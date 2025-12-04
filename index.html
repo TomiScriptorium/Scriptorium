@@ -1205,7 +1205,8 @@
                     type: "OBJECT",
                     properties: {
                         summary:{type:"STRING"},
-                        issues:{ type:"ARRAY", items:{ type:"OBJECT", properties:{ type:{type:"STRING"}, title:{type:"STRING"}, msg:{type:{type:"STRING"}}, tip:{type:"STRING"}, original:{type:"STRING"}, fix:{type:"STRING"} } } }
+                        // CORRECCIÓN: Arreglado el error de sintaxis en 'msg'
+                        issues:{ type:"ARRAY", items:{ type:"OBJECT", properties:{ type:{type:"STRING"}, title:{type:"STRING"}, msg:{type:"STRING"}, tip:{type:"STRING"}, original:{type:"STRING"}, fix:{type:"STRING"} } } }
                     }
                 }); 
                 if(r) renderAIResults(r); else analyzeText(); 
@@ -1284,7 +1285,9 @@
             const apiKey = localStorage.getItem('scriptorium_api_key');
             if(!apiKey) return null;
             
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            // CORRECCIÓN: Usar modelo gemini-1.5-flash real en lugar del 2.5 inexistente
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
             const payload = {
                 contents: [{ parts: [{ text: prompt }] }]
             };
@@ -1378,7 +1381,8 @@
             chatBox.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm opacity-50"><p>...</p></div>`;
             chatBox.scrollTop = chatBox.scrollHeight;
 
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${localStorage.getItem('scriptorium_api_key')}`;
+            // CORRECCIÓN: URL actualizada a gemini-1.5-flash
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${localStorage.getItem('scriptorium_api_key')}`;
             
             try {
                 const response = await fetch(url, {
@@ -1468,3 +1472,4 @@
     </script>
 </body>
 </html>
+
