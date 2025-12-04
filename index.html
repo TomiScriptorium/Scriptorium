@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Scriptorium AI</title>
+    
+    <!-- Estilos: Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Iconos: Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Markdown Parser -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- PDF Generation (jsPDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Word Import (.docx) - Mammoth.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    
+    <!-- PDF Import (.pdf) - PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        if (window.pdfjsLib) {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        }
+    </script>
+    
+    <!-- EPUB Processing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
+
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;700&family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- SISTEMA DE TEMAS --- */
+        :root {
+            --bg-main: #f5f5f4; --bg-panel: #ffffff; --bg-secondary: #fafaf9; --text-main: #292524; --text-muted: #78716c; --border: #e7e5e4; --accent: #d97706; --accent-light: #fcd34d; --shadow-color: rgba(0, 0, 0, 0.1); --input-bg: transparent; --shelf-bg: #292524; --shelf-border: #44403c; --active-tool: #e7e5e4;
+            --bg-reader: #fcfbf9; --text-reader: #222;
+            --paper-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        [data-theme='dark'] {
+            --bg-main: #0f172a; --bg-panel: #1e293b; --bg-secondary: #020617; --text-main: #f1f5f9; --text-muted: #94a3b8; --border: #334155; --accent: #60a5fa; --accent-light: #1e40af; --shadow-color: rgba(0, 0, 0, 0.5); --input-bg: rgba(255, 255, 255, 0.03); --shelf-bg: #020617; --shelf-border: #1e293b; --active-tool: #334155;
+            --paper-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+        [data-theme='warm'] {
+            --bg-main: #fdf6e3; --bg-panel: #fffbf0; --bg-secondary: #f7f1de; --text-main: #433422; --text-muted: #8a7668; --border: #e6dcc8; --accent: #b45309; --accent-light: #fde68a; --shadow-color: rgba(92, 64, 51, 0.1); --input-bg: transparent; --shelf-bg: #5d4037; --shelf-border: #8d6e63; --active-tool: #e6dcc8;
+            --paper-shadow: 0 4px 6px -1px rgba(92, 64, 51, 0.05);
+        }
+
+        /* Estilos Lector */
+        #view-reader { background-color: var(--bg-reader); color: var(--text-reader); transition: background-color 0.3s ease, color 0.3s ease; }
+        [data-reader-theme='light'] { --bg-reader: #fcfbf9; --text-reader: #1c1917; }
+        [data-reader-theme='sepia'] { --bg-reader: #f4ecd8; --text-reader: #5b4636; }
+        [data-reader-theme='dark'] { --bg-reader: #1c1917; --text-reader: #d6d3d1; }
+        [data-reader-theme='dark'] #pdf-render { filter: invert(0.9) hue-rotate(180deg); }
+
+        body { background-color: var(--bg-main); color: var(--text-main); transition: background-color 0.3s, color 0.3s; font-family: 'Noto Sans', sans-serif; }
+        .bg-stone-100 { background-color: var(--bg-main) !important; } .bg-stone-50 { background-color: var(--bg-secondary) !important; } .bg-white { background-color: var(--bg-panel) !important; }
+        .text-stone-900, .text-stone-800, .text-stone-700 { color: var(--text-main) !important; } .text-stone-600, .text-stone-500, .text-stone-400, .text-stone-300 { color: var(--text-muted) !important; }
+        .border-stone-200, .border-stone-300, .border-stone-100 { border-color: var(--border) !important; }
+        .shadow-xl, .shadow-md, .shadow-sm { box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color) !important; }
+        [data-theme='dark'] .bg-stone-900 { background-color: #0f172a !important; border-bottom-color: #334155 !important; } [data-theme='warm'] .bg-stone-900 { background-color: #43302b !important; }
+        textarea, input[type="text"], input[type="password"], select { background-color: var(--input-bg) !important; color: var(--text-main) !important; }
+        textarea::placeholder, input::placeholder { color: var(--text-muted) !important; opacity: 0.7; }
+        [data-theme='dark'] .border-l-4 { border-left-color: var(--accent) !important; }
+
+        .font-serif { font-family: 'Noto Serif', serif; } .font-display { font-family: 'Cinzel', serif; }
+        .no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        textarea::selection { background: var(--accent); color: white; }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        .progress-bar-fill { transition: width 1s ease-out; } .avatar-initials { background: linear-gradient(135deg, var(--accent) 0%, #78350f 100%); }
+        
+        /* Panel Animation */
+        #analysis-panel { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .panel-hidden { transform: translateX(100%); }
+        .panel-visible { transform: translateX(0); }
+
+        /* Chat Styles */
+        .chat-bubble { max-width: 85%; border-radius: 12px; padding: 10px 14px; font-size: 0.85rem; line-height: 1.5; position: relative; word-wrap: break-word; }
+        .chat-user { background-color: var(--border); color: var(--text-main); align-self: flex-end; border-bottom-right-radius: 2px; }
+        .chat-ai { background-color: var(--bg-secondary); border: 1px solid var(--border); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .chat-ai strong { font-weight: 700; color: var(--accent); }
+        
+        /* Libros */
+        .bookshelf-bg { background-color: var(--shelf-bg); border-right: 1px solid var(--shelf-border); }
+        .book-spine { writing-mode: vertical-rl; text-orientation: mixed; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s; box-shadow: -2px 0 5px rgba(0,0,0,0.3); transform-origin: bottom center; border-radius: 2px 5px 5px 2px; margin-right: 6px; display: flex; align-items: center; justify-content: center; padding: 12px 0; }
+        .book-spine:hover { transform: translateX(8px); z-index: 10; box-shadow: -5px 5px 15px rgba(0,0,0,0.5); }
+        .book-title { transform: rotate(180deg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-height: 90%; width: 100%; text-align: center; font-family: 'Cinzel', serif; letter-spacing: 1.5px; font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.95); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        
+        .nav-btn.active { background-color: var(--text-main) !important; color: var(--bg-panel) !important; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .nav-btn:not(.active):hover { background-color: rgba(255,255,255,0.1); color: #fff; }
+        
+        .download-menu { display: none; position: absolute; right: 0; top: 100%; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 0.5rem; padding: 0.25rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); z-index: 50; min-width: 120px; }
+        .download-menu.show { display: block; animation: popIn 0.1s ease-out; }
+        .download-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; padding: 0.5rem 0.75rem; font-size: 0.75rem; color: var(--text-main); text-align: left; border-radius: 0.25rem; transition: background 0.2s; cursor: pointer; }
+        .download-item:hover { background-color: var(--bg-main); }
+        
+        .toolbar-btn { @apply p-1.5 rounded text-stone-600 transition-all shadow-none border border-transparent; }
+        .toolbar-btn:hover { background-color: var(--border); box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
+        .toolbar-btn.active-tool { background-color: var(--active-tool); color: var(--accent); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); border-color: var(--border); }
+        [data-theme='dark'] .toolbar-btn { @apply text-slate-300; }
+        
+        .mentor-bubble { max-width: 80%; border-radius: 16px; padding: 16px; font-size: 0.95rem; line-height: 1.6; position: relative; word-wrap: break-word; margin-bottom: 1rem; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .mentor-user { background-color: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .mentor-ai { background-color: var(--bg-panel); border: 1px solid var(--border); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 2px; }
+        .mentor-ai strong { color: var(--accent); }
+        .mentor-ai ul, .mentor-ai ol { padding-left: 1.5em; margin: 0.5em 0; list-style-position: inside; }
+        .mentor-ai ul { list-style-type: disc; }
+        
+        #preview-content-body { white-space: pre-wrap; }
+        .resize-handle::-webkit-resizer { background-color: transparent; }
+        #chat-input:focus, #mentor-input:focus { outline: none !important; box-shadow: none !important; }
+        
+        /* Reader */
+        #reader-canvas { font-family: 'Libre Baskerville', serif; line-height: 1.8; font-size: 1.15rem; max-width: 750px; margin: 0 auto; height: 100%; padding: 2rem; overflow: hidden; }
+        .reader-page-transition { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease; }
+        .reader-theme-btn.active-reader-theme { border-color: var(--accent); border-width: 2px; transform: scale(1.1); }
+
+        /* Animation Keyframes */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    </style>
+</head>
+<body data-theme="light" class="h-screen flex flex-col overflow-hidden relative">
+
+    <!-- LOGIN MODAL -->
+    <div id="auth-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 fade-in">
+        <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-md overflow-hidden relative">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 to-amber-700"></div>
+            <div class="p-8 text-center">
+                <div class="mx-auto bg-stone-100 w-20 h-20 rounded-full flex items-center justify-center mb-6 shadow-inner"><i data-lucide="feather" class="w-10 h-10 text-amber-600"></i></div>
+                <h2 class="text-3xl font-display text-stone-800 mb-2">Scriptorium</h2>
+                <p class="text-stone-500 text-sm mb-8">Crea tu perfil de autor.</p>
+                <div class="space-y-4 text-left">
+                    <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre</label><input type="text" id="auth-name" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-3" placeholder="Ej: J.L. Borges"></div>
+                    <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Meta Diaria</label><input type="number" id="auth-goal" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-3" value="500"></div>
+                    <div class="flex gap-2"><button onclick="document.getElementById('auth-modal').classList.add('hidden')" class="w-1/3 bg-stone-200 hover:bg-stone-300 text-stone-700 font-bold py-3 rounded-lg transition-all">Cancelar</button><button onclick="registerUser()" class="w-2/3 bg-stone-900 hover:bg-stone-800 text-white font-bold py-3 rounded-lg transition-all">Guardar</button></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-stone-900 text-stone-200 p-3 shadow-xl flex flex-col md:flex-row justify-between items-center flex-shrink-0 z-20 border-b border-stone-700 gap-2">
+        <div class="flex items-center justify-between w-full md:w-auto">
+            <div class="flex items-center space-x-3 cursor-default">
+                <div class="relative group"><i data-lucide="feather" class="w-6 h-6 text-amber-500 transition-transform group-hover:rotate-12"></i><div id="ai-status-dot" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" title="IA Desconectada"></div></div>
+                <div><h1 class="text-xl font-display font-bold tracking-wider leading-none flex items-center gap-2 text-stone-100">SCRIPTORIUM <span class="text-[9px] bg-stone-800 border border-stone-600 text-amber-500 px-1.5 py-0.5 rounded font-sans tracking-normal">AI</span></h1></div>
+            </div>
+            <!-- Mobile Settings Toggle shown only on small screens -->
+            <button onclick="toggleSettings()" class="md:hidden p-2 text-stone-400 hover:text-white rounded-lg"><i data-lucide="settings" class="w-5 h-5"></i></button>
+        </div>
+        
+        <div class="flex bg-stone-800/50 backdrop-blur-md rounded-lg p-1 space-x-1 border border-stone-700/50 w-full md:w-auto overflow-x-auto no-scrollbar">
+            <button onclick="switchView('home')" id="btn-home" class="nav-btn px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-stone-100 hover:bg-stone-700/50 whitespace-nowrap"><i data-lucide="home" class="w-4 h-4"></i> Inicio</button>
+            <button onclick="switchView('editor')" id="btn-editor" class="nav-btn px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-stone-100 hover:bg-stone-700/50 whitespace-nowrap"><i data-lucide="edit-3" class="w-4 h-4"></i> Editor</button>
+            <button onclick="switchView('library')" id="btn-library" class="nav-btn px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-stone-100 hover:bg-stone-700/50 whitespace-nowrap"><i data-lucide="library" class="w-4 h-4"></i> Biblioteca</button>
+            <button onclick="switchView('mentor')" id="btn-mentor" class="nav-btn px-4 py-1.5 rounded-md text-sm font-medium transition-all flex items-center gap-2 text-stone-400 hover:text-stone-100 hover:bg-stone-700/50 whitespace-nowrap"><i data-lucide="message-circle" class="w-4 h-4"></i> Mentor</button>
+        </div>
+        
+        <div class="hidden md:flex items-center gap-3">
+            <div id="user-display" onclick="document.getElementById('auth-modal').classList.remove('hidden')" class="hidden md:flex items-center gap-2 bg-stone-800 rounded-full pl-3 pr-1 py-1 border border-stone-700 cursor-pointer hover:bg-stone-700 transition-colors"><span id="user-name-display" class="text-xs font-bold text-stone-300">Invitado</span><div class="w-6 h-6 rounded-full avatar-initials flex items-center justify-center text-[10px] font-bold text-white border border-white/20" id="user-avatar">?</div></div>
+            <button onclick="toggleSettings()" class="p-2 text-stone-400 hover:text-white hover:bg-stone-700 rounded-lg transition-colors"><i data-lucide="settings" class="w-5 h-5"></i></button>
+        </div>
+    </header>
+
+    <!-- TOAST & MENUS -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-stone-900 text-stone-100 px-5 py-4 rounded-lg shadow-2xl transform translate-y-40 transition-transform duration-500 z-50 flex items-center gap-4 border border-stone-700 max-w-[90vw]"><div class="bg-amber-500/20 p-2 rounded-full"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i></div><span id="toast-msg" class="font-medium text-sm">Notificación</span></div>
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center"><h3 class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-amber-500"></i> Configuración</h3><button onclick="toggleSettings()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-6">
+                <div><label class="block text-xs font-bold text-stone-500 uppercase mb-3">Tema Visual</label><div class="grid grid-cols-3 gap-3"><button onclick="setTheme('light')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-light"><div class="w-8 h-8 rounded-full bg-stone-100 border border-stone-300"></div><span class="text-xs font-medium">Día</span></button><button onclick="setTheme('dark')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-dark"><div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-700"></div><span class="text-xs font-medium">Noche</span></button><button onclick="setTheme('warm')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-warm"><div class="w-8 h-8 rounded-full bg-[#fdf6e3] border border-[#e6dcc8]"></div><span class="text-xs font-medium">Cálido</span></button></div></div>
+                <hr class="border-stone-200">
+                <div><button onclick="openReaderMode()" class="w-full bg-stone-800 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Entrar en Modo Solo Lectura</button><p class="text-xs text-stone-500 mt-2 text-center">Un espacio aislado para leer .epub y .pdf.</p></div>
+                <hr class="border-stone-200">
+                <div class="space-y-4"><div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre</label><input type="text" id="settings-name" class="w-full bg-stone-100 border border-stone-300 rounded p-2 text-sm"></div><div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Gemini API Key</label><input type="password" id="api-key-input" class="w-full bg-stone-100 border border-stone-300 rounded p-2 text-sm text-stone-800" placeholder="Pegar clave aquí..."></div></div><hr class="border-stone-200"><div class="flex justify-between items-center"><button onclick="logout()" class="text-xs text-red-500 hover:underline">Cerrar Sesión</button><button onclick="saveSettings()" class="bg-stone-900 hover:bg-stone-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors">Guardar Cambios</button></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PREVIEW MODAL -->
+    <div id="preview-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in"><div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl h-[80vh] flex flex-col overflow-hidden"><div class="bg-stone-50 p-4 border-b border-stone-200 flex justify-between items-center flex-shrink-0"><div><h3 id="preview-title" class="text-xl font-display font-bold text-stone-800">Título</h3><p id="preview-meta" class="text-xs text-stone-500">Detalles</p></div><div class="flex gap-2"><button onclick="editFromPreview()" class="text-xs bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-bold transition-colors flex items-center gap-1"><i data-lucide="edit-3" class="w-3 h-3"></i> Editar</button><button onclick="closePreview()" class="text-stone-400 hover:text-stone-800"><i data-lucide="x" class="w-6 h-6"></i></button></div></div><div id="preview-body" class="p-8 overflow-y-auto font-serif text-lg leading-relaxed text-stone-700 preview-content bg-white"></div></div></div>
+
+    <!-- SELECTION MENU -->
+    <div id="selection-menu" class="hidden fixed bg-stone-900/90 text-stone-100 rounded-lg shadow-xl p-1 z-50 flex gap-1 items-center animate-popIn backdrop-blur-md border border-white/10 overflow-hidden transform -translate-x-1/2">
+        <button onclick="runSelectionAnalysis()" type="button" class="px-3 py-1.5 hover:bg-white/10 rounded text-xs font-bold flex items-center gap-2 transition-colors">
+            <i data-lucide="search" class="w-3.5 h-3.5 text-blue-400"></i> Analizar
+        </button>
+        <div class="w-px h-4 bg-white/20"></div>
+        <button onclick="suggestContinuationCheck()" type="button" class="px-3 py-1.5 hover:bg-white/10 rounded text-xs font-bold flex items-center gap-2 transition-colors">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> Ideas
+        </button>
+    </div>
+    
+    <!-- TOOL MODAL -->
+    <div id="tool-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in"><div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"><div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center shrink-0"><h3 id="tool-title" class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Taller</h3><button onclick="closeToolModal()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto bg-stone-50 flex-1"><div class="mb-4"><label id="tool-prompt-label" class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-2">Descripción</label><textarea id="tool-input" class="w-full bg-white border border-stone-200 rounded-lg p-3 text-stone-800 focus:ring-2 focus:ring-amber-200 focus:border-amber-500 min-h-[100px]" placeholder="Describe..."></textarea></div><button onclick="runTool()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><i data-lucide="zap" class="w-4 h-4"></i> <span id="tool-action-text">Generar</span></button><div id="tool-result-container" class="mt-6 hidden"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-stone-500 uppercase">Resultado</span><div class="flex gap-2"><button onclick="copyToolResult()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar</button><button onclick="saveToolAsNote()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Guardar Nota</button></div></div><div id="tool-output" class="bg-white p-4 rounded-lg border border-stone-200 text-sm text-stone-800 font-serif leading-relaxed whitespace-pre-wrap"></div></div><div id="tool-loading" class="mt-6 hidden flex justify-center py-4"><div class="w-8 h-8 border-4 border-stone-200 border-t-amber-500 rounded-full animate-spin"></div></div></div></div></div>
+
+    <!-- VISTA: READER -->
+    <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode" data-reader-theme="light" tabindex="0">
+        <!-- HEADER READER -->
+        <div class="p-2 md:p-4 flex flex-wrap justify-between items-center bg-transparent absolute top-0 left-0 w-full z-40 hover:bg-white/90 transition-colors duration-300 opacity-0 hover:opacity-100 gap-2" id="reader-controls">
+            <button onclick="closeReaderMode()" class="p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 transition-all shadow-md"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+            
+            <!-- Controls only visible when a book is open -->
+            <div id="reader-nav-controls" class="hidden flex gap-2 md:gap-4 items-center bg-stone-100/80 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm">
+                <button onclick="closeBookAndShowLibrary()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500 mr-2 border-r border-stone-300 pr-3" title="Volver a Biblioteca"><i data-lucide="library" class="w-4 h-4"></i></button>
+                <button onclick="readerPrevPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
+                <span id="reader-page-info" class="text-xs font-mono text-stone-600 font-bold min-w-[50px] md:min-w-[60px] text-center">-- / --</span>
+                <button onclick="readerNextPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="flex gap-2 bg-stone-100/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm ml-auto md:ml-0">
+                <button onclick="setReaderTheme('light')" id="rt-btn-light" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fcfbf9] border border-stone-300 shadow-sm active-reader-theme" title="Día"></button>
+                <button onclick="setReaderTheme('sepia')" id="rt-btn-sepia" class="reader-theme-btn w-6 h-6 rounded-full bg-[#f4ecd8] border border-[#d4c5a8] shadow-sm" title="Sepia"></button>
+                <button onclick="setReaderTheme('dark')" id="rt-btn-dark" class="reader-theme-btn w-6 h-6 rounded-full bg-[#1a1a1a] border border-stone-700 shadow-sm" title="Noche"></button>
+                <div class="w-px h-6 bg-stone-300 mx-1"></div>
+                <label for="book-upload" class="cursor-pointer p-1 text-stone-500 hover:text-stone-800 transition-all" title="Importar nuevo"><i data-lucide="plus" class="w-4 h-4"></i></label>
+                <input type="file" id="book-upload" class="hidden" accept=".epub,.pdf" onchange="handleBookImport(this)">
+            </div>
+        </div>
+
+        <!-- 1. LIBRARY VIEW -->
+        <div id="reader-library-view" class="flex-1 w-full h-full overflow-y-auto bg-stone-100 p-8 pt-20 relative z-20">
+            <div class="max-w-5xl mx-auto">
+                <div class="flex justify-between items-end mb-8 border-b border-stone-300 pb-4">
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2>
+                        <p class="text-stone-500">Lecturas guardadas</p>
+                    </div>
+                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Importar Libro
+                    </label>
+                </div>
+                <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <!-- Books will be injected here -->
+                    <div class="col-span-full text-center py-20 text-stone-400 italic">
+                        <i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i>
+                        <p>No tienes libros guardados aún.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CONTENT VIEW (Hidden by default) -->
+        <div id="reader-content-view" class="hidden flex-1 w-full h-full overflow-hidden relative flex items-center justify-center z-10 bg-white">
+            <div id="epub-viewer" class="w-full h-full shadow-2xl hidden bg-transparent"></div>
+            <canvas id="pdf-render" class="max-h-full max-w-full shadow-2xl hidden"></canvas>
+            
+            <!-- Click zones for nav -->
+            <div class="absolute inset-y-0 left-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
+            <div class="absolute inset-y-0 right-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
+        </div>
+        
+        <div class="absolute bottom-0 left-0 w-full h-1 bg-stone-200 z-50"><div id="reader-progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div></div>
+    </div>
+
+    <!-- MAIN -->
+    <main class="flex flex-1 overflow-hidden relative">
+        
+        <!-- VISTA: INICIO -->
+        <div id="view-home" class="flex flex-1 w-full h-full overflow-y-auto bg-stone-100 p-4 md:p-8">
+            <div class="max-w-5xl mx-auto space-y-6 md:space-y-8 fade-in">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-stone-300 pb-4 gap-4 md:gap-0">
+                    <div><h2 class="text-2xl md:text-4xl font-display text-stone-800">Hola, <span id="welcome-name" class="text-amber-700">Escritor</span>.</h2><p class="text-stone-500 mt-2 text-base md:text-lg">El mundo espera tu historia.</p></div>
+                    <div class="flex gap-4 items-center w-full md:w-auto justify-between md:justify-end">
+                        <div class="flex flex-col items-end mr-4"><span class="text-xs font-bold text-stone-400 uppercase tracking-wider">Progreso Diario</span><span class="text-xl font-bold text-stone-700"><span id="daily-progress">0</span> <span class="text-sm text-stone-400">/ <span id="daily-goal-display">500</span></span></span></div>
+                        <button onclick="clearEditor(); switchView('editor')" class="bg-stone-800 text-stone-100 px-4 md:px-6 py-2 md:py-3 rounded-xl shadow-lg hover:bg-stone-700 hover:shadow-xl transition-all flex items-center gap-2 text-sm font-bold transform hover:-translate-y-0.5"><i data-lucide="plus-circle" class="w-5 h-5"></i> <span class="hidden md:inline">Nuevo Proyecto</span><span class="md:hidden">Nuevo</span></button>
+                    </div>
+                </div>
+                
+                <!-- TARJETA: MODO LECTURA (NUEVO) -->
+                <div onclick="openReaderMode()" class="bg-gradient-to-br from-emerald-600 to-teal-800 p-6 md:p-8 rounded-2xl shadow-lg text-white relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all transform hover:-translate-y-1">
+                    <div class="absolute -right-6 -bottom-6 opacity-20 group-hover:opacity-30 transition-opacity transform rotate-12">
+                        <i data-lucide="book-open" class="w-32 h-32 md:w-40 md:h-40 text-white"></i>
+                    </div>
+                    <div class="relative z-10 flex flex-col items-start">
+                        <div class="bg-white/20 p-2 rounded-lg mb-4 backdrop-blur-sm"><i data-lucide="library" class="w-6 h-6 text-white"></i></div>
+                        <h3 class="text-2xl font-display font-bold mb-2">Modo Lectura</h3>
+                        <p class="text-emerald-100 text-sm mb-6 max-w-md">Tu santuario personal. Accede a tu biblioteca de EPUBs y PDFs guardados para leer sin distracciones.</p>
+                        <button class="bg-white text-emerald-800 hover:bg-emerald-50 px-5 py-2.5 rounded-lg text-xs font-bold shadow-md transition-colors flex items-center gap-2">
+                            Entrar a Biblioteca <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- FRAGMENTOS LITERARIOS -->
+                <div class="bg-white p-0 rounded-2xl shadow-md border border-stone-200 relative overflow-hidden flex flex-col transition-all hover:shadow-lg">
+                    <div class="absolute top-0 right-0 p-8 opacity-5 transition-opacity transform rotate-12 pointer-events-none"><i data-lucide="feather" class="w-32 h-32 md:w-48 md:h-48 text-stone-900"></i></div>
+                    <div class="p-6 md:p-10 relative z-10 flex flex-col justify-center min-h-[200px]">
+                        <div id="excerpt-container" class="max-w-4xl mx-auto space-y-4 text-center fade-in">
+                            <h3 id="excerpt-book" class="text-sm font-bold text-amber-700 uppercase tracking-widest">Cargando inspiración...</h3>
+                            <p id="excerpt-text" class="font-serif text-lg md:text-xl text-stone-700 leading-relaxed italic">"El universo (que otros llaman la Biblioteca) se compone de un número indefinido, y tal vez infinito, de galerías hexagonales..."</p>
+                            <p id="excerpt-author" class="text-xs font-bold text-stone-400">— Jorge Luis Borges</p>
+                        </div>
+                    </div>
+                    <div class="bg-stone-50 px-4 md:px-8 py-3 border-t border-stone-100 flex justify-between items-center text-xs">
+                        <div class="flex items-center gap-2 text-stone-400"><span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span><span class="font-mono uppercase tracking-wider text-[10px]">Actualización en vivo</span></div>
+                        <button onclick="fetchBookExcerpt()" class="bg-white border border-stone-200 text-stone-600 hover:text-stone-900 hover:border-stone-300 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2 transition-all font-bold"><i data-lucide="refresh-cw" class="w-3 h-3"></i> <span class="hidden sm:inline">Nuevo Fragmento</span></button>
+                    </div>
+                </div>
+
+                <!-- TALLER CREATIVO (EXISTING) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"><div class="md:col-span-3 mb-2"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="pen-tool" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Taller Creativo AI</h3></div><div onclick="openTool('char')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-purple-600 group-hover:bg-purple-200 transition-colors"><i data-lucide="user" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Personajes</h4><p class="text-xs text-stone-500">Crea fichas detalladas.</p></div><div onclick="openTool('names')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-200 transition-colors"><i data-lucide="globe" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Mundos</h4><p class="text-xs text-stone-500">Nombres de lugares y gente.</p></div><div onclick="openTool('plot')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-amber-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-amber-600 group-hover:bg-amber-200 transition-colors"><i data-lucide="git-branch" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Tramas</h4><p class="text-xs text-stone-500">Desbloqueos y giros.</p></div></div>
+                <!-- PROYECTOS (EXISTING) -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2 space-y-6"><div class="flex items-center justify-between"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Tus Proyectos</h3></div><div id="projects-progress-container" class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="space-y-6"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="save" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Seguridad</h3><div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200 flex flex-col gap-4 justify-center h-full"><div class="text-center mb-2"><div class="bg-stone-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="shield-check" class="w-8 h-8 text-stone-400"></i></div><p class="text-sm text-stone-500">Tus historias son valiosas.</p></div><button onclick="exportBackup()" class="w-full border-2 border-stone-100 hover:border-amber-500 hover:bg-amber-50 text-stone-600 hover:text-amber-700 font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 text-sm"><i data-lucide="download-cloud" class="w-4 h-4"></i> Descargar Todo</button><input type="file" id="import-file" class="hidden" onchange="importBackup(this)"><button onclick="document.getElementById('import-file').click()" class="w-full text-xs text-stone-400 hover:text-stone-600 hover:underline text-center mt-2">Restaurar desde archivo</button></div></div></div>
+            </div>
+        </div>
+
+        <!-- VISTA: EDITOR (REDISENADO & ESTRUCTURADO) -->
+        <div id="view-editor" class="hidden relative w-full h-full flex overflow-hidden bg-stone-100/50">
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col h-full min-w-0 transition-all duration-300" id="editor-main-area">
+                
+                <!-- 1. Header del Editor -->
+                <div class="bg-white border-b border-stone-200 px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0 z-20 shadow-sm">
+                    <div class="flex-1 w-full md:w-auto flex flex-col md:flex-row md:items-center gap-2">
+                        <input type="text" id="doc-title" class="flex-1 min-w-[150px] text-xl font-serif font-bold text-stone-800 placeholder-stone-300 bg-transparent border-none focus:outline-none focus:ring-0 p-0" placeholder="Título del escrito...">
+                        <div class="flex gap-2 items-center w-full md:w-auto overflow-x-auto no-scrollbar">
+                            <div class="flex items-center bg-stone-50 rounded px-2 py-1 gap-1.5 border border-stone-200 hover:border-stone-300 transition-colors flex-shrink-0">
+                                <i data-lucide="folder" class="w-3 h-3 text-stone-400"></i>
+                                <input list="projects-datalist" id="doc-project" class="bg-transparent border-none text-stone-600 text-xs font-medium focus:outline-none w-20 md:w-24 p-0 placeholder-stone-400" placeholder="Proyecto">
+                                <datalist id="projects-datalist"></datalist>
+                            </div>
+                            <div class="flex items-center bg-stone-50 rounded px-2 py-1 gap-1.5 border border-stone-200 hover:border-stone-300 transition-colors flex-shrink-0">
+                                <i data-lucide="tag" class="w-3 h-3 text-stone-400"></i>
+                                <select id="doc-type" class="bg-transparent border-none text-stone-600 text-xs font-medium focus:outline-none p-0 w-20 md:w-24 cursor-pointer appearance-none">
+                                    <option value="Borrador">Borrador</option>
+                                    <option value="Capítulo">Capítulo</option>
+                                    <option value="Idea">Idea</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 self-end md:self-auto w-full md:w-auto justify-end">
+                        <button onclick="toggleAnalysisPanel()" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2 animate-pulse hover:animate-none">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analizar
+                        </button>
+                        <div class="w-px h-6 bg-stone-200 mx-1"></div>
+                        <div class="flex bg-stone-50 rounded-lg p-0.5 border border-stone-200">
+                            <button onclick="downloadCurrentTxt()" class="p-1.5 hover:bg-white hover:text-stone-800 text-stone-500 rounded-md transition-all" title="Descargar TXT"><i data-lucide="download" class="w-4 h-4"></i></button>
+                            <button onclick="copyToClipboard()" class="p-1.5 hover:bg-white hover:text-stone-800 text-stone-500 rounded-md transition-all" title="Copiar"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                            <button onclick="clearEditor()" class="p-1.5 hover:bg-red-50 hover:text-red-500 text-stone-400 rounded-md transition-all" title="Limpiar"><i data-lucide="eraser" class="w-4 h-4"></i></button>
+                        </div>
+                        <button onclick="saveDraft()" class="flex items-center gap-2 px-4 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-100 rounded-lg text-xs font-bold transition-all shadow-sm">
+                            <i data-lucide="save" class="w-3 h-3"></i> <span class="hidden sm:inline">Guardar</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 2. Área de Escritura con Toolbar Sticky -->
+                <div class="flex-1 w-full relative overflow-y-auto bg-stone-100 flex flex-col items-center">
+                    
+                    <!-- Toolbar Sticky -->
+                    <div class="sticky top-0 w-full z-10 flex justify-center pointer-events-none mt-2 mb-2">
+                        <div class="bg-white border border-stone-200 shadow-md rounded-full px-4 py-1.5 flex flex-wrap items-center gap-2 pointer-events-auto transform transition-transform hover:scale-[1.01]">
+                             <select onchange="format('fontName', this.value); this.selectedIndex=0;" class="h-6 text-[10px] bg-transparent font-bold text-stone-600 focus:outline-none cursor-pointer"><option value="">Fuente</option><option value="Noto Serif">Serif</option><option value="Noto Sans">Sans</option><option value="Cinzel">Cinzel</option></select>
+                             <div class="h-4 w-px bg-stone-300"></div>
+                             <select onchange="format('formatBlock', this.value); this.selectedIndex=0;" class="h-6 text-[10px] bg-transparent font-bold text-stone-600 focus:outline-none w-10 cursor-pointer"><option value="">H</option><option value="H2">H2</option><option value="H3">H3</option><option value="P">P</option></select>
+                             <div class="h-4 w-px bg-stone-300"></div>
+                             <div class="flex gap-1">
+                                <button onclick="format('bold')" id="btn-bold" class="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-100 text-stone-600 font-bold text-xs" onmousedown="event.preventDefault()">B</button>
+                                <button onclick="format('italic')" id="btn-italic" class="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-100 text-stone-600 italic font-serif text-xs" onmousedown="event.preventDefault()">I</button>
+                                <button onclick="format('underline')" id="btn-underline" class="w-6 h-6 flex items-center justify-center rounded hover:bg-stone-100 text-stone-600 underline text-xs" onmousedown="event.preventDefault()">U</button>
+                             </div>
+                             <div class="h-4 w-px bg-stone-300"></div>
+                             <input type="color" onchange="format('foreColor', this.value)" class="w-5 h-5 p-0 border-none bg-transparent cursor-pointer rounded-full overflow-hidden" title="Color Texto">
+                        </div>
+                    </div>
+
+                    <!-- La Hoja de Papel (Corrector Nativo Habilitado) -->
+                    <div class="w-full max-w-4xl bg-white min-h-[80vh] shadow-xl md:my-4 p-8 md:p-12 lg:px-16 outline-none text-lg leading-loose font-serif text-stone-800 transition-all" style="box-shadow: var(--paper-shadow);" id="main-editor" contenteditable="true" placeholder="Érase una vez..." spellcheck="true"></div>
+                    
+                    <div class="h-20 w-full shrink-0"></div>
+                </div>
+
+                <!-- Footer Flotante Stats -->
+                <div class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-sm border-t border-stone-200 px-4 py-1.5 flex justify-between items-center text-[10px] text-stone-500 uppercase tracking-wider z-20">
+                    <div class="flex gap-4 items-center">
+                        <span id="stat-words" class="font-bold text-stone-600">0 Pal</span>
+                        <span class="w-px h-3 bg-stone-300"></span>
+                        <span id="stat-sentences">0 Orac</span>
+                        <span id="stat-unsaved" class="text-amber-600 font-bold ml-2 hidden animate-pulse flex items-center gap-1"><i data-lucide="alert-circle" class="w-3 h-3"></i> Sin guardar</span>
+                    </div>
+                    <span class="text-stone-400">Scriptorium Editor</span>
+                </div>
+            </div>
+            
+            <!-- Panel Desplegable (Drawer) -->
+            <div id="analysis-panel" class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl border-l border-stone-200 z-40 transform translate-x-full flex flex-col">
+                <!-- Tabs Header with Close Button -->
+                <div class="flex border-b border-stone-200 bg-white items-center">
+                    <button onclick="switchAnalysisTab('manual')" id="tab-manual" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-stone-600 border-b-2 border-stone-800 bg-stone-50 hover:bg-stone-100 transition-colors">Manual</button>
+                    <button onclick="switchAnalysisTab('ai')" id="tab-ai" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-stone-400 border-b-2 border-transparent hover:text-stone-600 hover:bg-stone-50 transition-colors">IA</button>
+                    <button onclick="toggleAnalysisPanel()" class="px-3 text-stone-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+
+                <!-- Content Area -->
+                <div id="issues-container" class="flex-1 overflow-y-auto p-4 bg-stone-50/50 relative">
+                    <!-- Default State -->
+                    <div class="flex flex-col items-center justify-center h-full text-stone-400 py-10 italic text-xs text-center px-4">
+                        <div class="bg-stone-100 p-3 rounded-full shadow-sm mb-3"><i data-lucide="activity" class="w-6 h-6 text-stone-400"></i></div>
+                        <p class="font-medium text-stone-500 mb-1">Centro de Análisis</p>
+                        <p class="opacity-60 mb-4">Pulsa "Analizar" arriba para comenzar.</p>
+                    </div>
+                </div>
+
+                <!-- AI Loader Overlay (Local to Panel) -->
+                <div id="ai-loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center hidden fade-in">
+                    <div class="w-8 h-8 border-4 border-stone-100 border-t-blue-500 rounded-full animate-spin mb-3"></div>
+                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse mb-3">Procesando...</span>
+                    <button onclick="abortGemini()" class="text-[10px] text-red-500 border border-red-200 px-3 py-1 rounded hover:bg-red-50 font-bold transition-colors">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA: MENTOR (CHAT COMPLETO) -->
+        <div id="view-mentor" class="hidden flex-1 w-full h-full bg-stone-100 flex overflow-hidden">
+            <div class="flex flex-col w-full h-full max-w-5xl mx-auto bg-white shadow-2xl border-x border-stone-200 relative">
+                <div class="p-4 border-b border-stone-200 bg-white flex justify-between items-center shadow-sm z-10"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i data-lucide="sparkles" class="w-6 h-6"></i></div><div><h2 class="font-bold text-stone-800">Mentor Literario</h2><p class="text-xs text-stone-500">Experto en narrativa con acceso a tu biblioteca.</p></div></div><button onclick="switchView('home')" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+                <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-stone-50/50"><div class="mentor-bubble mentor-ai shadow-sm animate-fade-in"><p><strong>Hola, escritor.</strong></p><p>He analizado tu biblioteca. ¿En qué te ayudo hoy?</p></div></div>
+                <div class="p-4 bg-white border-t border-stone-200"><div class="flex items-end gap-2 bg-stone-50 rounded-xl p-3 border border-stone-200 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-50 transition-all shadow-inner"><textarea id="mentor-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 text-base resize-none max-h-32 pt-1.5 text-stone-800 placeholder-stone-400" placeholder="Pregúntame..."></textarea><button onclick="sendMentorMessage()" class="p-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md flex-shrink-0 transform hover:scale-105 active:scale-95"><i data-lucide="send" class="w-5 h-5"></i></button></div><p class="text-[10px] text-center text-stone-400 mt-2">La IA tiene acceso al contexto de tu obra.</p></div>
+            </div>
+        </div>
+
+        <!-- VISTA: BIBLIOTECA -->
+        <div id="view-library" class="hidden flex flex-col lg:flex-row w-full h-full bg-stone-100 flex overflow-hidden">
+            <div class="w-full lg:w-80 h-1/3 lg:h-full bg-stone-50 border-b lg:border-b-0 lg:border-r border-stone-200 flex flex-col bookshelf-bg text-white shadow-2xl z-10">
+                <div class="p-6 border-b border-white/10 bg-black/20"><h2 class="font-display font-bold text-xl text-stone-100 flex items-center gap-3"><i data-lucide="library" class="w-6 h-6 text-amber-500"></i> Biblioteca</h2></div>
+                <div id="project-list" class="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col items-start justify-start content-start"></div>
+                <div class="p-4 border-t border-white/10 bg-black/20"><button onclick="document.getElementById('file-upload').click()" class="w-full bg-white/10 hover:bg-white/20 text-stone-300 py-2 rounded text-xs font-bold flex items-center justify-center gap-2 mb-2 transition-colors"><i data-lucide="upload" class="w-3 h-3"></i> Importar Archivo</button><input type="file" id="file-upload" class="hidden" accept=".txt,.docx,.pdf" onchange="handleFileUpload(this)"><button onclick="selectTrash()" id="btn-trash" class="w-full text-left px-4 py-3 text-sm rounded-lg transition-colors flex justify-between items-center hover:bg-white/10 text-stone-300"><span class="flex items-center gap-2 font-medium"><i data-lucide="trash" class="w-4 h-4"></i> Papelera</span><span id="trash-count" class="text-[10px] bg-white/20 text-stone-100 px-2 py-0.5 rounded-full">0</span></button></div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 bg-stone-100/50 relative"><div class="max-w-6xl mx-auto"><div id="library-content" class="fade-in"></div></div></div>
+        </div>
+    </main>
+
+    <script>
+        // 1. VARIABLES
+        let excerptInterval = null; 
+        let db = null;
+        let currentReaderBookId = null; // Store ID to update progress
+        const DB_NAME = 'ScriptoriumReaderDB';
+        const STORE_NAME = 'books';
+        const TRASH_LIFETIME = 30 * 24 * 60 * 60 * 1000; // 30 days defined here
+        const apiKeyGlobal = localStorage.getItem('scriptorium_api_key') || "";
+        let currentUser = JSON.parse(localStorage.getItem('scriptorium_user') || 'null');
+        let drafts = JSON.parse(localStorage.getItem('scriptorium_drafts') || '[]');
+        let isDirty = false;
+        let currentDraftId = null;
+        let selectedProject = null;
+        let isTrashView = false;
+        let currentSelection = "";
+        let inspirationInterval = null;
+        let currentInspirationGenre = 'Terror';
+        let currentController = null;
+        let currentToolType = null;
+        let activeAnalysisTab = 'manual';
+        let isPanelOpen = false;
+        let chatHistory = []; // Para el contexto del Mentor
+
+        // Excerpts Data
+        const FAMOUS_EXCERPTS = [
+            { book: "Cien años de soledad", author: "Gabriel García Márquez", text: "Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo." },
+            { book: "Don Quijote de la Mancha", author: "Miguel de Cervantes", text: "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho tiempo que vivía un hidalgo de los de lanza en astillero, adarga antigua, rocín flaco y galgo corredor." },
+            { book: "Rayuela", author: "Julio Cortázar", text: "¿Encontraría a la Maga? Tantas veces me había bastado asomarme, viniendo por la rue de Seine, al arco que da al Quai de Conti, y apenas la luz de ceniza y olivo que flota sobre el río me dejaba distinguir las formas, ya su silueta delgada se inscribía en el Pont des Arts." },
+            { book: "Pedro Páramo", author: "Juan Rulfo", text: "Vine a Comala porque me dijeron que acá vivía mi padre, un tal Pedro Páramo. Mi madre me lo dijo. Y yo le prometí que vendría a verlo en cuanto ella muriera." },
+            { book: "El Aleph", author: "Jorge Luis Borges", text: "Vi el populoso mar, vi el alba y la tarde, vi las muchedumbres de América, vi una plateada telaraña en el centro de una negra pirámide, vi un laberinto roto (era Londres)." }
+        ];
+
+        // Reader vars
+        let bookRendition = null;
+        let pdfDoc = null;
+        let readerPage = 1;
+
+        const getEl = (id) => document.getElementById(id);
+        const editor = getEl('main-editor');
+        const titleInput = getEl('doc-title');
+        const projectInput = getEl('doc-project');
+        const typeInput = getEl('doc-type');
+        const issuesContainer = getEl('issues-container');
+        const selectionMenu = getEl('selection-menu');
+        const aiLoader = getEl('ai-loading-overlay');
+        const analysisPanel = getEl('analysis-panel');
+
+        // INIT
+        lucide.createIcons();
+        
+        function cleanupTrash(){
+            const n=Date.now();
+            drafts=drafts.filter(d=>!d.deletedAt||(n-d.deletedAt)<TRASH_LIFETIME);
+            localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));
+        }
+        
+        // --- CORE UTILITY FUNCTIONS ---
+        function updateUnsaved(){const e=getEl('stat-unsaved');if(e)e.classList.toggle('hidden',!isDirty);}
+        
+        function handleInput(){ 
+            const t = editor.innerText.trim(); 
+            if(getEl('stat-words')) getEl('stat-words').textContent=t?t.split(/\s+/).length:0; 
+            if(getEl('stat-sentences')) getEl('stat-sentences').textContent=t?t.split(/[.!?]+/).filter(x=>x.trim()).length:0; 
+            isDirty=true; updateUnsaved(); 
+            if(getEl('selection-menu').style.display!=='none') hideSelectionMenu(); 
+        }
+        
+        function checkToolbarState() {
+            const states = ['bold', 'italic', 'underline'];
+            states.forEach(cmd => {
+                const btn = getEl(`btn-${cmd}`);
+                if (btn) {
+                    if (document.queryCommandState(cmd)) btn.classList.add('active-tool');
+                    else btn.classList.remove('active-tool');
+                }
+            });
+        }
+        
+        function format(c, v=null) { document.execCommand(c, false, v); editor.focus(); handleInput(); checkToolbarState(); }
+
+        function showToast(m){const t=getEl('toast');getEl('toast-msg').textContent=m;t.classList.remove('translate-y-40');setTimeout(()=>t.classList.add('translate-y-40'),3000);}
+
+        cleanupTrash();
+        
+        // --- APP LOGIC ---
+        function registerUser() {
+            const name = getEl('auth-name').value.trim();
+            const goal = getEl('auth-goal').value;
+            if(!name) return alert("Nombre requerido");
+            currentUser = { name, goal, joined: new Date().toLocaleDateString(), theme: 'light' };
+            localStorage.setItem('scriptorium_user', JSON.stringify(currentUser));
+            getEl('auth-modal').classList.add('hidden');
+            initApp();
+        }
+
+        function initApp() {
+            if(getEl('user-name-display')) getEl('user-name-display').textContent = currentUser.name;
+            if(getEl('welcome-name')) getEl('welcome-name').textContent = currentUser.name;
+            if(getEl('user-avatar')) getEl('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            if(getEl('daily-goal-display')) getEl('daily-goal-display').textContent = currentUser.goal;
+            if(getEl('settings-name')) getEl('settings-name').value = currentUser.name;
+            if(getEl('user-display')) {
+                getEl('user-display').classList.remove('hidden');
+                getEl('user-display').classList.add('flex');
+            }
+            // Aplicar tema guardado al inicio
+            setTheme(currentUser.theme || 'light');
+            updateAiStatus();
+            renderHome();
+            switchView('home'); 
+            
+            // Start rotation
+            startExcerptRotation();
+            // Init DB
+            initDB();
+        }
+
+        function setTheme(mode) {
+            document.body.setAttribute('data-theme', mode);
+            ['light', 'dark', 'warm'].forEach(m => {
+                const btn = getEl(`theme-btn-${m}`);
+                if(btn) {
+                    if(m === mode) btn.classList.add('ring-2', 'ring-amber-500', 'border-amber-500');
+                    else btn.classList.remove('ring-2', 'ring-amber-500', 'border-amber-500');
+                }
+            });
+            if(currentUser) currentUser.theme = mode; 
+        }
+
+        function setReaderTheme(mode) {
+            const reader = getEl('view-reader');
+            reader.setAttribute('data-reader-theme', mode);
+            ['light', 'sepia', 'dark'].forEach(m => {
+                const btn = getEl(`rt-btn-${m}`);
+                if(btn) { if(m === mode) btn.classList.add('active-reader-theme'); else btn.classList.remove('active-reader-theme'); }
+            });
+            if (bookRendition) {
+                const themes = { 'light': { body: { color: '#222', background: '#fcfbf9' } }, 'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } } };
+                bookRendition.themes.default(themes[mode]);
+            }
+        }
+
+        function toggleSettings(){ getEl('settings-modal').classList.toggle('hidden'); getEl('api-key-input').value = localStorage.getItem('scriptorium_api_key') || ""; }
+        
+        function saveSettings(){ 
+            const k=getEl('api-key-input').value.trim(), n=getEl('settings-name').value.trim(); 
+            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+            currentUser.theme = currentTheme;
+            if(n) currentUser.name = n;
+            localStorage.setItem('scriptorium_user', JSON.stringify(currentUser));
+            if(k) localStorage.setItem('scriptorium_api_key', k);
+            showToast("Configuración guardada");
+            initApp(); 
+            getEl('settings-modal').classList.add('hidden');
+        }
+        
+        function logout(){ if(confirm("¿Salir?")){localStorage.removeItem('scriptorium_user');localStorage.removeItem('scriptorium_api_key');location.reload();} }
+        function updateAiStatus(){const d=getEl('ai-status-dot'); if(localStorage.getItem('scriptorium_api_key')){d.classList.remove('bg-red-500');d.classList.add('bg-emerald-500');}else{d.classList.remove('bg-emerald-500');d.classList.add('bg-red-500');}}
+        
+        function switchView(v){
+            ['editor','library','home','reader','mentor'].forEach(x=>getEl(`view-${x}`)?.classList.add('hidden')); 
+            const view = getEl(`view-${v}`); if(view) view.classList.remove('hidden');
+            ['btn-editor','btn-library','btn-home','btn-mentor'].forEach(x=>{const b=getEl(x); if(b){b.classList.remove('active', 'bg-stone-100','text-stone-900','shadow-md'); b.classList.add('text-stone-400');}});
+            const activeBtn = getEl(`btn-${v}`); if(activeBtn){activeBtn.classList.remove('text-stone-400'); activeBtn.classList.add('active', 'bg-stone-100','text-stone-900','shadow-md');}
+            if(v==='home')renderHome(); if(v==='library')updateProjectList();
+            if(v === 'reader') {
+                refreshReaderLibrary();
+                if(getEl('reader-content-view').classList.contains('hidden')){
+                    // Just opened, library view is default
+                }
+            }
+        }
+
+        // --- DRAFT & FILE LOGIC ---
+        function saveDraft(s=false){const t=editor.innerHTML;if(!editor.innerText.trim()&&!currentDraftId)return false;const d={id:currentDraftId||Date.now(),title:getEl('doc-title').value||"Sin título",text:t,project:getEl('doc-project').value||"Sin Proyecto",type:getEl('doc-type').value,date:new Date().toLocaleDateString(),preview:editor.innerText.substring(0,100),deletedAt:null};if(currentDraftId){const i=drafts.findIndex(x=>x.id===currentDraftId);i!==-1?drafts[i]=d:drafts.unshift(d);}else{drafts.unshift(d);currentDraftId=d.id;}localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));if(!s)updateProjectList();if(!s)showToast("Guardado");isDirty=false;updateUnsaved();return true;}
+        function clearEditor(s=false){if(!s&&isDirty)saveDraft(true);editor.innerHTML="";getEl('doc-title').value="";getEl('doc-project').value="";currentDraftId=null;isDirty=false;updateUnsaved();if(!s)showToast("Limpio");}
+        function loadDraft(id){if(isDirty)saveDraft(true);const d=drafts.find(x=>x.id===id);if(d&&!d.deletedAt){currentDraftId=d.id;getEl('doc-title').value=d.title;editor.innerHTML=d.text;getEl('doc-project').value=d.project;getEl('doc-type').value=d.type;switchView('editor');showToast("Cargado");}}
+        
+        function copyToClipboard(){const r=document.createRange();r.selectNode(editor);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();showToast("Copiado");}
+        function getCleanText(html){const t=document.createElement("div");t.innerHTML=html.replace(/<br>/g,'\n').replace(/<\/p>/g,'\n\n');return t.innerText||t.textContent||"";}
+        function downloadCurrentTxt(){ downloadTxt(); } 
+        function downloadTxt(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([getCleanText(editor.innerHTML)],{type:'text/plain'}));a.download="Borrador.txt";a.click();}
+        
+        // --- HOME & STATS ---
+        function renderHome(){ renderGenreButtons(); fetchInspiration(); renderStats(); }
+        function renderGenreButtons(){ /* REMOVED */ }
+        async function fetchInspiration(f=false){ fetchBookExcerpt(); }
+        
+        function renderStats(){
+            const a=drafts.filter(d=>!d.deletedAt), t=drafts.filter(d=>d.deletedAt), w=a.reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0);
+            if(getEl('stat-total-docs')) getEl('stat-total-docs').textContent=a.length;
+            if(getEl('stat-total-words')) getEl('stat-total-words').textContent=w.toLocaleString();
+            if(getEl('stat-total-trash')) getEl('stat-total-trash').textContent=t.length;
+            const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))]; const c = getEl('projects-progress-container');
+            if(c) c.innerHTML = ps.length===0 ? `<div class="text-center text-sm text-stone-400 col-span-2">Sin proyectos.</div>` : ps.map(p=>{ const pw=a.filter(d=>(d.project||"Sin Proyecto")===p).reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0), pct=Math.min(100,Math.round((pw/50000)*100)); return `<div class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-all"><div class="flex justify-between mb-3"><span class="font-bold text-lg truncate">${p}</span><span class="text-xs bg-stone-100 px-2 py-1 rounded-full font-mono">${pw}/50k</span></div><div class="w-full bg-stone-100 h-3 rounded-full"><div class="bg-amber-500 h-3 rounded-full" style="width:${pct}%"></div></div><div class="text-xs text-stone-400 mt-2 text-right">${pct}% Completado</div></div>`; }).join('');
+        }
+        
+        // --- LIBRARY MANAGEMENT ---
+        function moveToTrash(id){const d=drafts.find(x=>x.id===id);if(d){d.deletedAt=Date.now();localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();if(currentDraftId===id)clearEditor(true);showToast("Papelera");}}
+        function deleteForever(id){drafts=drafts.filter(x=>x.id!==id);localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();renderLibraryContent();showToast("Borrado");}
+        function restoreDraft(id){const d=drafts.find(x=>x.id===id);if(d){d.deletedAt=null;localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();renderLibraryContent();showToast("Restaurado");}}
+        
+        function selectTrash(){isTrashView=true;selectedProject=null;renderLibraryContent();}
+        function selectProject(p){selectedProject=p;isTrashView=false;renderLibraryContent();}
+        
+        function updateProjectList(){
+            const a=drafts.filter(d=>!d.deletedAt),t=drafts.filter(d=>d.deletedAt);
+            if(getEl('trash-count'))getEl('trash-count').textContent=t.length;
+            const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))].sort();
+            const listEl=getEl('project-list');
+            const dl=getEl('projects-datalist');
+            if(dl)dl.innerHTML=ps.map(p=>`<option value="${p}">`).join('');
+            
+            if(listEl) {
+                if(ps.length===0){listEl.innerHTML=`<div class="text-white/50 text-xs text-center italic mt-10">Estantería vacía</div>`; return;}
+                const colors = ['#8d6e63', '#5d4037', '#4e342e', '#3e2723', '#795548', '#a1887f', '#2e3b55', '#37474f', '#455a64'];
+                listEl.innerHTML = ps.map((p, idx)=>{
+                    const color = colors[idx % colors.length];
+                    const safeP = p.replace(/'/g,"\\'");
+                    return `<div onclick="selectProject('${safeP}')" class="book-spine h-32 w-14 rounded-sm flex items-center justify-center text-white/90 shadow-lg border-l-4 border-white/10 hover:scale-105 transition-transform relative" style="background: linear-gradient(to right, ${color}, #1a1a1a); writing-mode: vertical-rl; transform: none;">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-white/20"></div>
+                        <span class="book-title text-xs tracking-wider font-bold" style="writing-mode: vertical-rl; text-orientation: mixed;">${p}</span>
+                    </div>`;
+                }).join('');
+            }
+        }
+        
+        function renderLibraryContent(){
+            const c=getEl('library-content');
+            if(isTrashView){const dd=drafts.filter(d=>d.deletedAt);c.innerHTML=dd.map(d=>`<div class="bg-red-50 p-4 mb-2 rounded flex justify-between"><span>${d.title}</span><div><button onclick="restoreDraft(${d.id})" class="mr-2">Recuperar</button><button onclick="deleteForever(${d.id})">X</button></div></div>`).join('');return;}
+            if(!selectedProject){c.innerHTML=`<div class="flex flex-col items-center justify-center h-full text-stone-400 pt-20"><i data-lucide="library" class="w-16 h-16 mb-4 opacity-20"></i><p class="text-lg">Selecciona un libro de la estantería</p></div>`;return;}
+            const ds=drafts.filter(d=>(d.project||"Sin Proyecto")===selectedProject&&!d.deletedAt);
+            
+            c.innerHTML=`<div class="mb-6 border-b border-stone-300 pb-4 flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h2 class="text-4xl font-display font-bold text-stone-800">${selectedProject}</h2>
+                    <p class="text-stone-500 mt-1">${ds.length} documentos</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="createNewInProject('${selectedProject.replace(/'/g,"\\'")}')" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-stone-700">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nuevo Escrito
+                    </button>
+                </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">` + 
+            ds.map(d => `
+                <div onclick="loadDraft(${d.id})" class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 cursor-pointer hover:shadow-lg hover:border-amber-300 transition-all group relative">
+                    <h4 class="font-bold text-stone-800 mb-2 text-lg group-hover:text-amber-700">${d.title}</h4>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2 py-0.5 bg-stone-100 text-stone-500 text-[10px] rounded-full uppercase tracking-wider font-bold">${d.type}</span>
+                        <span class="text-xs text-stone-400">${d.date}</span>
+                    </div>
+                    <p class="text-sm font-serif text-stone-600 line-clamp-4 leading-relaxed">${getCleanText(d.preview)}</p>
+                    
+                    <div class="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <button onclick="loadDraft(${d.id}); event.stopPropagation();" class="text-amber-500 hover:text-amber-700 p-1" title="Editar"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button onclick="event.stopPropagation();moveToTrash(${d.id})" class="text-red-300 hover:text-red-500 p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                </div>`).join('') + `</div>`;
+            lucide.createIcons();
+        }
+        
+        function handleFileUpload(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async function(e){let c="";const t=f.name.split('.').slice(0,-1).join('.');if(f.name.endsWith('.docx')){const ab=e.target.result;const res=await mammoth.convertToHtml({arrayBuffer:ab});c=res.value;}else{c=e.target.result;}const nd={id:Date.now(),title:t,text:c,project:"Importados",type:"Borrador",date:new Date().toLocaleDateString(),preview:getCleanText(c).substring(0,100),deletedAt:null};drafts.unshift(nd);localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();if(confirm(`"${f.name}" importado. ¿Editar?`))loadDraft(nd.id);else showToast("Importado");};if(f.name.endsWith('.docx')){r.readAsArrayBuffer(f);}else{r.readAsText(f);}i.value='';}
+        
+        function exportBackup() { const d = { user: currentUser, drafts: drafts, date: new Date() }; const b = new Blob([JSON.stringify(d)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "backup.json"; a.click(); }
+        function importBackup(i) { const f = i.files[0]; if(!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if(d.drafts){ drafts = d.drafts; saveAndRefresh(); location.reload(); } } catch(x){} }; r.readAsText(f); }
+
+        // --- INDEXED DB FOR READER LIBRARY ---
+        function initDB() {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (e) => {
+                const d = e.target.result;
+                if (!d.objectStoreNames.contains(STORE_NAME)) {
+                    d.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+            request.onsuccess = (e) => {
+                db = e.target.result;
+                console.log("DB Ready");
+            };
+            request.onerror = (e) => console.error("DB Error", e);
+        }
+
+        function saveBookToLibrary(file) {
+            if(!db) return alert("Base de datos no lista.");
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const blob = new Blob([e.target.result], { type: file.type });
+                const bookData = {
+                    id: Date.now(),
+                    name: file.name,
+                    type: file.type,
+                    data: blob,
+                    date: new Date().toLocaleDateString(),
+                    progress: null // Initialize progress
+                };
+                const tx = db.transaction([STORE_NAME], 'readwrite');
+                tx.objectStore(STORE_NAME).add(bookData);
+                tx.oncomplete = () => {
+                    showToast("Libro guardado en biblioteca");
+                    refreshReaderLibrary();
+                };
+                tx.onerror = () => alert("Error al guardar libro (posiblemente muy grande).");
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function updateBookProgress(id, progress) {
+            if(!db || !id) return;
+            const tx = db.transaction([STORE_NAME], 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.get(id);
+            
+            request.onsuccess = () => {
+                const data = request.result;
+                if(data) {
+                    data.progress = progress;
+                    store.put(data);
+                }
+            };
+        }
+
+        function refreshReaderLibrary() {
+            if(!db) return;
+            const grid = getEl('reader-library-grid');
+            if(!grid) return;
+            
+            const tx = db.transaction([STORE_NAME], 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            const request = store.getAll();
+            
+            request.onsuccess = () => {
+                const books = request.result;
+                if(books.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>`;
+                } else {
+                    grid.innerHTML = books.map(book => {
+                        const isPdf = book.type.includes('pdf');
+                        const icon = isPdf ? 'file-text' : 'book-open';
+                        const colorClass = isPdf ? 'bg-red-50 text-red-600 border-red-200' : 'bg-amber-50 text-amber-600 border-amber-200';
+                        // Show progress if exists
+                        let progressLabel = "";
+                        if(book.progress) {
+                            progressLabel = isPdf ? `Pág ${book.progress}` : `Continuar`;
+                        }
+                        
+                        return `
+                        <div onclick="loadBookFromLibrary(${book.id})" class="group cursor-pointer flex flex-col gap-2">
+                            <div class="aspect-[2/3] ${colorClass} border rounded-lg shadow-sm flex flex-col items-center justify-center p-4 transition-transform group-hover:-translate-y-1 group-hover:shadow-md relative">
+                                <i data-lucide="${icon}" class="w-12 h-12 mb-2 opacity-50"></i>
+                                <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">${isPdf ? 'PDF' : 'EPUB'}</span>
+                                ${book.progress ? `<div class="absolute bottom-2 right-2 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm text-stone-600">${progressLabel}</div>` : ''}
+                                <button onclick="event.stopPropagation(); deleteBookFromLibrary(${book.id})" class="absolute top-2 right-2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                            </div>
+                            <h4 class="text-xs font-bold text-stone-700 truncate text-center px-1">${book.name}</h4>
+                            <p class="text-[10px] text-stone-400 text-center">${book.date}</p>
+                        </div>`;
+                    }).join('');
+                    lucide.createIcons();
+                }
+            };
+        }
+
+        function deleteBookFromLibrary(id) {
+            if(!confirm("¿Eliminar este libro de la biblioteca?")) return;
+            const tx = db.transaction([STORE_NAME], 'readwrite');
+            tx.objectStore(STORE_NAME).delete(id);
+            tx.oncomplete = () => {
+                showToast("Libro eliminado");
+                refreshReaderLibrary();
+            };
+        }
+
+        function loadBookFromLibrary(id) {
+            const tx = db.transaction([STORE_NAME], 'readonly');
+            const request = tx.objectStore(STORE_NAME).get(id);
+            request.onsuccess = () => {
+                const book = request.result;
+                if(book) {
+                    currentReaderBookId = book.id; // Set current book ID for tracking
+                    
+                    // Handle File Creation
+                    const file = new File([book.data], book.name, { type: book.type });
+                    loadBookFile(file, book.progress); // Pass saved progress
+                }
+            };
+        }
+
+        function handleBookImport(input) {
+            const file = input.files[0];
+            if(!file) return;
+            currentReaderBookId = null; // New import, no ID yet unless saved
+            
+            if(confirm(`¿Quieres guardar "${file.name}" en tu biblioteca permanente?`)) {
+                saveBookToLibrary(file);
+                // We can't get the ID immediately easily without complex logic, 
+                // so we load it as a temp file first. Next time they open from library it will track.
+                loadBookFile(file);
+            } else {
+                loadBookFile(file);
+            }
+            input.value = '';
+        }
+
+        // UPDATED: LOAD BOOK WITH FALLBACK AND PROGRESS
+        function loadBookFile(file, savedProgress = null) {
+            // UI Switch
+            getEl('reader-library-view').classList.add('hidden');
+            getEl('reader-content-view').classList.remove('hidden');
+            getEl('reader-controls').classList.remove('opacity-0'); 
+            getEl('reader-nav-controls').classList.remove('hidden');
+            getEl('reader-nav-controls').classList.add('flex');
+
+            const reader = new FileReader();
+            const epubViewer = document.getElementById('epub-viewer');
+            const pdfCanvas = document.getElementById('pdf-render');
+            const pageInfo = document.getElementById('reader-page-info');
+
+            pageInfo.textContent = "Cargando...";
+
+            // --- EPUB HANDLER ---
+            if (file.name.endsWith('.epub') || file.type.includes('epub')) {
+                epubViewer.classList.remove('hidden');
+                pdfCanvas.classList.add('hidden');
+                
+                if (bookRendition) {
+                    try { bookRendition.destroy(); } catch(e){}
+                }
+                
+                // Use FileReader for robustness
+                const arrayBufferReader = new FileReader();
+                arrayBufferReader.onload = function(e) {
+                    const bookData = e.target.result;
+                    
+                    try {
+                         if (typeof window.ePub === 'undefined') {
+                            throw new Error("Librería EPUB no cargada.");
+                        }
+
+                        const book = window.ePub(bookData);
+                        bookRendition = book.renderTo("epub-viewer", {
+                            width: "100%",
+                            height: "100%",
+                            flow: "paginated", 
+                            manager: "default",
+                        });
+
+                        // Display at saved progress or start
+                        const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display();
+
+                        displayPromise.then(() => {
+                            console.log("EPUB Rendered");
+                        }).catch(err => {
+                            console.error("EPUB Render Error", err);
+                            // Trigger Fallback
+                            fallbackEpubToPdf(file);
+                        });
+
+                        bookRendition.on("relocated", function(location){
+                            if(location && location.start) {
+                                // Save Progress
+                                if(currentReaderBookId) {
+                                    updateBookProgress(currentReaderBookId, location.start.cfi);
+                                }
+                                
+                                try {
+                                    const percent = location.start.percentage;
+                                    if(percent !== undefined) {
+                                        const p = Math.round(percent * 100);
+                                        pageInfo.textContent = `${p}%`;
+                                        getEl('reader-progress-bar').style.width = `${p}%`;
+                                    } else {
+                                     pageInfo.textContent = `Loc ${location.start.displayed.page}`;
+                                }
+                            } catch(e) {}
+                            }
+                        });
+                        
+                        // Restore theme
+                        const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light';
+                        setReaderTheme(currentTheme);
+
+                    } catch(e) {
+                        console.error("EPUB Init Error", e);
+                        fallbackEpubToPdf(file);
+                    }
+                };
+                arrayBufferReader.readAsArrayBuffer(file);
+
+            // --- PDF HANDLER ---
+            } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) {
+                if (typeof window.pdfjsLib === 'undefined') {
+                     alert("Librería PDF no cargada");
+                     return;
+                }
+                
+                epubViewer.classList.add('hidden');
+                pdfCanvas.classList.remove('hidden');
+                
+                reader.readAsArrayBuffer(file);
+                reader.onload = async function(e) {
+                    try {
+                        const typedarray = new Uint8Array(e.target.result);
+                        pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise;
+                        // Load saved page or 1
+                        renderPdfPage(savedProgress || 1);
+                    } catch(err) {
+                        alert("Error al leer PDF: " + err.message);
+                    }
+                }
+            }
+        }
+
+        // --- FALLBACK: EPUB TO PDF (TEXT EXTRACTION) ---
+        function fallbackEpubToPdf(file) {
+            if(!confirm("El visor de EPUB ha fallado. ¿Intentar convertir el contenido a un formato legible (PDF básico)?")) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const zip = new JSZip();
+                zip.loadAsync(e.target.result).then(function(contents) {
+                    let fullText = "";
+                    const promises = [];
+                    
+                    // Extract text from all HTML/XHTML files
+                    Object.keys(contents.files).forEach(function(filename) {
+                        if (filename.endsWith(".html") || filename.endsWith(".xhtml")) {
+                            promises.push(
+                                zip.file(filename).async("string").then(function(content) {
+                                    // Simple HTML tag strip
+                                    const temp = document.createElement("div");
+                                    temp.innerHTML = content;
+                                    fullText += temp.innerText + "\n\n";
+                                })
+                            );
+                        }
+                    });
+
+                    Promise.all(promises).then(function() {
+                        if(!fullText.trim()) {
+                            alert("No se pudo extraer texto del EPUB.");
+                            return;
+                        }
+                        
+                        // Generate PDF using jsPDF
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+                        doc.setFont("times", "normal");
+                        doc.setFontSize(12);
+                        
+                        const splitText = doc.splitTextToSize(fullText, 180);
+                        let pageHeight = doc.internal.pageSize.height;
+                        let y = 15;
+                        
+                        // Simple pagination
+                        for (let i = 0; i < splitText.length; i++) {
+                            if (y > pageHeight - 15) {
+                                doc.addPage();
+                                y = 15;
+                            }
+                            doc.text(splitText[i], 15, y);
+                            y += 7;
+                        }
+
+                        // Output as blob URL and load
+                        const pdfBlob = doc.output('blob');
+                        const pdfFile = new File([pdfBlob], file.name.replace('.epub', '.pdf'), { type: 'application/pdf' });
+                        
+                        showToast("Conversión exitosa");
+                        loadBookFile(pdfFile); // Reload as PDF
+                    });
+                }).catch(err => {
+                    console.error(err);
+                    alert("Error crítico: El archivo está dañado y no se puede leer ni convertir.");
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function renderPdfPage(num) {
+            if (!pdfDoc) return;
+            // Save progress if valid book ID
+            if(currentReaderBookId) {
+                updateBookProgress(currentReaderBookId, num);
+            }
+
+            readerPage = num;
+            const pageInfo = document.getElementById('reader-page-info');
+            
+            pdfDoc.getPage(num).then(page => {
+                const canvas = document.getElementById('pdf-render');
+                const ctx = canvas.getContext('2d');
+                
+                // FIX: Get width from the correct parent view, not the missing 'reader-container'
+                const parentView = document.getElementById('reader-content-view');
+                const containerWidth = parentView ? parentView.clientWidth : window.innerWidth;
+                
+                const unscaledViewport = page.getViewport({scale: 1});
+                const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); // Max scale 1.5, fit width
+                
+                const viewport = page.getViewport({scale: scale});
+
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                };
+                page.render(renderContext);
+                
+                pageInfo.textContent = `${num} / ${pdfDoc.numPages}`;
+                const pct = (num / pdfDoc.numPages) * 100;
+                getEl('reader-progress-bar').style.width = `${pct}%`;
+            });
+        }
+
+        function readerPrevPage() {
+            if (bookRendition) bookRendition.prev();
+            if (pdfDoc && readerPage > 1) renderPdfPage(readerPage - 1);
+        }
+
+        function readerNextPage() {
+            if (bookRendition) bookRendition.next();
+            if (pdfDoc && readerPage < pdfDoc.numPages) renderPdfPage(readerPage + 1);
+        }
+        
+        function closeBookAndShowLibrary() {
+            getEl('reader-content-view').classList.add('hidden');
+            getEl('reader-library-view').classList.remove('hidden');
+            getEl('reader-nav-controls').classList.add('hidden');
+            getEl('reader-nav-controls').classList.remove('flex');
+            refreshReaderLibrary();
+        }
+
+        function openPreview(id) { const d = drafts.find(x => x.id === id); if(!d) return; currentDraftId = id; getEl('preview-title').textContent = d.title; getEl('preview-meta').textContent = `${d.project} • ${d.type}`; getEl('preview-body').innerHTML = d.text; getEl('preview-modal').classList.remove('hidden'); }
+        function closePreview() { getEl('preview-modal').classList.add('hidden'); }
+        function editFromPreview() { closePreview(); loadDraft(currentDraftId); }
+        
+        // TALLER CREATIVO
+        function openTool(type) {
+            currentToolType = type;
+            const titles = { 'char': 'Generador de Personajes', 'names': 'Bautizador de Mundos', 'plot': 'Giros de Trama' };
+            const placeholders = { 'char': 'Ej: Un detective cansado en el año 2050...', 'names': 'Ej: Ciudad élfica subterránea...', 'plot': 'Ej: Una boda real sale mal...' };
+            getEl('tool-title').innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> ${titles[type]}`;
+            getEl('tool-input').placeholder = placeholders[type];
+            getEl('tool-input').value = "";
+            getEl('tool-result-container').classList.add('hidden');
+            getEl('tool-modal').classList.remove('hidden');
+        }
+        function closeToolModal() { getEl('tool-modal').classList.add('hidden'); }
+        
+        async function runTool() {
+            const input = getEl('tool-input').value.trim();
+            if(!input) return alert("Escribe una descripción.");
+            if(!localStorage.getItem('scriptorium_api_key')) return alert("Configura la API Key.");
+            
+            getEl('tool-loading').classList.remove('hidden');
+            getEl('tool-result-container').classList.add('hidden');
+            
+            let prompt = "";
+            if(currentToolType === 'char') prompt = `Genera perfil personaje detallado (Nombre, Rol, Rasgos, Secreto) para: "${input}". Formato Markdown.`;
+            else if(currentToolType === 'names') prompt = `Genera 10 nombres creativos y únicos para: "${input}". Formato lista.`;
+            else if(currentToolType === 'plot') prompt = `Genera 3 giros de trama sorprendentes para: "${input}". Formato lista.`;
+
+            const result = await callGemini(prompt);
+            getEl('tool-loading').classList.add('hidden');
+            
+            if(result) {
+                getEl('tool-output').innerHTML = marked.parse(result);
+                getEl('tool-result-container').classList.remove('hidden');
+            } else { alert("Error al generar."); }
+        }
+        function copyToolResult() { 
+            const text = getEl('tool-output').innerText;
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            showToast("Copiado");
+        }
+        function saveToolAsNote() {
+            const content = getEl('tool-output').innerText;
+            const typeMap = { 'char': 'Ficha de Personaje', 'names': 'Creación de Mundo', 'plot': 'Idea/Nota' };
+            const newDraft = { id: Date.now(), title: `Nota ${typeMap[currentToolType]}`, text: content.replace(/\n/g, '<br>'), project: "Notas Taller", type: typeMap[currentToolType], date: new Date().toLocaleDateString(), preview: content.substring(0,100), deletedAt: null };
+            drafts.unshift(newDraft); localStorage.setItem('scriptorium_drafts', JSON.stringify(drafts));
+            closeToolModal(); showToast("Guardado en Biblioteca");
+        }
+        
+        // READER MODE FUNCTIONS
+        function openReaderMode() {
+            const readerDiv = document.getElementById('view-reader');
+            readerDiv.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent body scroll
+            document.addEventListener('keydown', handleReaderKeydown);
+            readerDiv.focus();
+            
+            // Ensure library view is default on open
+            if(getEl('reader-content-view').classList.contains('hidden')) {
+                 refreshReaderLibrary();
+            }
+        }
+
+        function closeReaderMode() {
+            document.getElementById('view-reader').classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restore scroll
+            document.removeEventListener('keydown', handleReaderKeydown);
+        }
+
+        function handleReaderKeydown(e) {
+            if (document.getElementById('view-reader').classList.contains('hidden')) return;
+            if (e.key === 'ArrowLeft') readerPrevPage();
+            if (e.key === 'ArrowRight') readerNextPage();
+            if (e.key === 'Escape') closeReaderMode();
+        }
+
+        // --- ANALYSIS PANEL LOGIC ---
+        function toggleAnalysisPanel() {
+            const panel = getEl('analysis-panel');
+            if(panel.classList.contains('translate-x-full')) {
+                // Open
+                panel.classList.remove('translate-x-full');
+                isPanelOpen = true;
+                if(editor.innerText.trim().length > 0) {
+                    runActiveAnalysis();
+                }
+            } else {
+                // Close
+                panel.classList.add('translate-x-full');
+                isPanelOpen = false;
+            }
+        }
+
+        function runActiveAnalysis(textOverride = null) {
+            const panel = getEl('analysis-panel');
+            if(panel.classList.contains('translate-x-full')) {
+                panel.classList.remove('translate-x-full');
+                isPanelOpen = true;
+            }
+            
+            if (activeAnalysisTab === 'manual') {
+                analyzeManual(textOverride, textOverride ? "Selección" : "Documento");
+            } else {
+                triggerFullAnalysis(textOverride);
+            }
+        }
+
+        function switchAnalysisTab(tab) {
+            activeAnalysisTab = tab;
+            const btnManual = getEl('tab-manual');
+            const btnAi = getEl('tab-ai');
+            
+            if (tab === 'manual') {
+                btnManual.classList.remove('text-stone-400', 'border-transparent');
+                btnManual.classList.add('text-stone-600', 'border-stone-800', 'bg-stone-50');
+                btnAi.classList.add('text-stone-400', 'border-transparent');
+                btnAi.classList.remove('text-stone-600', 'border-stone-800', 'bg-stone-50');
+                analyzeManual();
+            } else {
+                btnAi.classList.remove('text-stone-400', 'border-transparent');
+                btnAi.classList.add('text-stone-600', 'border-stone-800', 'bg-stone-50');
+                btnManual.classList.add('text-stone-400', 'border-transparent');
+                btnManual.classList.remove('text-stone-600', 'border-stone-800', 'bg-stone-50');
+                
+                if(getEl('ai-loading-overlay').classList.contains('hidden')) {
+                    getEl('issues-container').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-stone-400 py-10 italic text-xs text-center px-4 fade-in">
+                        <div class="bg-blue-50 p-3 rounded-full shadow-sm mb-3"><i data-lucide="sparkles" class="w-6 h-6 text-blue-400"></i></div>
+                        <p class="font-medium text-stone-500 mb-1">Corrector IA</p>
+                        <p class="opacity-60 mb-4">Requiere API Key.</p>
+                        <button onclick="runDocumentAnalysis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-sm text-xs font-bold transition-all">Ejecutar Corrector</button>
+                    </div>`;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function triggerFullAnalysis(textOverride = null){
+            if(activeAnalysisTab !== 'ai') switchAnalysisTab('ai');
+            const t = textOverride || editor.innerText.trim();
+            if(!localStorage.getItem('scriptorium_api_key')) {
+                 getEl('issues-container').innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-full text-stone-400 py-10 italic text-xs text-center px-4 fade-in">
+                        <div class="bg-red-50 p-3 rounded-full shadow-sm mb-3 text-red-400"><i data-lucide="key" class="w-6 h-6"></i></div>
+                        <p class="font-medium text-stone-600 mb-1">Falta API Key</p>
+                        <button onclick="toggleSettings()" class="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-full shadow-sm text-xs font-bold transition-all">Configurar</button>
+                    </div>`;
+                    lucide.createIcons();
+                return;
+            }
+            if(t.length<10) return showToast("Escribe más texto");
+            
+            getEl('ai-loading-overlay').classList.remove('hidden');
+            
+            const prompt = `Actúa como editor literario. Analiza este texto: "${t}".
+            Identifica errores gramaticales, ortográficos o de estilo importantes.
+            Devuelve un JSON con formato:
+            {
+                "summary": "Breve resumen",
+                "issues": [
+                    { "type": "error", "title": "Título", "msg": "Mensaje", "original": "Texto original", "fix": "Corrección" }
+                ]
+            }`;
+
+            try {
+                const r = await callGemini(prompt, {
+                    type: "OBJECT",
+                    properties: {
+                        summary:{type:"STRING"},
+                        issues:{ type:"ARRAY", items:{ type:"OBJECT", properties:{ type:{type:"STRING"}, title:{type:"STRING"}, msg:{type:"STRING"}, tip:{type:"STRING"}, original:{type:"STRING"}, fix:{type:"STRING"} } } }
+                    }
+                }); 
+                if(r) renderAIResults(r); else analyzeText(); 
+            } finally { getEl('ai-loading-overlay').classList.add('hidden'); }
+        }
+
+        function renderAIResults(d){
+            if(getEl('stat-issues')) getEl('stat-issues').textContent = d.summary || "Listo";
+            if(!d.issues || d.issues.length === 0) {
+                 getEl('issues-container').innerHTML = `<div class="text-center p-6 text-emerald-600 bg-emerald-50 rounded border border-emerald-100"><i data-lucide="check-circle" class="w-8 h-8 mx-auto mb-2"></i><p class="font-bold">¡Todo correcto!</p></div>`;
+                 lucide.createIcons();
+                 return;
+            }
+            getEl('issues-container').innerHTML = d.issues.map(i => createIssueCard(i)).join('');
+            lucide.createIcons();
+        }
+
+        function createIssueCard(i){ 
+            const s = { error:'bg-red-50 text-red-900 border-red-200', warning:'bg-amber-50 text-amber-900 border-amber-200', tip:'bg-blue-50 text-blue-900 border-blue-200' }[i.type]||'bg-stone-100'; 
+            const fixBtn = (i.original && i.fix) ? `<button onclick="applyCorrection('${i.original.replace(/'/g,"\\'")}','${i.fix.replace(/'/g,"\\'")}')" class="mt-2 w-full bg-white border border-stone-300 hover:bg-stone-100 text-xs font-bold py-1.5 rounded transition-colors flex items-center justify-center gap-1 shadow-sm"><i data-lucide="check" class="w-3 h-3 text-green-600"></i> Aplicar</button>` : ''; 
+            return `<div class="p-3 rounded border ${s} mb-3 shadow-sm fade-in relative group"><div class="font-bold text-xs uppercase mb-1 flex justify-between"><span>${i.title}</span></div><p class="text-sm leading-snug opacity-90">${i.msg}</p>${fixBtn}</div>`; 
+        }
+        
+        function analyzeText(){ getEl('issues-container').innerHTML=`<div class="text-center p-4 bg-red-50 text-red-800 rounded border border-red-100">Error en análisis.</div>`; }
+        
+        function analyzeManual(textToAnalyze = null, label = "Documento Completo") {
+            const text = textToAnalyze || editor.innerText;
+            if(!text.trim()) {
+                getEl('issues-container').innerHTML = `<div class="text-center text-stone-400 mt-10 text-xs italic">Escribe algo para analizar.</div>`;
+                return;
+            }
+            const words = text.toLowerCase().match(/\b[\wáéíóúüñ]+\b/g) || [];
+            const sentences = text.split(/[.!?]+/).filter(x => x.trim().length > 0);
+            const adverbs = words.filter(w => w.endsWith('mente'));
+            const freq = {};
+            words.forEach(w => { if(w.length > 3) freq[w] = (freq[w] || 0) + 1; }); 
+            const sortedFreq = Object.entries(freq).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const longSentences = sentences.filter(s => s.split(/\s+/).length > 30);
+
+            let html = `<div class="space-y-4 fade-in pb-4">`;
+            html += `<div class="flex justify-between items-center pb-2 border-b border-stone-200 mb-2"><span class="text-[10px] font-bold uppercase text-stone-400 tracking-wider">Analizando: ${label}</span><span class="text-[10px] bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded border border-stone-200">Local</span></div>`;
+            html += `<div class="bg-white p-3 rounded-lg border border-stone-200 shadow-sm"><h4 class="font-bold text-stone-700 text-xs uppercase mb-2 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-3 h-3 text-stone-400"></i> Métricas</h4><div class="grid grid-cols-2 gap-y-2 gap-x-4 text-xs"><div class="flex justify-between border-b border-stone-100 pb-1"><span>Palabras</span> <b class="text-stone-800">${words.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Oraciones</span> <b class="text-stone-800">${sentences.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Adverbios</span> <b class="${adverbs.length > 5 ? 'text-red-500' : 'text-emerald-600'}">${adverbs.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Largas</span> <b class="${longSentences.length > 0 ? 'text-amber-500' : 'text-stone-700'}">${longSentences.length}</b></div></div></div>`;
+
+            if(sortedFreq.length > 0) {
+                html += `<div class="bg-white p-3 rounded-lg border border-stone-200 shadow-sm"><h4 class="font-bold text-stone-700 text-xs uppercase mb-2 flex items-center gap-2"><i data-lucide="repeat" class="w-3 h-3 text-stone-400"></i> Frecuencia</h4><div class="flex flex-wrap gap-1.5">${sortedFreq.map(([w, c]) => `<span class="bg-stone-50 px-2 py-1 rounded text-xs text-stone-600 border border-stone-200 flex items-center gap-1">${w} <span class="bg-stone-200 text-stone-600 px-1 rounded-[2px] text-[9px] font-bold">${c}</span></span>`).join('')}</div></div>`;
+            }
+            if(adverbs.length > 0) {
+                html += `<div class="bg-white p-3 rounded-lg border border-stone-200 shadow-sm"><h4 class="font-bold text-stone-700 text-xs uppercase mb-2 flex items-center gap-2"><i data-lucide="alert-triangle" class="w-3 h-3 text-amber-500"></i> Adverbios (-mente)</h4><div class="text-xs text-amber-800 flex flex-wrap gap-1">${adverbs.map(a => `<span class="bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">${a}</span>`).join('')}</div></div>`;
+            }
+            html += `</div>`;
+            getEl('issues-container').innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function runSelectionAnalysis() {
+            if (!currentSelection || !currentSelection.trim()) return showToast("Selecciona texto primero");
+            hideSelectionMenu();
+            runActiveAnalysis(currentSelection);
+            showToast("Analizando selección...");
+        }
+
+        function runDocumentAnalysis() {
+            const text = editor.innerText;
+            if(!text || text.trim().length === 0) { toggleAnalysisPanel(); return showToast("El documento está vacío"); }
+            runActiveAnalysis(); 
+        }
+
+        function suggestContinuationCheck() {
+            hideSelectionMenu();
+            if(localStorage.getItem('scriptorium_api_key')) suggestContinuationWithAI();
+            else { switchAnalysisTab('ai'); toggleAnalysisPanel(); }
+        }
+
+        // --- NEW AI FUNCTIONS (IMPLEMENTED) ---
+        async function callGemini(prompt, schema = null) {
+            const apiKey = localStorage.getItem('scriptorium_api_key');
+            if(!apiKey) return null;
+            
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
+            };
+            if(schema) {
+                payload.generationConfig = { responseMimeType: "application/json", responseSchema: schema };
+            }
+
+            try {
+                currentController = new AbortController();
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: currentController.signal
+                });
+                
+                if(!response.ok) throw new Error("API Error");
+                
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if(schema && text) return JSON.parse(text);
+                return text;
+            } catch(e) {
+                if(e.name !== 'AbortError') console.error(e);
+                return null;
+            } finally {
+                currentController = null;
+            }
+        }
+
+        async function suggestContinuationWithAI() {
+            if(!currentSelection) return;
+            const prompt = `Continúa el siguiente texto literario manteniendo el estilo (máx 50 palabras): "${currentSelection}"`;
+            
+            showToast("Generando ideas...");
+            const result = await callGemini(prompt);
+            
+            if(result) {
+                const span = document.createElement("span");
+                span.className = "bg-purple-100 text-purple-800 border-b-2 border-purple-300";
+                span.innerText = " " + result;
+                
+                // Append securely
+                editor.focus();
+                // Simple append for demo (robust caret insertion is complex)
+                const range = window.getSelection().getRangeAt(0);
+                range.collapse(false);
+                range.insertNode(span);
+            } else {
+                showToast("Error al generar");
+            }
+        }
+
+        function applyCorrection(original, fix) {
+            // Safe replace in innerHTML to preserve format around it
+            const content = editor.innerHTML;
+            if(content.includes(original)) {
+                editor.innerHTML = content.replace(original, `<span class="bg-green-100">${fix}</span>`);
+                showToast("Corregido");
+                // Remove highlight after delay
+                setTimeout(() => {
+                    editor.innerHTML = editor.innerHTML.replace(/<span class="bg-green-100">(.*?)<\/span>/g, '$1');
+                    handleInput(); // Save state
+                }, 2000);
+            } else {
+                showToast("No se encontró el texto original");
+            }
+        }
+
+        async function sendMentorMessage() {
+            const inputEl = getEl('mentor-input');
+            const msg = inputEl.value.trim();
+            if(!msg) return;
+            
+            if(!localStorage.getItem('scriptorium_api_key')) return alert("Configura la API Key primero.");
+
+            // Add user message
+            const chatBox = getEl('mentor-messages');
+            chatBox.innerHTML += `<div class="mentor-bubble mentor-user shadow-sm animate-fade-in"><p>${msg}</p></div>`;
+            inputEl.value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Context
+            chatHistory.push({role: "user", parts: [{text: msg}]});
+            const contextText = editor.innerText.substring(0, 1000); // Send partial context
+            const sysPrompt = `Eres un editor literario experto. El usuario está escribiendo un texto. Contexto actual del borrador (primeras 1000 letras): "${contextText}". Responde de forma breve, útil y alentadora.`;
+
+            // Call API
+            const loadingId = Date.now();
+            chatBox.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm opacity-50"><p>...</p></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${localStorage.getItem('scriptorium_api_key')}`;
+            
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        contents: chatHistory,
+                        systemInstruction: { parts: [{ text: sysPrompt }] }
+                    })
+                });
+                const data = await response.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude procesar eso.";
+                
+                document.getElementById(`load-${loadingId}`).remove();
+                chatBox.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${marked.parse(reply)}</div>`;
+                chatHistory.push({role: "model", parts: [{text: reply}]});
+                
+            } catch(e) {
+                document.getElementById(`load-${loadingId}`).remove();
+                chatBox.innerHTML += `<div class="mentor-bubble mentor-ai bg-red-50 text-red-800"><p>Error de conexión.</p></div>`;
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+        
+        function abortGemini(){if(currentController){currentController.abort();currentController=null;}getEl('ai-loading-overlay').classList.add('hidden');showToast("Cancelado");}
+
+        // --- AUTO-REFRESH EXCERPTS ---
+        function startExcerptRotation() {
+            if(excerptInterval) clearInterval(excerptInterval);
+            fetchBookExcerpt(); 
+            excerptInterval = setInterval(() => {
+                if(!document.getElementById('view-home').classList.contains('hidden')){ fetchBookExcerpt(); }
+            }, 45000); 
+        }
+
+        async function fetchBookExcerpt() {
+            const container = getEl('excerpt-text');
+            if(!container) return; 
+            const mainContainer = getEl('excerpt-container');
+            mainContainer.style.opacity = '0';
+            
+            setTimeout(async () => {
+                const apiKey = localStorage.getItem('scriptorium_api_key');
+                let excerpt = null;
+                if (apiKey) {
+                    try {
+                        const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso de la literatura universal o latinoamericana. JSON: { "book": "...", "author": "...", "text": "..." }`;
+                        const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } });
+                        if (result) excerpt = result;
+                    } catch (e) {}
+                }
+                if (!excerpt) excerpt = FAMOUS_EXCERPTS[Math.floor(Math.random() * FAMOUS_EXCERPTS.length)];
+                if(getEl('excerpt-book')) getEl('excerpt-book').textContent = excerpt.book;
+                if(getEl('excerpt-author')) getEl('excerpt-author').textContent = `— ${excerpt.author}`;
+                if(getEl('excerpt-text')) getEl('excerpt-text').textContent = `"${excerpt.text}"`;
+                if(mainContainer) mainContainer.style.opacity = '1';
+            }, 300); 
+        }
+
+        function createNewInProject(p) {
+            clearEditor(true);
+            getEl('doc-project').value = p;
+            switchView('editor');
+        }
+
+        editor.addEventListener('input', handleInput); 
+        [titleInput, projectInput, typeInput].forEach(el => el.addEventListener('input', () => { isDirty=true; updateUnsaved(); })); 
+        editor.addEventListener('mouseup', handleSelection); 
+        editor.addEventListener('keyup', checkToolbarState);
+        document.addEventListener('mousedown', e=>{if(!selectionMenu.contains(e.target)&&e.target!==editor)hideSelectionMenu();});
+        
+        function handleSelection(e) { 
+            const s=window.getSelection(); const t=s.toString().trim(); 
+            if(t.length>3 && s.rangeCount > 0 && editor.contains(s.anchorNode)){ 
+                currentSelection=t; const r=s.getRangeAt(0).getBoundingClientRect(); 
+                showSelectionMenu(r.left + r.width/2, r.top - 40); 
+            } else hideSelectionMenu(); 
+        } 
+        function showSelectionMenu(x,y){
+            if(x>window.innerWidth-200)x=window.innerWidth-200; if(y<20)y=20;
+            selectionMenu.style.left=`${x}px`; selectionMenu.style.top=`${y}px`;
+            selectionMenu.classList.remove('hidden'); selectionMenu.style.display='flex';
+        } 
+        function hideSelectionMenu(){selectionMenu.classList.add('hidden');selectionMenu.style.display='none';}
+        
+        if (!currentUser) { currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light' }; initApp(); } else { initApp(); }
+    </script>
+</body>
+</html>
