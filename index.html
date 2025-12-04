@@ -462,7 +462,6 @@
         let currentToolType = null;
         let activeAnalysisTab = 'manual';
         let isPanelOpen = false;
-        let chatHistory = []; // Para el contexto del Mentor
 
         // Excerpts Data
         const FAMOUS_EXCERPTS = [
@@ -1034,10 +1033,7 @@
                 const canvas = document.getElementById('pdf-render');
                 const ctx = canvas.getContext('2d');
                 
-                // FIX: Get width from the correct parent view, not the missing 'reader-container'
-                const parentView = document.getElementById('reader-content-view');
-                const containerWidth = parentView ? parentView.clientWidth : window.innerWidth;
-                
+                const containerWidth = document.getElementById('reader-container').clientWidth;
                 const unscaledViewport = page.getViewport({scale: 1});
                 const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); // Max scale 1.5, fit width
                 
@@ -1324,130 +1320,6 @@
             hideSelectionMenu();
             if(localStorage.getItem('scriptorium_api_key')) suggestContinuationWithAI();
             else { switchAnalysisTab('ai'); toggleAnalysisPanel(); }
-        }
-
-        // --- NEW AI FUNCTIONS (IMPLEMENTED) ---
-        async function callGemini(prompt, schema = null) {
-            const apiKey = localStorage.getItem('scriptorium_api_key');
-            if(!apiKey) return null;
-            
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }]
-            };
-            if(schema) {
-                payload.generationConfig = { responseMimeType: "application/json", responseSchema: schema };
-            }
-
-            try {
-                currentController = new AbortController();
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: currentController.signal
-                });
-                
-                if(!response.ok) throw new Error("API Error");
-                
-                const data = await response.json();
-                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if(schema && text) return JSON.parse(text);
-                return text;
-            } catch(e) {
-                if(e.name !== 'AbortError') console.error(e);
-                return null;
-            } finally {
-                currentController = null;
-            }
-        }
-
-        async function suggestContinuationWithAI() {
-            if(!currentSelection) return;
-            const prompt = `Continúa el siguiente texto literario manteniendo el estilo (máx 50 palabras): "${currentSelection}"`;
-            
-            showToast("Generando ideas...");
-            const result = await callGemini(prompt);
-            
-            if(result) {
-                const span = document.createElement("span");
-                span.className = "bg-purple-100 text-purple-800 border-b-2 border-purple-300";
-                span.innerText = " " + result;
-                
-                // Append securely
-                editor.focus();
-                // Simple append for demo (robust caret insertion is complex)
-                const range = window.getSelection().getRangeAt(0);
-                range.collapse(false);
-                range.insertNode(span);
-            } else {
-                showToast("Error al generar");
-            }
-        }
-
-        function applyCorrection(original, fix) {
-            // Safe replace in innerHTML to preserve format around it
-            const content = editor.innerHTML;
-            if(content.includes(original)) {
-                editor.innerHTML = content.replace(original, `<span class="bg-green-100">${fix}</span>`);
-                showToast("Corregido");
-                // Remove highlight after delay
-                setTimeout(() => {
-                    editor.innerHTML = editor.innerHTML.replace(/<span class="bg-green-100">(.*?)<\/span>/g, '$1');
-                    handleInput(); // Save state
-                }, 2000);
-            } else {
-                showToast("No se encontró el texto original");
-            }
-        }
-
-        async function sendMentorMessage() {
-            const inputEl = getEl('mentor-input');
-            const msg = inputEl.value.trim();
-            if(!msg) return;
-            
-            if(!localStorage.getItem('scriptorium_api_key')) return alert("Configura la API Key primero.");
-
-            // Add user message
-            const chatBox = getEl('mentor-messages');
-            chatBox.innerHTML += `<div class="mentor-bubble mentor-user shadow-sm animate-fade-in"><p>${msg}</p></div>`;
-            inputEl.value = "";
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            // Context
-            chatHistory.push({role: "user", parts: [{text: msg}]});
-            const contextText = editor.innerText.substring(0, 1000); // Send partial context
-            const sysPrompt = `Eres un editor literario experto. El usuario está escribiendo un texto. Contexto actual del borrador (primeras 1000 letras): "${contextText}". Responde de forma breve, útil y alentadora.`;
-
-            // Call API
-            const loadingId = Date.now();
-            chatBox.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm opacity-50"><p>...</p></div>`;
-            chatBox.scrollTop = chatBox.scrollHeight;
-
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${localStorage.getItem('scriptorium_api_key')}`;
-            
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({
-                        contents: chatHistory,
-                        systemInstruction: { parts: [{ text: sysPrompt }] }
-                    })
-                });
-                const data = await response.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "No pude procesar eso.";
-                
-                document.getElementById(`load-${loadingId}`).remove();
-                chatBox.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${marked.parse(reply)}</div>`;
-                chatHistory.push({role: "model", parts: [{text: reply}]});
-                
-            } catch(e) {
-                document.getElementById(`load-${loadingId}`).remove();
-                chatBox.innerHTML += `<div class="mentor-bubble mentor-ai bg-red-50 text-red-800"><p>Error de conexión.</p></div>`;
-            }
-            chatBox.scrollTop = chatBox.scrollHeight;
         }
         
         function abortGemini(){if(currentController){currentController.abort();currentController=null;}getEl('ai-loading-overlay').classList.add('hidden');showToast("Cancelado");}
