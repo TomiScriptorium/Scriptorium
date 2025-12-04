@@ -3,8 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Scriptorium AI - Mentor Edition</title>
+    <title>Scriptorium - Edición Offline</title>
     
+    <!-- FAVICON (Logotipo Scriptorium recreado en SVG) -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E" type="image/svg+xml">
+
     <!-- Estilos: Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -114,13 +117,14 @@
         
         /* Tags Styles */
         .tag-pill {
-            @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all;
-            background-color: var(--border);
+            @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition-all whitespace-nowrap;
+            background-color: var(--bg-secondary);
             color: var(--text-muted);
+            border: 1px solid var(--border);
         }
-        .tag-pill:hover { background-color: var(--accent); color: white; }
-        .tag-pill button { opacity: 0.6; }
-        .tag-pill button:hover { opacity: 1; }
+        .tag-pill:hover { background-color: var(--accent); color: white; border-color: var(--accent); }
+        .tag-pill button { opacity: 0.6; padding-left: 2px; }
+        .tag-pill button:hover { opacity: 1; color: white; }
 
         /* Reader */
         #reader-canvas { font-family: 'Libre Baskerville', serif; line-height: 1.8; font-size: 1.15rem; max-width: 750px; margin: 0 auto; height: 100%; padding: 2rem; overflow: hidden; }
@@ -195,10 +199,6 @@
 
     <!-- SELECTION MENU -->
     <div id="selection-menu" class="hidden fixed bg-stone-900/90 text-stone-100 rounded-lg shadow-xl p-1 z-50 flex gap-1 items-center animate-popIn backdrop-blur-md border border-white/10 overflow-hidden transform -translate-x-1/2">
-        <button onclick="runSelectionAnalysis()" type="button" class="px-3 py-1.5 hover:bg-white/10 rounded text-xs font-bold flex items-center gap-2 transition-colors">
-            <i data-lucide="search" class="w-3.5 h-3.5 text-blue-400"></i> Analizar
-        </button>
-        <div class="w-px h-4 bg-white/20"></div>
         <button onclick="suggestContinuationCheck()" type="button" class="px-3 py-1.5 hover:bg-white/10 rounded text-xs font-bold flex items-center gap-2 transition-colors">
             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> Ideas
         </button>
@@ -317,17 +317,28 @@
                                 <input list="projects-datalist" id="doc-project" class="bg-transparent border-none text-stone-600 text-xs font-medium focus:outline-none w-20 md:w-24 p-0 placeholder-stone-400" placeholder="Proyecto">
                                 <datalist id="projects-datalist"></datalist>
                             </div>
-                            <!-- NUEVA FUNCIÓN: AGREGAR ETIQUETAS -->
+                            <!-- SELECCIÓN DE TIPO + ETIQUETAS (MEJORADO) -->
                              <div class="flex items-center bg-stone-50 rounded px-2 py-1 gap-1.5 border border-stone-200 hover:border-stone-300 transition-colors flex-shrink-0 relative group">
                                 <i data-lucide="tag" class="w-3 h-3 text-stone-400"></i>
-                                <div id="active-tags-container" class="flex gap-1 items-center max-w-[100px] overflow-hidden"></div>
-                                <input type="text" id="tag-input" class="bg-transparent border-none text-stone-600 text-xs font-medium focus:outline-none p-0 w-20 placeholder-stone-400" placeholder="Etiqueta..." onkeydown="handleTagInput(event)">
+                                <!-- Selector de Tipo (Restaurado) -->
+                                <select id="doc-type-select" class="bg-transparent border-none text-stone-600 text-xs font-bold focus:outline-none p-0 w-auto max-w-[80px] cursor-pointer appearance-none mr-1">
+                                    <option value="Borrador">Borrador</option>
+                                    <option value="Capítulo">Capítulo</option>
+                                    <option value="Idea">Idea</option>
+                                    <option value="Personaje">Personaje</option>
+                                    <option value="Escena">Escena</option>
+                                </select>
+                                <div class="w-px h-3 bg-stone-300 mx-1"></div>
+                                <!-- Etiquetas Dinámicas -->
+                                <div id="active-tags-container" class="flex gap-1 items-center max-w-[150px] overflow-x-auto no-scrollbar"></div>
+                                <input type="text" id="tag-input" class="bg-transparent border-none text-stone-500 text-xs font-medium focus:outline-none p-0 w-16 placeholder-stone-300 ml-1" placeholder="+ Etiqueta" onkeydown="handleTagInput(event)">
                             </div>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 self-end md:self-auto w-full md:w-auto justify-end">
-                        <button onclick="toggleAnalysisPanel()" type="button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2 animate-pulse hover:animate-none">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Analizar
+                        <!-- NUEVO BOTÓN CORRECTOR -->
+                        <button onclick="toggleAnalysisPanel()" type="button" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md flex items-center gap-2">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i> Corrector
                         </button>
                         <div class="w-px h-6 bg-stone-200 mx-1"></div>
                         <div class="flex bg-stone-50 rounded-lg p-0.5 border border-stone-200">
@@ -379,30 +390,30 @@
                 </div>
             </div>
             
-            <!-- Panel Desplegable (ARREGLADO) -->
-            <div id="analysis-panel" class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl border-l border-stone-200 z-40 transform translate-x-full flex flex-col">
-                <!-- Tabs Header -->
-                <div class="flex border-b border-stone-200 bg-white items-center">
-                    <button onclick="switchAnalysisTab('manual')" id="tab-manual" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-stone-600 border-b-2 border-stone-800 bg-stone-50 hover:bg-stone-100 transition-colors">Manual</button>
-                    <button onclick="switchAnalysisTab('ai')" id="tab-ai" class="flex-1 py-3 text-xs font-bold uppercase tracking-wider text-stone-400 border-b-2 border-transparent hover:text-stone-600 hover:bg-stone-50 transition-colors">IA</button>
-                    <button onclick="toggleAnalysisPanel()" class="px-3 text-stone-400 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <!-- Panel Corrector (OFFLINE) -->
+            <div id="analysis-panel" class="absolute right-0 top-0 h-full w-80 bg-white shadow-2xl border-l border-stone-200 z-40 transform translate-x-full flex flex-col transition-transform duration-300">
+                <div class="bg-stone-100 p-3 border-b border-stone-200 flex justify-between items-center">
+                    <h3 class="font-bold text-stone-700 text-xs uppercase flex items-center gap-2"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> Corrección Offline</h3>
+                    <button onclick="toggleAnalysisPanel()" class="text-stone-400 hover:text-stone-700"><i data-lucide="x" class="w-5 h-5"></i></button>
                 </div>
-
-                <!-- Content Area -->
-                <div id="issues-container" class="flex-1 overflow-y-auto p-4 bg-stone-50/50 relative">
+                <div id="issues-container" class="flex-1 overflow-y-auto p-4 bg-stone-50 relative">
                     <!-- Default State -->
                     <div class="flex flex-col items-center justify-center h-full text-stone-400 py-10 italic text-xs text-center px-4">
-                        <div class="bg-stone-100 p-3 rounded-full shadow-sm mb-3"><i data-lucide="activity" class="w-6 h-6 text-stone-400"></i></div>
-                        <p class="font-medium text-stone-500 mb-1">Centro de Análisis</p>
-                        <p class="opacity-60 mb-4">Pulsa "Analizar" arriba para comenzar.</p>
+                        <div class="bg-white p-3 rounded-full shadow-sm mb-3"><i data-lucide="search" class="w-6 h-6 text-emerald-200"></i></div>
+                        <p class="font-medium text-stone-500 mb-1">Revisor Local</p>
+                        <p class="opacity-60 mb-4">Pulsa el botón abajo para buscar errores.</p>
                     </div>
                 </div>
-
-                <!-- AI Loader Overlay -->
+                <div class="p-4 border-t border-stone-200 bg-white">
+                     <button onclick="runGrammarCheck()" class="w-full bg-stone-800 hover:bg-stone-900 text-white py-3 rounded-lg text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2">
+                        <i data-lucide="scan-search" class="w-4 h-4"></i> Revisar Documento
+                     </button>
+                </div>
+                
+                <!-- Loading Overlay -->
                 <div id="ai-loading-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-[1px] z-20 flex flex-col items-center justify-center hidden fade-in">
-                    <div class="w-8 h-8 border-4 border-stone-100 border-t-blue-500 rounded-full animate-spin mb-3"></div>
-                    <span class="text-[10px] font-bold text-blue-600 uppercase tracking-widest animate-pulse mb-3">Procesando...</span>
-                    <button onclick="abortGemini()" class="text-[10px] text-red-500 border border-red-200 px-3 py-1 rounded hover:bg-red-50 font-bold transition-colors">Cancelar</button>
+                    <div class="w-8 h-8 border-4 border-stone-100 border-t-emerald-500 rounded-full animate-spin mb-3"></div>
+                    <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest animate-pulse mb-3">Revisando...</span>
                 </div>
             </div>
         </div>
@@ -445,9 +456,8 @@
         let currentSelection = "";
         let currentController = null;
         let currentToolType = null;
-        let activeAnalysisTab = 'manual';
+        let currentTags = []; // Etiquetas del documento actual
         let isPanelOpen = false;
-        let currentTags = []; // NUEVO: Etiquetas del documento actual
 
         // Datos para Excerpts
         const FAMOUS_EXCERPTS = [
@@ -464,7 +474,7 @@
         const editor = getEl('main-editor');
         const titleInput = getEl('doc-title');
         const projectInput = getEl('doc-project');
-        const issuesContainer = getEl('issues-container');
+        const typeSelect = getEl('doc-type-select'); // Nuevo selector
         const selectionMenu = getEl('selection-menu');
         const aiLoader = getEl('ai-loading-overlay');
         const analysisPanel = getEl('analysis-panel');
@@ -495,7 +505,7 @@
 
         cleanupTrash();
 
-        // --- GEMINI API INTEGRATION (CORREGIDO) ---
+        // --- GEMINI API INTEGRATION ---
         async function callGemini(prompt, schema = null) {
             const apiKey = localStorage.getItem('scriptorium_api_key');
             if (!apiKey) {
@@ -529,11 +539,15 @@
                 const data = await response.json();
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 
-                if (schema) return JSON.parse(text);
+                if (schema && text) {
+                     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                     return JSON.parse(cleanText);
+                }
                 return text;
             } catch (error) {
                 if (error.name === 'AbortError') return null;
-                console.error(error);
+                console.error("Gemini Error:", error);
+                showToast("Error conectando con IA");
                 return null;
             }
         }
@@ -609,7 +623,7 @@
         function renderTags() {
             const container = getEl('active-tags-container');
             container.innerHTML = currentTags.map(t => 
-                `<span class="tag-pill">${t}<button onclick="removeTag('${t}')" class="hover:text-red-300">×</button></span>`
+                `<span class="tag-pill">${t}<button onclick="removeTag('${t}')" class="hover:text-red-300 ml-1">×</button></span>`
             ).join('');
         }
 
@@ -639,12 +653,15 @@
             const t=editor.innerHTML;
             if(!editor.innerText.trim()&&!currentDraftId)return false;
             
+            const mainType = typeSelect.value || "Borrador"; // Usar el selector
+
             const d={
                 id: currentDraftId || Date.now(),
                 title: getEl('doc-title').value || "Sin título",
                 text: t,
                 project: getEl('doc-project').value || "Sin Proyecto",
-                tags: currentTags, // Guardar etiquetas
+                type: mainType, // Guardamos el tipo principal
+                tags: currentTags, // Guardamos las etiquetas adicionales
                 date: new Date().toLocaleDateString(),
                 preview: editor.innerText.substring(0,100),
                 deletedAt: null
@@ -671,7 +688,8 @@
             editor.innerHTML="";
             getEl('doc-title').value="";
             getEl('doc-project').value="";
-            currentTags = []; // Limpiar etiquetas
+            typeSelect.value="Borrador"; // Reset selector
+            currentTags = [];
             renderTags();
             currentDraftId=null;
             isDirty=false;
@@ -687,7 +705,15 @@
                 getEl('doc-title').value = d.title;
                 editor.innerHTML = d.text;
                 getEl('doc-project').value = d.project;
-                currentTags = d.tags || []; // Cargar etiquetas
+                
+                // Cargar Tipo Principal
+                if(d.type) {
+                    typeSelect.value = d.type;
+                } else {
+                    typeSelect.value = "Borrador";
+                }
+
+                currentTags = d.tags || [];
                 renderTags();
                 switchView('editor');
                 showToast("Cargado");
@@ -697,7 +723,7 @@
         function copyToClipboard(){const r=document.createRange();r.selectNode(editor);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();showToast("Copiado");}
         function getCleanText(html){const t=document.createElement("div");t.innerHTML=html.replace(/<br>/g,'\n').replace(/<\/p>/g,'\n\n');return t.innerText||t.textContent||"";}
         
-        // --- DOWNLOAD FUNCTIONALITY (MEJORADA) ---
+        // --- DOWNLOAD FUNCTIONALITY ---
         function downloadCurrentTxt(){ 
             const blob = new Blob([getCleanText(editor.innerHTML)], {type:'text/plain'});
             const a = document.createElement("a");
@@ -815,14 +841,17 @@
             </div>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">` + 
             ds.map(d => {
-                const tagsHtml = (d.tags || []).map(t => `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase">${t}</span>`).join('');
+                const typeLabel = d.type ? `<span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border border-stone-300">${d.type}</span>` : '';
+                const tagsHtml = (d.tags || []).map(t => `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border border-amber-200">${t}</span>`).join('');
+                
                 return `
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-amber-300 transition-all group relative flex flex-col h-full">
                     <div class="flex-1" onclick="loadDraft(${d.id})">
-                        <h4 class="font-bold text-stone-800 mb-2 text-lg group-hover:text-amber-700 cursor-pointer">${d.title}</h4>
+                        <h4 class="font-bold text-stone-800 mb-2 text-lg group-hover:text-amber-700 cursor-pointer line-clamp-1" title="${d.title}">${d.title}</h4>
                         <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            ${typeLabel}
                             ${tagsHtml}
-                            <span class="text-xs text-stone-400">${d.date}</span>
+                            <span class="text-xs text-stone-400 ml-auto">${d.date}</span>
                         </div>
                         <p class="text-sm font-serif text-stone-600 line-clamp-4 leading-relaxed cursor-pointer">${getCleanText(d.preview)}</p>
                     </div>
@@ -842,14 +871,13 @@
             lucide.createIcons();
         }
         
-        function handleFileUpload(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async function(e){let c="";const t=f.name.split('.').slice(0,-1).join('.');if(f.name.endsWith('.docx')){const ab=e.target.result;const res=await mammoth.convertToHtml({arrayBuffer:ab});c=res.value;}else{c=e.target.result;}const nd={id:Date.now(),title:t,text:c,project:"Importados",tags:['Importado'],date:new Date().toLocaleDateString(),preview:getCleanText(c).substring(0,100),deletedAt:null};drafts.unshift(nd);localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();if(confirm(`"${f.name}" importado. ¿Editar?`))loadDraft(nd.id);else showToast("Importado");};if(f.name.endsWith('.docx')){r.readAsArrayBuffer(f);}else{r.readAsText(f);}i.value='';}
+        function handleFileUpload(i){const f=i.files[0];if(!f)return;const r=new FileReader();r.onload=async function(e){let c="";const t=f.name.split('.').slice(0,-1).join('.');if(f.name.endsWith('.docx')){const ab=e.target.result;const res=await mammoth.convertToHtml({arrayBuffer:ab});c=res.value;}else{c=e.target.result;}const nd={id:Date.now(),title:t,text:c,project:"Importados",tags:['Importado'],type:'Borrador',date:new Date().toLocaleDateString(),preview:getCleanText(c).substring(0,100),deletedAt:null};drafts.unshift(nd);localStorage.setItem('scriptorium_drafts',JSON.stringify(drafts));updateProjectList();if(confirm(`"${f.name}" importado. ¿Editar?`))loadDraft(nd.id);else showToast("Importado");};if(f.name.endsWith('.docx')){r.readAsArrayBuffer(f);}else{r.readAsText(f);}i.value='';}
         
         function exportBackup() { const d = { user: currentUser, drafts: drafts, date: new Date() }; const b = new Blob([JSON.stringify(d)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = "backup.json"; a.click(); }
         function importBackup(i) { const f = i.files[0]; if(!f) return; const r = new FileReader(); r.onload = e => { try { const d = JSON.parse(e.target.result); if(d.drafts){ drafts = d.drafts; location.reload(); } } catch(x){} }; r.readAsText(f); }
 
-        // --- MENTOR CHAT (POTENCIADO CON CONTEXTO) ---
+        // --- MENTOR CHAT ---
         function renderMentorChat(){
-             // No need to re-render everything, just ensure scrolling
              const container = getEl('mentor-messages');
              container.scrollTop = container.scrollHeight;
         }
@@ -859,17 +887,14 @@
             const msg = input.value.trim();
             if(!msg) return;
             
-            // 1. UI Update
             const container = getEl('mentor-messages');
             container.innerHTML += `<div class="mentor-bubble mentor-user shadow-sm animate-fade-in"><p>${msg}</p></div>`;
             input.value = "";
             container.scrollTop = container.scrollHeight;
 
-            // 2. Build Library Context (Invisible to user)
             const activeDrafts = drafts.filter(d => !d.deletedAt);
-            const librarySummary = activeDrafts.map(d => `- Título: "${d.title}" | Proyecto: ${d.project} | Etiquetas: ${d.tags ? d.tags.join(', ') : 'Ninguna'}`).slice(0, 30).join('\n'); // Limit to 30 to save tokens
+            const librarySummary = activeDrafts.map(d => `- Título: "${d.title}" | Proyecto: ${d.project} | Tipo: ${d.type} | Etiquetas: ${d.tags ? d.tags.join(', ') : 'Ninguna'}`).slice(0, 30).join('\n');
 
-            // 3. System Prompt
             const prompt = `Actúa como un mentor literario experto y amable. 
             CONTEXTO DE LA BIBLIOTECA DEL USUARIO:
             ${librarySummary}
@@ -878,15 +903,12 @@
             
             Responde de forma concisa, útil y motivadora. Usa formato Markdown. Si la pregunta es sobre sus obras, usa el contexto provisto.`;
 
-            // 4. Loading State
             const loadingId = Date.now();
             container.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm animate-pulse text-stone-400 text-xs">Escribiendo...</div>`;
             container.scrollTop = container.scrollHeight;
 
-            // 5. Call AI
             const response = await callGemini(prompt);
             
-            // 6. Remove loading and show response
             const loader = document.getElementById(`load-${loadingId}`);
             if(loader) loader.remove();
             
@@ -898,114 +920,106 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- ANALYSIS PANEL (REPARADO) ---
+        // --- PANEL DE CORRECCIÓN (OFFLINE) ---
         function toggleAnalysisPanel() {
             const panel = getEl('analysis-panel');
             if(panel.classList.contains('translate-x-full')) {
                 panel.classList.remove('translate-x-full');
                 isPanelOpen = true;
-                // Run manual analysis by default immediately
-                if(editor.innerText.trim().length > 0) {
-                    analyzeManual();
-                }
             } else {
                 panel.classList.add('translate-x-full');
                 isPanelOpen = false;
             }
         }
 
-        function switchAnalysisTab(tab) {
-            activeAnalysisTab = tab;
-            const btnManual = getEl('tab-manual');
-            const btnAi = getEl('tab-ai');
-            
-            if (tab === 'manual') {
-                btnManual.classList.remove('text-stone-400', 'border-transparent');
-                btnManual.classList.add('text-stone-600', 'border-stone-800', 'bg-stone-50');
-                btnAi.classList.add('text-stone-400', 'border-transparent');
-                btnAi.classList.remove('text-stone-600', 'border-stone-800', 'bg-stone-50');
-                analyzeManual();
-            } else {
-                btnAi.classList.remove('text-stone-400', 'border-transparent');
-                btnAi.classList.add('text-stone-600', 'border-stone-800', 'bg-stone-50');
-                btnManual.classList.add('text-stone-400', 'border-transparent');
-                btnManual.classList.remove('text-stone-600', 'border-stone-800', 'bg-stone-50');
-                
-                getEl('issues-container').innerHTML = `
-                    <div class="flex flex-col items-center justify-center h-full text-stone-400 py-10 italic text-xs text-center px-4 fade-in">
-                        <div class="bg-blue-50 p-3 rounded-full shadow-sm mb-3"><i data-lucide="sparkles" class="w-6 h-6 text-blue-400"></i></div>
-                        <p class="font-medium text-stone-500 mb-1">Corrector IA</p>
-                        <p class="opacity-60 mb-4">Requiere API Key.</p>
-                        <button onclick="triggerFullAnalysis()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full shadow-sm text-xs font-bold transition-all">Ejecutar Análisis Profundo</button>
-                    </div>`;
-                lucide.createIcons();
-            }
-        }
+        // === MOTOR DE CORRECCIÓN OFFLINE (JAVASCRIPT PURO) ===
+        const commonErrors = [
+            { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." },
+            { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Escritura incorrecta." },
+            { regex: /\bsiudad\b/gi, fix: "ciudad", type: "Ortografía", context: "S/C." },
+            { regex: /\bdetectibe\b/gi, fix: "detective", type: "Ortografía", context: "B/V." },
+            { regex: /\bbarias\b/gi, fix: "varias", type: "Ortografía", context: "B/V." },
+            { regex: /\bdemaciado\b/gi, fix: "demasiado", type: "Ortografía", context: "S/C." },
+            { regex: /\boracion\b/gi, fix: "oración", type: "Ortografía", context: "Falta tilde." },
+            { regex: /\bconclucion\b/gi, fix: "conclusión", type: "Ortografía", context: "S/C y tilde." },
+            { regex: /\ [,\.]/g, fix: ",", type: "Gramática", context: "Espacio antes de puntuación." },
+            { regex: /\b([a-zñáéíóú]+)\s\./g, fix: "$1.", type: "Puntuación", context: "Espacio antes del punto." },
+            { regex: /^\s*[a-zñáéíóú]/m, fix: "Mayúscula", type: "Gramática", context: "Inicio de oración minúscula." }
+        ];
 
-        function analyzeManual(textOverride = null) {
-            const text = textOverride || editor.innerText;
-            if(!text.trim()) {
-                getEl('issues-container').innerHTML = `<div class="text-center text-stone-400 mt-10 text-xs italic">Escribe algo para analizar.</div>`;
-                return;
-            }
-            const words = text.toLowerCase().match(/\b[\wáéíóúüñ]+\b/g) || [];
-            const sentences = text.split(/[.!?]+/).filter(x => x.trim().length > 0);
-            const adverbs = words.filter(w => w.endsWith('mente'));
-            const freq = {};
-            words.forEach(w => { if(w.length > 3) freq[w] = (freq[w] || 0) + 1; }); 
-            const sortedFreq = Object.entries(freq).sort((a,b) => b[1] - a[1]).slice(0, 5);
-            const longSentences = sentences.filter(s => s.split(/\s+/).length > 30);
-
-            let html = `<div class="space-y-4 fade-in pb-4">`;
-            html += `<div class="bg-white p-3 rounded-lg border border-stone-200 shadow-sm"><h4 class="font-bold text-stone-700 text-xs uppercase mb-2 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-3 h-3 text-stone-400"></i> Métricas</h4><div class="grid grid-cols-2 gap-y-2 gap-x-4 text-xs"><div class="flex justify-between border-b border-stone-100 pb-1"><span>Palabras</span> <b class="text-stone-800">${words.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Oraciones</span> <b class="text-stone-800">${sentences.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Adverbios</span> <b class="${adverbs.length > 5 ? 'text-red-500' : 'text-emerald-600'}">${adverbs.length}</b></div><div class="flex justify-between border-b border-stone-100 pb-1"><span>Largas</span> <b class="${longSentences.length > 0 ? 'text-amber-500' : 'text-stone-700'}">${longSentences.length}</b></div></div></div>`;
-
-            if(sortedFreq.length > 0) {
-                html += `<div class="bg-white p-3 rounded-lg border border-stone-200 shadow-sm"><h4 class="font-bold text-stone-700 text-xs uppercase mb-2 flex items-center gap-2"><i data-lucide="repeat" class="w-3 h-3 text-stone-400"></i> Frecuencia</h4><div class="flex flex-wrap gap-1.5">${sortedFreq.map(([w, c]) => `<span class="bg-stone-50 px-2 py-1 rounded text-xs text-stone-600 border border-stone-200 flex items-center gap-1">${w} <span class="bg-stone-200 text-stone-600 px-1 rounded-[2px] text-[9px] font-bold">${c}</span></span>`).join('')}</div></div>`;
-            }
-            html += `</div>`;
-            getEl('issues-container').innerHTML = html;
-            lucide.createIcons();
-        }
-
-        async function triggerFullAnalysis() {
-            const t = editor.innerText.trim();
-            if(!localStorage.getItem('scriptorium_api_key')) return alert("Falta API Key");
+        async function runGrammarCheck() {
+            const t = editor.innerText;
+            if(!t) return showToast("Escribe algo primero.");
             
             getEl('ai-loading-overlay').classList.remove('hidden');
             
-            const prompt = `Analiza este texto literario: "${t}". 
-            Busca: Errores gramaticales, repeticiones excesivas y sugerencias de estilo.
-            Responde en JSON: { "issues": [ { "type": "error/warning/tip", "title": "...", "msg": "..." } ] }`;
-
-            const r = await callGemini(prompt, {
-                type: "OBJECT",
-                properties: {
-                    issues: {
-                        type: "ARRAY",
-                        items: {
-                            type: "OBJECT",
-                            properties: {
-                                type: {type: "STRING"},
-                                title: {type: "STRING"},
-                                msg: {type: "STRING"}
+            // Simular un pequeño retraso para la UX
+            setTimeout(() => {
+                const issues = [];
+                
+                // 1. Verificar Errores de Diccionario
+                commonErrors.forEach(rule => {
+                    let match;
+                    // Resetear regex si es global
+                    if(rule.regex.global) rule.regex.lastIndex = 0;
+                    
+                    const matches = t.match(rule.regex);
+                    if(matches) {
+                        matches.forEach(m => {
+                            if(!issues.some(i => i.error === m)) {
+                                 issues.push({
+                                    type: rule.type,
+                                    error: m,
+                                    fix: rule.fix,
+                                    context: rule.context
+                                });
                             }
-                        }
+                        });
                     }
-                }
-            });
-            
-            getEl('ai-loading-overlay').classList.add('hidden');
-            
-            if(r && r.issues) {
-                getEl('issues-container').innerHTML = r.issues.map(i => {
-                    const color = i.type === 'error' ? 'red' : (i.type === 'warning' ? 'amber' : 'blue');
-                    return `<div class="p-3 rounded border bg-${color}-50 border-${color}-200 text-${color}-900 mb-3 text-sm">
-                        <strong class="block text-xs uppercase mb-1">${i.title}</strong>
-                        ${i.msg}
+                });
+
+                // 2. Verificar Mayúsculas (Heurística simple)
+                const sentences = t.split(/[.!?]+/);
+                sentences.forEach(s => {
+                    const trimmed = s.trim();
+                    if(trimmed.length > 0 && /^[a-zñáéíóú]/.test(trimmed)) {
+                         issues.push({
+                            type: "Gramática",
+                            error: trimmed.substring(0, 10) + "...",
+                            fix: trimmed.charAt(0).toUpperCase() + "...",
+                            context: "Mayúscula al inicio de oración."
+                        });
+                    }
+                });
+
+                renderIssues(issues);
+                getEl('ai-loading-overlay').classList.add('hidden');
+            }, 500);
+        }
+
+        function renderIssues(issues) {
+            const container = getEl('issues-container');
+            if(issues.length > 0) {
+                container.innerHTML = issues.map(i => {
+                    return `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4 animate-fade-in">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${i.type}</span>
+                        </div>
+                        <div class="mb-2">
+                            <p class="text-red-500 text-sm line-through decoration-red-300 decoration-2">${i.error}</p>
+                            <p class="text-stone-800 font-bold text-base flex items-center gap-2"><i data-lucide="arrow-right" class="w-3 h-3 text-stone-400"></i> ${i.fix}</p>
+                        </div>
+                        <p class="text-xs text-stone-500 italic border-t border-stone-100 pt-2 mt-2">${i.context}</p>
                     </div>`
                 }).join('');
+                lucide.createIcons();
             } else {
-                getEl('issues-container').innerHTML = `<div class="text-center p-4">Todo parece correcto o hubo un error.</div>`;
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-emerald-600 py-10 text-center px-4 animate-fade-in">
+                    <div class="bg-emerald-50 p-4 rounded-full mb-3 border border-emerald-100"><i data-lucide="check-check" class="w-8 h-8"></i></div>
+                    <p class="font-bold text-lg mb-1">¡Perfecto!</p>
+                    <p class="text-xs opacity-80">No encontré errores comunes en mi base de datos local.</p>
+                </div>`;
+                lucide.createIcons();
             }
         }
         
@@ -1032,7 +1046,7 @@
         }
         function saveToolAsNote() {
              const content = getEl('tool-output').innerText;
-             const newDraft = { id: Date.now(), title: `Nota Taller`, text: content.replace(/\n/g, '<br>'), project: "Notas", tags: ['Taller'], date: new Date().toLocaleDateString(), preview: content.substring(0,100), deletedAt: null };
+             const newDraft = { id: Date.now(), title: `Nota Taller`, text: content.replace(/\n/g, '<br>'), project: "Notas", tags: ['Taller'], type: 'Idea', date: new Date().toLocaleDateString(), preview: content.substring(0,100), deletedAt: null };
              drafts.unshift(newDraft); localStorage.setItem('scriptorium_drafts', JSON.stringify(drafts));
              closeToolModal(); showToast("Nota guardada");
         }
@@ -1043,7 +1057,7 @@
         }
 
         // --- PREVIEW ---
-        function openPreview(id) { const d = drafts.find(x => x.id === id); if(!d) return; currentDraftId = id; getEl('preview-title').textContent = d.title; getEl('preview-meta').textContent = `${d.project} • ${(d.tags||[]).join(', ')}`; getEl('preview-body').innerHTML = d.text; getEl('preview-modal').classList.remove('hidden'); }
+        function openPreview(id) { const d = drafts.find(x => x.id === id); if(!d) return; currentDraftId = id; getEl('preview-title').textContent = d.title; getEl('preview-meta').textContent = `${d.project} • ${d.type} • ${(d.tags||[]).join(', ')}`; getEl('preview-body').innerHTML = d.text; getEl('preview-modal').classList.remove('hidden'); }
         function closePreview() { getEl('preview-modal').classList.add('hidden'); }
         function editFromPreview() { closePreview(); loadDraft(currentDraftId); }
 
@@ -1110,15 +1124,14 @@
         
         // Listeners
         editor.addEventListener('input', handleInput); 
-        editor.addEventListener('mouseup', handleSelection); // Restaurado
-        document.addEventListener('mousedown', e=>{if(selectionMenu && !selectionMenu.contains(e.target)&&e.target!==editor)hideSelectionMenu();}); // Restaurado
+        editor.addEventListener('mouseup', handleSelection); 
+        [titleInput, projectInput, typeSelect].forEach(el => el.addEventListener('input', () => { isDirty=true; updateUnsaved(); })); // Listener for select
+        document.addEventListener('mousedown', e=>{if(selectionMenu && !selectionMenu.contains(e.target)&&e.target!==editor)hideSelectionMenu();}); 
 
-        [titleInput, projectInput].forEach(el => el.addEventListener('input', () => { isDirty=true; updateUnsaved(); })); 
-        
         if (!currentUser) { currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light' }; initApp(); } else { initApp(); }
         
         // --- DB Placeholder (Reader) ---
-        function initDB() { /* Lógica de IndexedDB para Reader Mode (simplificada para este archivo) */ }
+        function initDB() { /* Lógica de IndexedDB para Reader Mode */ }
         function handleBookImport(input) { /* Lógica Reader */ }
         function openReaderMode() { getEl('view-reader').classList.remove('hidden'); }
         function closeReaderMode() { getEl('view-reader').classList.add('hidden'); }
