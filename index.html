@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- MODO PANTALLA COMPLETA (iOS) -->
+    <!-- CONFIGURACIÓN iOS (PANTALLA DE INICIO) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Scriptorium">
@@ -14,8 +14,9 @@
     <!-- FAVICON (Navegadores de escritorio) -->
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E" type="image/svg+xml">
     
-    <!-- APPLE TOUCH ICON (Se generará automáticamente como PNG vía JS usando el mismo logo) -->
-    <link rel="apple-touch-icon" id="ios-icon">
+    <!-- APPLE TOUCH ICON (Respaldo Online PNG + Generación JS) -->
+    <!-- Usamos un placeholder de alta calidad con los colores exactos de la app como base -->
+    <link rel="apple-touch-icon" id="ios-icon" href="https://placehold.co/180x180/292524/d97706.png?text=S&font=playfair-display">
 
     <!-- Estilos & Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -235,12 +236,14 @@
     <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode" data-reader-theme="light" tabindex="0">
         <div class="p-2 md:p-4 flex flex-wrap justify-between items-center bg-transparent absolute top-0 left-0 w-full z-40 hover:bg-white/90 transition-colors duration-300 opacity-0 hover:opacity-100 gap-2" id="reader-controls">
             <button onclick="closeReaderMode()" class="p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 transition-all shadow-md"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+            
             <div id="reader-nav-controls" class="hidden flex gap-2 md:gap-4 items-center bg-stone-100/80 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm">
                 <button onclick="closeBookAndShowLibrary()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500 mr-2 border-r border-stone-300 pr-3" title="Volver a Biblioteca"><i data-lucide="library" class="w-4 h-4"></i></button>
                 <button onclick="readerPrevPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
                 <span id="reader-page-info" class="text-xs font-mono text-stone-600 font-bold min-w-[50px] md:min-w-[60px] text-center whitespace-nowrap">-- / --</span>
                 <button onclick="readerNextPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
             </div>
+
             <div class="flex gap-2 bg-stone-100/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm ml-auto md:ml-0">
                 <button onclick="setReaderTheme('light')" id="rt-btn-light" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fcfbf9] border border-stone-300 shadow-sm active-reader-theme" title="Día"></button>
                 <button onclick="setReaderTheme('sepia')" id="rt-btn-sepia" class="reader-theme-btn w-6 h-6 rounded-full bg-[#f4ecd8] border border-[#d4c5a8] shadow-sm" title="Sepia"></button>
@@ -483,8 +486,8 @@
         let excerptInterval = null; 
         let db = null;
         let currentReaderBookId = null;
-        const DB_NAME = 'ScriptoriumDB'; 
-        const DB_VERSION = 3; 
+        const DB_NAME = 'ScriptoriumDB'; // Nombre unificado
+        const DB_VERSION = 3; // Version incrementada para migración
         const TRASH_LIFETIME = 30 * 24 * 60 * 60 * 1000;
         let pdfRenderTask = null; 
         
@@ -526,6 +529,8 @@
 
         // --- IOS ICON GENERATOR ---
         function generateIOSIcon() {
+            // Try to draw the SVG from favicon to a canvas and set it as apple-touch-icon
+            // Using the same SVG as favicon
             const svgData = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E";
 
             const canvas = document.createElement('canvas');
@@ -675,10 +680,10 @@
             }
         }
 
-        async function callGemini(prompt, schema = null) {
+        async function callGemini(prompt, schema = null, silent = false) {
             const apiKey = localStorage.getItem('scriptorium_api_key');
             if (!apiKey) {
-                alert("Por favor, configura tu API Key en Ajustes.");
+                if(!silent) alert("Por favor, configura tu API Key en Ajustes.");
                 return null;
             }
 
@@ -715,8 +720,11 @@
                 return text;
             } catch (error) {
                 if (error.name === 'AbortError') return null;
-                console.error("Gemini Error:", error);
-                showToast("Error conectando con IA");
+                // If silent is true, do not show toast
+                if(!silent) {
+                    console.error("Gemini Error:", error);
+                    showToast("Error conectando con IA");
+                }
                 return null;
             }
         }
@@ -953,7 +961,7 @@
         function renderStats(){ const a=drafts.filter(d=>!d.deletedAt), t=drafts.filter(d=>d.deletedAt), w=a.reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0); if(getEl('stat-total-docs')) getEl('stat-total-docs').textContent=a.length; if(getEl('stat-total-words')) getEl('stat-total-words').textContent=w.toLocaleString(); if(getEl('stat-total-trash')) getEl('stat-total-trash').textContent=t.length; const c = getEl('projects-progress-container'); if(c) { const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))]; if(ps.length===0){ c.innerHTML = `<div class="text-center text-sm text-stone-400 col-span-2">Sin proyectos.</div>`; } else { c.innerHTML = ps.map(p=>{ const pw=a.filter(d=>(d.project||"Sin Proyecto")===p).reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0); const pct=Math.min(100,Math.round((pw/50000)*100)); return `<div class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-all"><div class="flex justify-between mb-3"><span class="font-bold text-lg truncate">${p}</span><span class="text-xs bg-stone-100 px-2 py-1 rounded-full font-mono">${pw}/50k</span></div><div class="w-full bg-stone-100 h-3 rounded-full"><div class="bg-amber-500 h-3 rounded-full" style="width:${pct}%"></div></div><div class="text-xs text-stone-400 mt-2 text-right">${pct}% Completado</div></div>`; }).join(''); } } }
         function renderHome(){ fetchBookExcerpt(); renderStats(); }
         function startExcerptRotation() { if(excerptInterval) clearInterval(excerptInterval); fetchBookExcerpt(); excerptInterval = setInterval(() => { const homeView = document.getElementById('view-home'); if(homeView && !homeView.classList.contains('hidden')){ fetchBookExcerpt(); } }, 45000); }
-        async function fetchBookExcerpt() { const container = getEl('excerpt-text'); if(!container) return; const mainContainer = getEl('excerpt-container'); mainContainer.style.opacity = '0'; setTimeout(async () => { const apiKey = localStorage.getItem('scriptorium_api_key'); let excerpt = null; if (apiKey) { try { const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso. JSON: { "book": "...", "author": "...", "text": "..." }`; const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } }); if (result) excerpt = result; } catch (e) {} } if (!excerpt) excerpt = FAMOUS_EXCERPTS[Math.floor(Math.random() * FAMOUS_EXCERPTS.length)]; if(getEl('excerpt-book')) getEl('excerpt-book').textContent = excerpt.book; if(getEl('excerpt-author')) getEl('excerpt-author').textContent = `— ${excerpt.author}`; if(getEl('excerpt-text')) getEl('excerpt-text').textContent = `"${excerpt.text}"`; if(mainContainer) mainContainer.style.opacity = '1'; }, 300); }
+        async function fetchBookExcerpt() { const container = getEl('excerpt-text'); if(!container) return; const mainContainer = getEl('excerpt-container'); mainContainer.style.opacity = '0'; setTimeout(async () => { const apiKey = localStorage.getItem('scriptorium_api_key'); let excerpt = null; if (apiKey) { try { const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso. JSON: { "book": "...", "author": "...", "text": "..." }`; const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } }, true); if (result) excerpt = result; } catch (e) {} } if (!excerpt) excerpt = FAMOUS_EXCERPTS[Math.floor(Math.random() * FAMOUS_EXCERPTS.length)]; if(getEl('excerpt-book')) getEl('excerpt-book').textContent = excerpt.book; if(getEl('excerpt-author')) getEl('excerpt-author').textContent = `— ${excerpt.author}`; if(getEl('excerpt-text')) getEl('excerpt-text').textContent = `"${excerpt.text}"`; if(mainContainer) mainContainer.style.opacity = '1'; }, 300); }
         function createNewInProject(p) { clearEditor(true); getEl('doc-project').value = p; switchView('editor'); }
         function handleSelection(e) { const s=window.getSelection(); const t=s.toString().trim(); if(t.length>3 && s.rangeCount > 0 && editor.contains(s.anchorNode)){ currentSelection=t; const r=s.getRangeAt(0).getBoundingClientRect(); showSelectionMenu(r.left + r.width/2, r.top - 40); } else hideSelectionMenu(); } 
         function showSelectionMenu(x,y){ if(x>window.innerWidth-200)x=window.innerWidth-200; if(y<20)y=20; selectionMenu.style.left=`${x}px`; selectionMenu.style.top=`${y}px`; selectionMenu.classList.remove('hidden'); selectionMenu.style.display='flex'; } 
