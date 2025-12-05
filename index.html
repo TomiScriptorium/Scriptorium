@@ -15,8 +15,8 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E" type="image/svg+xml">
     
     <!-- APPLE TOUCH ICON (Icono elegante para iOS) -->
-    <!-- Un cuadrado con el color de fondo y la pluma centrada. iOS redondeará las esquinas automáticamente. -->
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23292524'/%3E%3Cg transform='translate(50,50)'%3E%3Cg transform='translate(-28, -28) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
+    <!-- Se incluye id="ios-icon" para que el script lo actualice a PNG automáticamente -->
+    <link rel="apple-touch-icon" id="ios-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23292524'/%3E%3Cg transform='translate(50,50)'%3E%3Cg transform='translate(-28, -28) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
 
     <!-- Estilos & Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -525,13 +525,14 @@
         const analysisPanel = getEl('analysis-panel');
 
         lucide.createIcons();
-        generateIOSIcon();
+        // Generar icono iOS al iniciar
+        setTimeout(generateIOSIcon, 500);
 
-        // --- IOS ICON GENERATOR ---
+        // --- IOS ICON GENERATOR (FIXED) ---
         function generateIOSIcon() {
-            // Try to draw the SVG from favicon to a canvas and set it as apple-touch-icon
-            // Using the same SVG as favicon
-            const svgData = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E";
+            // Usamos el mismo SVG cuadrado que está en el HTML para evitar transparencias
+            // iOS necesita un fondo opaco (cuadrado) para que se vea bien
+            const squareSvgData = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23292524'/%3E%3Cg transform='translate(50,50)'%3E%3Cg transform='translate(-28, -28) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E";
 
             const canvas = document.createElement('canvas');
             canvas.width = 180;
@@ -540,12 +541,19 @@
             
             const img = new Image();
             img.onload = function() {
+                // Dibujar imagen en canvas
                 ctx.drawImage(img, 0, 0, 180, 180);
+                // Convertir a PNG real
                 const pngData = canvas.toDataURL('image/png');
+                // Asignar al link tag
                 const link = document.getElementById('ios-icon');
-                if(link) link.href = pngData;
+                if(link) {
+                    link.href = pngData;
+                    // Forzar actualización del DOM para navegadores que cachean iconos
+                    link.parentNode.replaceChild(link.cloneNode(), link);
+                }
             };
-            img.src = svgData;
+            img.src = squareSvgData;
         }
 
         // --- DATABASE INIT ---
