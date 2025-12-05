@@ -519,7 +519,15 @@
         const TRASH_LIFETIME = 30 * 24 * 60 * 60 * 1000;
         let pdfRenderTask = null; 
         
-        let currentUser = null;
+        // MODIFICADO: Estructura inicial del usuario garantizada
+        let currentUser = { 
+            name: "Invitado", 
+            goal: 500, 
+            joined: new Date().toLocaleDateString(), 
+            theme: 'light', 
+            apiKey: '', // Clave API incluida por defecto
+            avatar: null 
+        };
         let drafts = [];
         let isDirty = false;
         let currentDraftId = null;
@@ -629,16 +637,14 @@
             const userReq = userTx.objectStore('user').get('current');
             userReq.onsuccess = () => {
                 if (userReq.result) {
+                    // Cargar datos de IndexedDB si existen
                     currentUser = userReq.result;
-                    // Migración de la clave API de localStorage a currentUser (solo la primera vez)
-                    const oldApiKey = localStorage.getItem('scriptorium_api_key');
-                    if(oldApiKey && !currentUser.apiKey) {
-                        currentUser.apiKey = oldApiKey;
-                        dbSaveUser(currentUser);
-                        localStorage.removeItem('scriptorium_api_key');
+                    // Asegurar que currentUser tiene apiKey por si viene de una versión anterior sin ese campo
+                    if (typeof currentUser.apiKey === 'undefined') {
+                        currentUser.apiKey = '';
                     }
-                    initAppUI(); 
                 } else {
+                    // Cargar de localStorage si existe (por migración)
                     const oldUser = localStorage.getItem('scriptorium_user');
                     const oldApiKey = localStorage.getItem('scriptorium_api_key');
                     
@@ -648,12 +654,17 @@
                         dbSaveUser(currentUser); 
                         localStorage.removeItem('scriptorium_user'); 
                         localStorage.removeItem('scriptorium_api_key'); 
-                        initAppUI();
-                    } else {
-                        currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light', apiKey: '' };
-                        initAppUI();
-                    }
+                    } 
+                    // Si no hay datos en IndexedDB ni localStorage, usamos el valor predeterminado global (que ya tiene apiKey: '')
                 }
+                
+                // Finalizar UI después de intentar cargar datos
+                initAppUI(); 
+            };
+            userReq.onerror = () => {
+                 // Si IndexedDB falla (ej. permisos), usamos el valor predeterminado global
+                 console.error("Error al cargar usuario desde IndexedDB. Usando perfil predeterminado.");
+                 initAppUI();
             };
 
             const draftsTx = db.transaction(['drafts'], 'readonly');
@@ -766,9 +777,9 @@
         }
 
         async function callGemini(prompt, schema = null, silent = false) {
-            // CORREGIDO: Usar currentUser.apiKey en lugar de localStorage
+            // Usar currentUser.apiKey (que ahora está garantizado que existe)
             const apiKey = currentUser.apiKey; 
-            if (!apiKey) {
+            if (!apiKey || apiKey === '') { // Comprobar si está vacía
                 if(!silent) alert("Por favor, configura tu API Key en Ajustes.");
                 return null;
             }
@@ -820,8 +831,8 @@
             const msg = input.value.trim();
             if(!msg) return;
             
-            // CORREGIDO: Verificar la clave API antes de enviar el mensaje
-            if (!currentUser.apiKey) {
+            // Verificar la clave API (de nuevo, para mostrar el toast más rápido si falla)
+            if (!currentUser.apiKey || currentUser.apiKey === '') {
                  showToast("Error: Configura tu API Key en Ajustes.");
                  return;
             }
@@ -1069,7 +1080,7 @@
         // CORREGIDO: Verificar la clave API desde currentUser para el estado
         function updateAiStatus(){
             const d=getEl('ai-status-dot'); 
-            if(currentUser.apiKey){ // <-- Verificar en currentUser
+            if(currentUser.apiKey && currentUser.apiKey !== ''){ // <-- Verificar en currentUser si NO está vacío
                 d.classList.remove('bg-red-500');
                 d.classList.add('bg-emerald-500');
                 d.setAttribute('title', 'IA Conectada');
@@ -1096,7 +1107,7 @@
             // CORREGIDO: Usar currentUser.apiKey
             const apiKey = currentUser.apiKey; 
             let excerpt = null; 
-            if (apiKey) { 
+            if (apiKey && apiKey !== '') { 
                 try { 
                     const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso. JSON: { "book": "...", "author": "...", "text": "..." }`; 
                     const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } }, true); 
@@ -1113,7 +1124,7 @@
         function handleSelection(e) { const s=window.getSelection(); const t=s.toString().trim(); if(t.length>3 && s.rangeCount > 0 && editor.contains(s.anchorNode)){ currentSelection=t; const r=s.getRangeAt(0).getBoundingClientRect(); showSelectionMenu(r.left + r.width/2, r.top - 40); } else hideSelectionMenu(); } 
         function showSelectionMenu(x,y){ if(x>window.innerWidth-200)x=window.innerWidth-200; if(y<20)y=20; selectionMenu.style.left=`${x}px`; selectionMenu.style.top=`${y}px`; selectionMenu.classList.remove('hidden'); selectionMenu.style.display='flex'; } 
         function hideSelectionMenu(){ if(selectionMenu) { selectionMenu.classList.add('hidden'); selectionMenu.style.display='none'; } }
-        function suggestContinuationCheck() { hideSelectionMenu(); if(currentUser.apiKey) { alert("Funcionalidad de sugerencias en mantenimiento."); } else { alert("Configura tu API Key primero."); } } // CORREGIDO: Usar currentUser.apiKey
+        function suggestContinuationCheck() { hideSelectionMenu(); if(currentUser.apiKey && currentUser.apiKey !== '') { alert("Funcionalidad de sugerencias en mantenimiento."); } else { alert("Configura tu API Key primero."); } } // CORREGIDO: Usar currentUser.apiKey
         
         // --- LIBRARY FUNCTIONS ---
         function selectTrash(){isTrashView=true;selectedProject=null;renderLibraryContent();}
