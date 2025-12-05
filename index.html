@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <!-- CONFIGURACIÓN iOS (PANTALLA DE INICIO) -->
+    <!-- CONFIGURACIÓN iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Scriptorium">
@@ -15,7 +15,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E" type="image/svg+xml">
     <link rel="apple-touch-icon" id="ios-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23292524'/%3E%3Cg transform='translate(50,50)'%3E%3Cg transform='translate(-28, -28) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E">
 
-    <!-- Estilos & Librerías -->
+    <!-- Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -72,10 +72,17 @@
         .text-stone-900, .text-stone-800, .text-stone-700 { color: var(--text-main) !important; } .text-stone-600, .text-stone-500, .text-stone-400, .text-stone-300 { color: var(--text-muted) !important; }
         .border-stone-200, .border-stone-300, .border-stone-100 { border-color: var(--border) !important; }
         .shadow-xl, .shadow-md, .shadow-sm { box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color) !important; }
+        
         [data-theme='dark'] .bg-stone-900 { background-color: #0f172a !important; border-bottom-color: #334155 !important; } 
         [data-theme='warm'] .bg-stone-900 { background-color: #43302b !important; }
-        [data-theme='pink'] .bg-stone-900 { background-color: #be123c !important; border-bottom-color: #9f1239 !important; } /* Pink header overrides */
+        [data-theme='pink'] .bg-stone-900 { background-color: #be123c !important; border-bottom-color: #9f1239 !important; } 
         [data-theme='pink'] .text-stone-200 { color: #ffe4e6 !important; }
+        
+        /* CORRECCIÓN ICONOS TEMA ROSA: Forzar color claro en encabezado para iconos */
+        [data-theme='pink'] .bg-stone-900 .text-stone-400, 
+        [data-theme='pink'] .bg-stone-900 .text-stone-500,
+        [data-theme='pink'] .bg-stone-900 .group:hover .text-stone-400 { color: #ffe4e6 !important; opacity: 0.9; }
+        [data-theme='pink'] .bg-stone-900 .text-white { color: #ffffff !important; }
 
         textarea, input[type="text"], input[type="password"], select { background-color: var(--input-bg) !important; color: var(--text-main) !important; }
         textarea::placeholder, input::placeholder { color: var(--text-muted) !important; opacity: 0.7; }
@@ -281,9 +288,6 @@
             <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-400"></i> Ideas
         </button>
     </div>
-    
-    <!-- TOOL MODAL -->
-    <div id="tool-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in"><div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"><div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center shrink-0"><h3 id="tool-title" class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Taller</h3><button onclick="closeToolModal()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto bg-stone-50 flex-1"><div class="mb-4"><label id="tool-prompt-label" class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-2">Descripción</label><textarea id="tool-input" class="w-full bg-white border border-stone-200 rounded-lg p-3 text-stone-800 focus:ring-2 focus:ring-amber-200 focus:border-amber-500 min-h-[100px]" placeholder="Describe..."></textarea></div><button onclick="runTool()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><i data-lucide="zap" class="w-4 h-4"></i> <span id="tool-action-text">Generar</span></button><div id="tool-result-container" class="mt-6 hidden"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-stone-500 uppercase">Resultado</span><div class="flex gap-2"><button onclick="copyToolResult()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar</button><button onclick="saveToolAsNote()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Guardar Nota</button></div></div><div id="tool-output" class="bg-white p-4 rounded-lg border border-stone-200 text-sm text-stone-800 font-serif leading-relaxed whitespace-pre-wrap"></div></div><div id="tool-loading" class="mt-6 hidden flex justify-center py-4"><div class="w-8 h-8 border-4 border-stone-200 border-t-amber-500 rounded-full animate-spin"></div></div></div></div></div>
 
     <!-- VISTA: READER -->
     <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode no-select" data-reader-theme="light" tabindex="0">
@@ -368,7 +372,8 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"><div class="md:col-span-3 mb-2"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="pen-tool" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Taller Creativo AI</h3></div><div onclick="openTool('char')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-purple-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-purple-600 group-hover:bg-purple-200 transition-colors"><i data-lucide="user" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Personajes</h4><p class="text-xs text-stone-500">Crea fichas detalladas.</p></div><div onclick="openTool('names')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-blue-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-blue-600 group-hover:bg-blue-200 transition-colors"><i data-lucide="globe" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Mundos</h4><p class="text-xs text-stone-500">Nombres de lugares y gente.</p></div><div onclick="openTool('plot')" class="bg-white p-6 rounded-xl border border-stone-200 shadow-sm hover:shadow-md cursor-pointer transition-all group"><div class="bg-amber-100 w-10 h-10 rounded-lg flex items-center justify-center mb-4 text-amber-600 group-hover:bg-amber-200 transition-colors"><i data-lucide="git-branch" class="w-6 h-6"></i></div><h4 class="font-bold text-stone-800 mb-1">Tramas</h4><p class="text-xs text-stone-500">Desbloqueos y giros.</p></div></div>
+                <!-- TALLER CREATIVO ELIMINADO -->
+                
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2 space-y-6"><div class="flex items-center justify-between"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Tus Proyectos</h3></div><div id="projects-progress-container" class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="space-y-6"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="save" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Seguridad</h3><div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200 flex flex-col gap-4 justify-center h-full"><div class="text-center mb-2"><div class="bg-stone-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="shield-check" class="w-8 h-8 text-stone-400"></i></div><p class="text-sm text-stone-500">Tus historias son valiosas.</p></div><button onclick="exportBackup()" class="w-full border-2 border-stone-100 hover:border-amber-500 hover:bg-amber-50 text-stone-600 hover:text-amber-700 font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 text-sm"><i data-lucide="download-cloud" class="w-4 h-4"></i> Descargar Todo</button><input type="file" id="import-file" class="hidden" onchange="importBackup(this)"><button onclick="document.getElementById('import-file').click()" class="w-full text-xs text-stone-400 hover:text-stone-600 hover:underline text-center mt-2">Restaurar desde archivo</button></div></div></div>
             </div>
         </div>
@@ -745,81 +750,6 @@
             }
         }
 
-        // --- CREATIVE TOOLS (RESTAURADO) ---
-        function openTool(type) {
-            currentToolType = type;
-            getEl('tool-modal').classList.remove('hidden');
-            getEl('tool-modal').classList.add('flex');
-            getEl('tool-result-container').classList.add('hidden');
-            getEl('tool-input').value = '';
-            
-            const titles = { 'char': 'Creador de Personajes', 'names': 'Generador de Nombres/Mundos', 'plot': 'Desbloqueo de Tramas' };
-            const prompts = { 'char': 'Describe el rol (ej: villano elegante)', 'names': 'Describe el ambiente (ej: ciudad futurista sucia)', 'plot': 'Describe el problema actual' };
-            const actions = { 'char': 'Generar Ficha', 'names': 'Inventar Nombres', 'plot': 'Sugerir Giros' };
-            
-            getEl('tool-title').innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> ${titles[type]}`;
-            getEl('tool-prompt-label').textContent = prompts[type];
-            getEl('tool-action-text').textContent = actions[type];
-            lucide.createIcons();
-        }
-
-        function closeToolModal() {
-            getEl('tool-modal').classList.add('hidden');
-            getEl('tool-modal').classList.remove('flex');
-        }
-
-        async function runTool() {
-            const input = getEl('tool-input').value.trim();
-            if(!input) return showToast("Escribe una descripción primero");
-            
-            getEl('tool-loading').classList.remove('hidden');
-            getEl('tool-result-container').classList.add('hidden');
-            
-            let prompt = "";
-            if (currentToolType === 'char') prompt = `Genera una ficha de personaje literario detallada basada en: "${input}". Incluye Nombre, Edad, Rol, Apariencia, Personalidad y Secreto.`;
-            else if (currentToolType === 'names') prompt = `Genera una lista de 10 nombres creativos y únicos para: "${input}". Mezcla estilos y da breve significado.`;
-            else if (currentToolType === 'plot') prompt = `Actúa como asistente de escritura. El usuario está atascado en: "${input}". Dame 3 opciones de giros argumentales o soluciones creativas para continuar la historia.`;
-
-            const result = await callGemini(prompt);
-            
-            getEl('tool-loading').classList.add('hidden');
-            if(result) {
-                getEl('tool-output').textContent = result; // Markdown text
-                getEl('tool-result-container').classList.remove('hidden');
-            } else {
-                // Better error feedback
-                if (!currentUser.apiKey) showToast("Falta API Key en Configuración");
-                else showToast("Error conectando con IA (Ver consola)");
-            }
-        }
-
-        function copyToolResult() {
-            const text = getEl('tool-output').textContent;
-            navigator.clipboard.writeText(text).then(() => showToast("Copiado al portapapeles"));
-        }
-
-        function saveToolAsNote() {
-            const text = getEl('tool-output').textContent;
-            const titles = { 'char': 'Personaje', 'names': 'Nombres', 'plot': 'Ideas Trama' };
-            const nd = { 
-                id: Date.now(), 
-                title: `${titles[currentToolType]} - ${new Date().toLocaleTimeString()}`, 
-                text: text.replace(/\n/g, '<br>'), 
-                project: "Notas Creativas", 
-                type: 'Idea', 
-                tags: ['IA', 'Nota'], 
-                date: new Date().toLocaleDateString(), 
-                preview: text.substring(0, 100), 
-                deletedAt: null 
-            };
-            drafts.unshift(nd); 
-            dbSaveDraft(nd); 
-            if(isOnlineUser) saveDraftToCloud(nd);
-            updateProjectList(); 
-            showToast("Guardado en Notas Creativas");
-            closeToolModal();
-        }
-
         // --- FUNCIONES DE IMAGEN ---
         function compressImage(file, mW, mH, q) { 
             return new Promise((resolve, reject) => { 
@@ -913,7 +843,7 @@
             const response = await callGemini(prompt);
             const loader = document.getElementById(`load-${loadingId}`); if(loader) loader.remove();
             if(response) { container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${marked.parse(response)}</div>`; } 
-            else { container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm text-red-500">Error de conexión.</div>`; }
+            else { container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm text-red-500">Error de conexión. Verifica tu Key.</div>`; }
             container.scrollTop = container.scrollHeight;
         }
 
