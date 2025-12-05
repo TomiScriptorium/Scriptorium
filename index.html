@@ -175,7 +175,6 @@
         </div>
     </header>
 
-    <!-- TOAST & MENUS -->
     <div id="toast" class="fixed bottom-6 right-6 bg-stone-900 text-stone-100 px-5 py-4 rounded-lg shadow-2xl transform translate-y-40 transition-transform duration-500 z-50 flex items-center gap-4 border border-stone-700 max-w-[90vw]"><div class="bg-amber-500/20 p-2 rounded-full"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i></div><span id="toast-msg" class="font-medium text-sm">Notificación</span></div>
     
     <!-- SETTINGS MODAL -->
@@ -225,17 +224,14 @@
 
     <!-- VISTA: READER -->
     <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode" data-reader-theme="light" tabindex="0">
-        <!-- HEADER READER -->
         <div class="p-2 md:p-4 flex flex-wrap justify-between items-center bg-transparent absolute top-0 left-0 w-full z-40 hover:bg-white/90 transition-colors duration-300 opacity-0 hover:opacity-100 gap-2" id="reader-controls">
             <button onclick="closeReaderMode()" class="p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 transition-all shadow-md"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
-            
             <div id="reader-nav-controls" class="hidden flex gap-2 md:gap-4 items-center bg-stone-100/80 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm">
                 <button onclick="closeBookAndShowLibrary()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500 mr-2 border-r border-stone-300 pr-3" title="Volver a Biblioteca"><i data-lucide="library" class="w-4 h-4"></i></button>
                 <button onclick="readerPrevPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
                 <span id="reader-page-info" class="text-xs font-mono text-stone-600 font-bold min-w-[50px] md:min-w-[60px] text-center whitespace-nowrap">-- / --</span>
                 <button onclick="readerNextPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
             </div>
-
             <div class="flex gap-2 bg-stone-100/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm ml-auto md:ml-0">
                 <button onclick="setReaderTheme('light')" id="rt-btn-light" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fcfbf9] border border-stone-300 shadow-sm active-reader-theme" title="Día"></button>
                 <button onclick="setReaderTheme('sepia')" id="rt-btn-sepia" class="reader-theme-btn w-6 h-6 rounded-full bg-[#f4ecd8] border border-[#d4c5a8] shadow-sm" title="Sepia"></button>
@@ -250,34 +246,22 @@
         <div id="reader-library-view" class="flex-1 w-full h-full overflow-y-auto bg-stone-100 p-8 pt-20 relative z-20">
             <div class="max-w-5xl mx-auto">
                 <div class="flex justify-between items-end mb-8 border-b border-stone-300 pb-4">
-                    <div>
-                        <h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2>
-                        <p class="text-stone-500">Lecturas guardadas</p>
-                    </div>
-                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg">
-                        <i data-lucide="upload" class="w-4 h-4"></i> Importar Libro
-                    </label>
+                    <div><h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2><p class="text-stone-500">Lecturas guardadas</p></div>
+                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg"><i data-lucide="upload" class="w-4 h-4"></i> Importar Libro</label>
                 </div>
                 <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    <!-- Books will be injected here -->
-                    <div class="col-span-full text-center py-20 text-stone-400 italic">
-                        <i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i>
-                        <p>No tienes libros guardados aún.</p>
-                    </div>
+                    <div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. CONTENT VIEW (Hidden by default) -->
+        <!-- 2. CONTENT VIEW -->
         <div id="reader-content-view" class="hidden flex-1 w-full h-full overflow-hidden relative flex items-center justify-center z-10 bg-white">
             <div id="epub-viewer" class="w-full h-full shadow-2xl hidden bg-transparent"></div>
             <canvas id="pdf-render" class="max-h-full max-w-full shadow-2xl hidden"></canvas>
-            
-            <!-- Click zones for nav -->
             <div class="absolute inset-y-0 left-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
             <div class="absolute inset-y-0 right-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
         </div>
-        
         <div class="absolute bottom-0 left-0 w-full h-1 bg-stone-200 z-50"><div id="reader-progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div></div>
     </div>
 
@@ -295,7 +279,7 @@
                     </div>
                 </div>
                 
-                <!-- TARJETA: MODO LECTURA (RESTAURADA) -->
+                <!-- TARJETA: MODO LECTURA -->
                 <div onclick="openReaderMode()" class="bg-gradient-to-br from-emerald-600 to-teal-800 p-6 md:p-8 rounded-2xl shadow-lg text-white relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all transform hover:-translate-y-1">
                     <div class="absolute -right-6 -bottom-6 opacity-20 group-hover:opacity-30 transition-opacity transform rotate-12">
                         <i data-lucide="book-open" class="w-32 h-32 md:w-40 md:h-40 text-white"></i>
@@ -337,8 +321,6 @@
         <div id="view-editor" class="hidden relative w-full h-full flex overflow-hidden bg-stone-100/50">
             <!-- Main Content Area -->
             <div class="flex-1 flex flex-col h-full min-w-0 transition-all duration-300" id="editor-main-area">
-                
-                <!-- 1. Header del Editor -->
                 <div class="bg-white border-b border-stone-200 px-4 py-2 flex flex-col md:flex-row justify-between items-center gap-3 flex-shrink-0 z-20 shadow-sm">
                     <div class="flex-1 w-full md:w-auto flex flex-col md:flex-row md:items-center gap-2">
                         <input type="text" id="doc-title" class="flex-1 min-w-[150px] text-xl font-serif font-bold text-stone-800 placeholder-stone-300 bg-transparent border-none focus:outline-none focus:ring-0 p-0" placeholder="Título del escrito...">
@@ -454,7 +436,13 @@
             <div class="flex flex-col w-full h-full max-w-5xl mx-auto bg-white shadow-2xl border-x border-stone-200 relative">
                 <div class="p-4 border-b border-stone-200 bg-white flex justify-between items-center shadow-sm z-10"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600"><i data-lucide="sparkles" class="w-6 h-6"></i></div><div><h2 class="font-bold text-stone-800">Mentor Literario</h2><p class="text-xs text-stone-500">Analiza toda tu biblioteca para ayudarte.</p></div></div><button onclick="switchView('home')" class="text-stone-400 hover:text-stone-600"><i data-lucide="x" class="w-6 h-6"></i></button></div>
                 <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-stone-50/50"><div class="mentor-bubble mentor-ai shadow-sm animate-fade-in"><p><strong>Hola, escritor.</strong></p><p>He leído tu biblioteca. ¿En qué te ayudo hoy?</p></div></div>
-                <div class="p-4 bg-white border-t border-stone-200"><div class="flex items-end gap-2 bg-stone-50 rounded-xl p-3 border border-stone-200 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-50 transition-all shadow-inner"><textarea id="mentor-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 text-base resize-none max-h-32 pt-1.5 text-stone-800 placeholder-stone-400" placeholder="Pregúntame..."></textarea><button onclick="sendMentorMessage()" class="p-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md flex-shrink-0 transform hover:scale-105 active:scale-95"><i data-lucide="send" class="w-5 h-5"></i></button></div><p class="text-[10px] text-center text-stone-400 mt-2">La IA tiene acceso al contexto de tu obra.</p></div>
+                <div class="p-4 bg-white border-t border-stone-200 relative z-20">
+                    <div class="flex items-end gap-2 bg-stone-50 rounded-xl p-3 border border-stone-200 focus-within:border-purple-400 focus-within:ring-4 focus-within:ring-purple-50 transition-all shadow-inner">
+                        <textarea id="mentor-input" rows="1" class="w-full bg-transparent border-none focus:ring-0 text-base resize-none max-h-32 pt-1.5 text-stone-800 placeholder-stone-400" placeholder="Pregúntame..."></textarea>
+                        <button id="mentor-send-btn" class="p-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors shadow-md flex-shrink-0 transform hover:scale-105 active:scale-95 relative z-30"><i data-lucide="send" class="w-5 h-5"></i></button>
+                    </div>
+                    <p class="text-[10px] text-center text-stone-400 mt-2">La IA tiene acceso al contexto de tu obra.</p>
+                </div>
             </div>
         </div>
 
@@ -475,9 +463,9 @@
         let db = null;
         let currentReaderBookId = null;
         const DB_NAME = 'ScriptoriumDB'; // Nombre unificado
-        const DB_VERSION = 2; // Version incrementada para migración
+        const DB_VERSION = 3; // Version incrementada para migración
         const TRASH_LIFETIME = 30 * 24 * 60 * 60 * 1000;
-        let pdfRenderTask = null; // Task for PDF rendering
+        let pdfRenderTask = null; 
         
         let currentUser = null;
         let drafts = [];
@@ -502,6 +490,7 @@
         let pdfDoc = null;
         let readerPage = 1;
 
+        // DOM Elements
         const getEl = (id) => document.getElementById(id);
         const editor = getEl('main-editor');
         const titleInput = getEl('doc-title');
@@ -513,120 +502,89 @@
 
         lucide.createIcons();
 
-        // --- DATABASE INIT (PERSISTENCIA REAL) ---
+        // --- DATABASE INIT ---
         function initDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-                
                 request.onupgradeneeded = (e) => {
                     const d = e.target.result;
-                    // Almacen de libros (Reader)
-                    if (!d.objectStoreNames.contains('books')) {
-                        d.createObjectStore('books', { keyPath: 'id' });
-                    }
-                    // Almacen de borradores (Editor/Library)
-                    if (!d.objectStoreNames.contains('drafts')) {
-                        d.createObjectStore('drafts', { keyPath: 'id' });
-                    }
-                    // Almacen de usuario (Profile/Settings)
-                    if (!d.objectStoreNames.contains('user')) {
-                        d.createObjectStore('user', { keyPath: 'id' });
-                    }
+                    if (!d.objectStoreNames.contains('books')) d.createObjectStore('books', { keyPath: 'id' });
+                    if (!d.objectStoreNames.contains('drafts')) d.createObjectStore('drafts', { keyPath: 'id' });
+                    if (!d.objectStoreNames.contains('user')) d.createObjectStore('user', { keyPath: 'id' });
                 };
-
                 request.onsuccess = (e) => {
                     db = e.target.result;
-                    console.log("DB Ready & Persistent");
+                    console.log("DB Ready");
                     resolve(db);
-                    loadInitialData(); // Cargar todo al iniciar
+                    loadInitialData(); 
                 };
-
-                request.onerror = (e) => {
-                    console.error("DB Error", e);
-                    reject(e);
-                };
+                request.onerror = (e) => { console.error("DB Error", e); reject(e); };
             });
         }
 
-        // --- DATA LAYER (Wrappers para IndexedDB) ---
+        // --- DATA LAYER ---
         function dbSaveDraft(draft) {
             if(!db) return;
             const tx = db.transaction(['drafts'], 'readwrite');
             tx.objectStore('drafts').put(draft);
         }
-
         function dbDeleteDraft(id) {
             if(!db) return;
             const tx = db.transaction(['drafts'], 'readwrite');
             tx.objectStore('drafts').delete(id);
         }
-
         function dbSaveUser(user) {
             if(!db) return;
-            // Guardamos usuario con ID fijo 'current'
             const userObj = { ...user, id: 'current' };
             const tx = db.transaction(['user'], 'readwrite');
             tx.objectStore('user').put(userObj);
         }
 
-        // --- CARGA INICIAL Y MIGRACIÓN ---
         async function loadInitialData() {
-            // 1. Cargar Usuario
             const userTx = db.transaction(['user'], 'readonly');
             const userReq = userTx.objectStore('user').get('current');
-            
             userReq.onsuccess = () => {
                 if (userReq.result) {
                     currentUser = userReq.result;
-                    initAppUI(); // Usuario existe, iniciar UI
+                    initAppUI(); 
                 } else {
-                    // Intento de migración de localStorage antiguo
                     const oldUser = localStorage.getItem('scriptorium_user');
                     if(oldUser) {
                         currentUser = JSON.parse(oldUser);
-                        dbSaveUser(currentUser); // Persistir en DB
-                        localStorage.removeItem('scriptorium_user'); // Limpiar antiguo
+                        dbSaveUser(currentUser); 
+                        localStorage.removeItem('scriptorium_user'); 
                         initAppUI();
                     } else {
-                        // Usuario nuevo/invitado
                         currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light' };
                         initAppUI();
                     }
                 }
             };
 
-            // 2. Cargar Borradores
             const draftsTx = db.transaction(['drafts'], 'readonly');
             const draftsReq = draftsTx.objectStore('drafts').getAll();
-            
             draftsReq.onsuccess = () => {
                 if(draftsReq.result && draftsReq.result.length > 0) {
                     drafts = draftsReq.result;
                 } else {
-                    // Migración de localStorage antiguo
                     const oldDrafts = localStorage.getItem('scriptorium_drafts');
                     if(oldDrafts) {
                         try {
                             drafts = JSON.parse(oldDrafts);
-                            // Guardar cada uno en DB
                             drafts.forEach(d => dbSaveDraft(d));
                             localStorage.removeItem('scriptorium_drafts');
                         } catch(e) { drafts = []; }
                     }
                 }
-                // Limpiar basura antigua
                 const now = Date.now();
                 drafts = drafts.filter(d => !d.deletedAt || (now - d.deletedAt) < TRASH_LIFETIME);
-                renderHome(); // Actualizar stats
+                renderHome(); 
             };
         }
 
-        // --- UI INIT ---
         function initAppUI() {
-            // Aplicar datos de usuario a la interfaz
             if(getEl('user-name-display')) getEl('user-name-display').textContent = currentUser.name;
             if(getEl('welcome-name')) getEl('welcome-name').textContent = currentUser.name;
-            
             const avatarContainer = getEl('user-avatar');
             if(currentUser.avatar) {
                 avatarContainer.innerHTML = `<img src="${currentUser.avatar}" class="avatar-img" alt="Avatar">`;
@@ -636,10 +594,8 @@
                 avatarContainer.textContent = currentUser.name.charAt(0).toUpperCase();
                 avatarContainer.style.background = ''; 
             }
-
             if(getEl('daily-goal-display')) getEl('daily-goal-display').textContent = currentUser.goal;
             if(getEl('settings-name')) getEl('settings-name').value = currentUser.name;
-            
             if(currentUser.avatar) {
                 const sImg = getEl('settings-avatar-img');
                 const sIcon = getEl('settings-default-icon');
@@ -647,134 +603,329 @@
                 sImg.classList.remove('hidden');
                 sIcon.classList.add('hidden');
             }
-
             if(getEl('user-display')) {
                 getEl('user-display').classList.remove('hidden');
                 getEl('user-display').classList.add('flex');
             }
-            
             setTheme(currentUser.theme || 'light');
             updateAiStatus();
             renderHome();
             switchView('home'); 
-            
-            // Start the rotation safely after everything is loaded
             startExcerptRotation();
+            
+            // Force chat setup on init
+            const mentorInput = getEl('mentor-input');
+            const mentorBtn = getEl('mentor-send-btn');
+            
+            if(mentorInput) {
+                 // Remove old listeners to avoid dupes
+                 mentorInput.removeEventListener('keydown', handleChatEnter); 
+                 mentorInput.addEventListener('keydown', handleChatEnter);
+            }
+            if(mentorBtn) {
+                mentorBtn.onclick = sendMentorMessage;
+            }
         }
 
-        // --- REGISTER & SETTINGS (UPDATED TO DB) ---
-        function registerUser() {
-            const name = getEl('auth-name').value.trim();
-            const goal = getEl('auth-goal').value;
-            if(!name) return alert("Nombre requerido");
-            
-            currentUser = { 
-                name, 
-                goal, 
-                joined: new Date().toLocaleDateString(), 
-                theme: 'light',
-                avatar: currentAvatarData 
+        // --- MENTOR CHAT LOGIC ---
+        function renderMentorChat(){
+             const container = getEl('mentor-messages');
+             if(container) container.scrollTop = container.scrollHeight;
+        }
+
+        function handleChatEnter(e) {
+            if(e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMentorMessage();
+            }
+        }
+
+        async function callGemini(prompt, schema = null) {
+            const apiKey = localStorage.getItem('scriptorium_api_key');
+            if (!apiKey) {
+                alert("Por favor, configura tu API Key en Ajustes.");
+                return null;
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            currentController = new AbortController();
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }]
             };
-            
-            dbSaveUser(currentUser); // Save to DB
-            getEl('auth-modal').classList.add('hidden');
-            initAppUI();
+
+            if (schema) {
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: schema
+                };
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    signal: currentController.signal
+                });
+
+                if (!response.ok) throw new Error("Error en API");
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (schema && text) {
+                     const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                     return JSON.parse(cleanText);
+                }
+                return text;
+            } catch (error) {
+                if (error.name === 'AbortError') return null;
+                console.error("Gemini Error:", error);
+                showToast("Error conectando con IA");
+                return null;
+            }
         }
 
-        function saveSettings(){ 
-            const k=getEl('api-key-input').value.trim(), n=getEl('settings-name').value.trim(); 
-            const currentTheme = document.body.getAttribute('data-theme') || 'light';
+        async function sendMentorMessage() {
+            const input = getEl('mentor-input');
+            const msg = input.value.trim();
+            if(!msg) return;
             
-            currentUser.theme = currentTheme;
-            if(n) currentUser.name = n;
-            if(currentAvatarData) currentUser.avatar = currentAvatarData;
+            const container = getEl('mentor-messages');
+            container.innerHTML += `<div class="mentor-bubble mentor-user shadow-sm animate-fade-in"><p>${msg}</p></div>`;
+            input.value = "";
+            container.scrollTop = container.scrollHeight;
 
-            dbSaveUser(currentUser); // Save to DB
-            
-            if(k) localStorage.setItem('scriptorium_api_key', k); // API Key is safe in localStorage (small string)
-            
-            showToast("Configuración guardada permanentemente");
-            initAppUI(); 
-            getEl('settings-modal').classList.add('hidden');
-        }
+            const activeDrafts = drafts.filter(d => !d.deletedAt);
+            const librarySummary = activeDrafts.map(d => `- Título: "${d.title}" | Proyecto: ${d.project} | Tipo: ${d.type} | Etiquetas: ${d.tags ? d.tags.join(', ') : 'Ninguna'}`).slice(0, 30).join('\n');
 
-        function removeAvatar() {
-            currentAvatarData = null;
-            if(currentUser) currentUser.avatar = null;
-            getEl('settings-avatar-img').classList.add('hidden');
-            getEl('settings-default-icon').classList.remove('hidden');
-            getEl('settings-avatar-input').value = "";
-            saveSettings();
-        }
-
-        // --- DRAFT LOGIC (UPDATED TO DB) ---
-        function saveDraft(s=false){
-            const t=editor.innerHTML;
-            if(!editor.innerText.trim()&&!currentDraftId)return false;
+            const prompt = `Actúa como un mentor literario experto y amable. 
+            CONTEXTO DE LA BIBLIOTECA DEL USUARIO:
+            ${librarySummary}
             
-            const mainType = typeSelect.value || "Borrador";
-
-            const d={
-                id: currentDraftId || Date.now(),
-                title: getEl('doc-title').value || "Sin título",
-                text: t,
-                project: getEl('doc-project').value || "Sin Proyecto",
-                type: mainType,
-                tags: currentTags,
-                date: new Date().toLocaleDateString(),
-                preview: editor.innerText.substring(0,100),
-                deletedAt: null
-            };
+            PREGUNTA DEL USUARIO: "${msg}"
             
-            // Actualizar array en memoria
-            if(currentDraftId){
-                const i=drafts.findIndex(x=>x.id===currentDraftId);
-                i!==-1 ? drafts[i]=d : drafts.unshift(d);
+            Responde de forma concisa, útil y motivadora. Usa formato Markdown. Si la pregunta es sobre sus obras, usa el contexto provisto.`;
+
+            const loadingId = Date.now();
+            container.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm animate-pulse text-stone-400 text-xs">Escribiendo...</div>`;
+            container.scrollTop = container.scrollHeight;
+
+            const response = await callGemini(prompt);
+            
+            const loader = document.getElementById(`load-${loadingId}`);
+            if(loader) loader.remove();
+            
+            if(response) {
+                container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${marked.parse(response)}</div>`;
             } else {
-                drafts.unshift(d);
-                currentDraftId=d.id;
+                container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm text-red-500">Error de conexión. Verifica tu API Key en Configuración.</div>`;
             }
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // --- CORRECTOR & EDITOR ---
+        function toggleAnalysisPanel() {
+            const panel = getEl('analysis-panel');
+            if(panel.classList.contains('translate-x-full')) {
+                panel.classList.remove('translate-x-full');
+                isPanelOpen = true;
+            } else {
+                panel.classList.add('translate-x-full');
+                isPanelOpen = false;
+            }
+        }
+
+        async function runGrammarCheck() {
+            const t = editor.innerText;
+            if(!t) return showToast("Escribe algo primero.");
             
-            dbSaveDraft(d); // Guardar en DB Persistente
+            getEl('ai-loading-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                const issues = [];
+                const commonErrors = [
+                    { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." },
+                    { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Escritura incorrecta." },
+                    { regex: /\bsiudad\b/gi, fix: "ciudad", type: "Ortografía", context: "S/C." },
+                    { regex: /\bdetectibe\b/gi, fix: "detective", type: "Ortografía", context: "B/V." },
+                    { regex: /\bbarias\b/gi, fix: "varias", type: "Ortografía", context: "B/V." },
+                    { regex: /\bdemaciado\b/gi, fix: "demasiado", type: "Ortografía", context: "S/C." },
+                    { regex: /\boracion\b/gi, fix: "oración", type: "Ortografía", context: "Falta tilde." },
+                    { regex: /\bconclucion\b/gi, fix: "conclusión", type: "Ortografía", context: "S/C y tilde." },
+                    { regex: /\ [,\.]/g, fix: ",", type: "Gramática", context: "Espacio antes de puntuación." },
+                    { regex: /\b([a-zñáéíóú]+)\s\./g, fix: "$1.", type: "Puntuación", context: "Espacio antes del punto." },
+                    { regex: /^\s*[a-zñáéíóú]/m, fix: "Mayúscula", type: "Gramática", context: "Inicio de oración minúscula." }
+                ];
+
+                commonErrors.forEach(rule => {
+                    let match;
+                    if(rule.regex.global) rule.regex.lastIndex = 0;
+                    const matches = t.match(rule.regex);
+                    if(matches) {
+                        matches.forEach(m => {
+                            if(!issues.some(i => i.error === m)) {
+                                 issues.push({ type: rule.type, error: m, fix: rule.fix, context: rule.context });
+                            }
+                        });
+                    }
+                });
+
+                const sentences = t.split(/[.!?]+/);
+                sentences.forEach(s => {
+                    const trimmed = s.trim();
+                    if(trimmed.length > 0 && /^[a-zñáéíóú]/.test(trimmed)) {
+                         issues.push({ type: "Gramática", error: trimmed.substring(0, 10) + "...", fix: trimmed.charAt(0).toUpperCase() + "...", context: "Mayúscula al inicio de oración." });
+                    }
+                });
+
+                renderIssues(issues);
+                getEl('ai-loading-overlay').classList.add('hidden');
+            }, 500);
+        }
+
+        function renderIssues(issues) {
+            const container = getEl('issues-container');
+            if(issues.length > 0) {
+                container.innerHTML = issues.map(i => {
+                    return `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4 animate-fade-in">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${i.type}</span>
+                        </div>
+                        <div class="mb-2">
+                            <p class="text-red-500 text-sm line-through decoration-red-300 decoration-2">${i.error}</p>
+                            <p class="text-stone-800 font-bold text-base flex items-center gap-2"><i data-lucide="arrow-right" class="w-3 h-3 text-stone-400"></i> ${i.fix}</p>
+                        </div>
+                        <p class="text-xs text-stone-500 italic border-t border-stone-100 pt-2 mt-2">${i.context}</p>
+                    </div>`
+                }).join('');
+                lucide.createIcons();
+            } else {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-emerald-600 py-10 text-center px-4 animate-fade-in"><div class="bg-emerald-50 p-4 rounded-full mb-3 border border-emerald-100"><i data-lucide="check-check" class="w-8 h-8"></i></div><p class="font-bold text-lg mb-1">¡Perfecto!</p><p class="text-xs opacity-80">No encontré errores comunes en mi base de datos local.</p></div>`;
+                lucide.createIcons();
+            }
+        }
+
+        // --- LIBRARY IMPORT FIX ---
+        function handleFileUpload(i){
+            const f=i.files[0];
+            if(!f)return;
+            const r=new FileReader();
             
-            if(!s) updateProjectList();
-            if(!s) showToast("Guardado en Disco Local");
-            isDirty=false;
-            updateUnsaved();
-            return true;
-        }
-
-        function moveToTrash(id){
-            const d=drafts.find(x=>x.id===id);
-            if(d){
-                d.deletedAt=Date.now();
-                dbSaveDraft(d); // Update DB
-                updateProjectList();
-                if(currentDraftId===id) clearEditor(true);
-                showToast("Papelera");
+            // PDF HANDLING FOR EDITOR (EXTRACT TEXT)
+            if (f.name.endsWith('.pdf')) {
+                 if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no lista"); return; }
+                 const pdfReader = new FileReader();
+                 pdfReader.onload = async function(e) {
+                     try {
+                         const typedarray = new Uint8Array(e.target.result);
+                         const pdf = await window.pdfjsLib.getDocument(typedarray).promise;
+                         let fullText = "";
+                         for(let j=1; j<=pdf.numPages; j++) {
+                             const page = await pdf.getPage(j);
+                             const textContent = await page.getTextContent();
+                             const pageText = textContent.items.map(item => item.str).join(' ');
+                             fullText += pageText + "\n\n";
+                         }
+                         
+                         const t = f.name.split('.').slice(0,-1).join('.');
+                         const nd = {
+                            id: Date.now(),
+                            title: t,
+                            text: fullText.replace(/\n/g, '<br>'),
+                            project: "Importados",
+                            tags: ['PDF Importado'],
+                            type: 'Borrador',
+                            date: new Date().toLocaleDateString(),
+                            preview: fullText.substring(0,100),
+                            deletedAt: null
+                         };
+                         drafts.unshift(nd);
+                         dbSaveDraft(nd);
+                         updateProjectList();
+                         selectProject('Importados'); 
+                         switchView('library'); // Go to library to see it
+                         showToast("PDF importado a editor");
+                     } catch(err) { alert("Error leyendo PDF: " + err.message); }
+                 };
+                 pdfReader.readAsArrayBuffer(f);
+                 i.value = ''; 
+                 return;
             }
-        }
 
-        function deleteForever(id){
-            drafts=drafts.filter(x=>x.id!==id);
-            dbDeleteDraft(id); // Delete from DB
-            updateProjectList();
-            renderLibraryContent();
-            showToast("Borrado permanentemente");
-        }
-
-        function restoreDraft(id){
-            const d=drafts.find(x=>x.id===id);
-            if(d){
-                d.deletedAt=null;
-                dbSaveDraft(d); // Update DB
+            r.onload=async function(e){
+                let c="";
+                const t=f.name.split('.').slice(0,-1).join('.');
+                if(f.name.endsWith('.docx')){
+                    const ab=e.target.result;
+                    const res=await mammoth.convertToHtml({arrayBuffer:ab});
+                    c=res.value;
+                } else {
+                    c=e.target.result;
+                }
+                const nd={
+                    id:Date.now(),
+                    title:t,
+                    text:c,
+                    project:"Importados",
+                    tags:['Importado'],
+                    type:'Borrador',
+                    date:new Date().toLocaleDateString(),
+                    preview:getCleanText(c).substring(0,100),
+                    deletedAt:null
+                };
+                drafts.unshift(nd);
+                dbSaveDraft(nd);
                 updateProjectList();
-                renderLibraryContent();
-                showToast("Restaurado");
-            }
+                selectProject('Importados'); 
+                switchView('library'); 
+                showToast("Importado correctamente");
+            };
+            
+            if(f.name.endsWith('.docx')){ r.readAsArrayBuffer(f); } else { r.readAsText(f); }
+            i.value='';
         }
 
-        // --- LIBRARY FUNCTIONS (RESTORED) ---
+        // --- COMMON FUNCTIONS ---
+        function registerUser() { const name = getEl('auth-name').value.trim(); const goal = getEl('auth-goal').value; if(!name) return alert("Nombre requerido"); currentUser = { name, goal, joined: new Date().toLocaleDateString(), theme: 'light', avatar: currentAvatarData }; dbSaveUser(currentUser); getEl('auth-modal').classList.add('hidden'); initAppUI(); }
+        function saveSettings(){ const k=getEl('api-key-input').value.trim(), n=getEl('settings-name').value.trim(); const currentTheme = document.body.getAttribute('data-theme') || 'light'; currentUser.theme = currentTheme; if(n) currentUser.name = n; if(currentAvatarData) currentUser.avatar = currentAvatarData; dbSaveUser(currentUser); if(k) localStorage.setItem('scriptorium_api_key', k); showToast("Configuración guardada"); initAppUI(); getEl('settings-modal').classList.add('hidden'); }
+        function removeAvatar() { currentAvatarData = null; if(currentUser) currentUser.avatar = null; getEl('settings-avatar-img').classList.add('hidden'); getEl('settings-default-icon').classList.remove('hidden'); getEl('settings-avatar-input').value = ""; saveSettings(); }
+        function saveDraft(s=false){ const t=editor.innerHTML; if(!editor.innerText.trim()&&!currentDraftId)return false; const mainType = typeSelect.value || "Borrador"; const d={ id: currentDraftId || Date.now(), title: getEl('doc-title').value || "Sin título", text: t, project: getEl('doc-project').value || "Sin Proyecto", type: mainType, tags: currentTags, date: new Date().toLocaleDateString(), preview: editor.innerText.substring(0,100), deletedAt: null }; if(currentDraftId){ const i=drafts.findIndex(x=>x.id===currentDraftId); i!==-1 ? drafts[i]=d : drafts.unshift(d); } else { drafts.unshift(d); currentDraftId=d.id; } dbSaveDraft(d); if(!s) updateProjectList(); if(!s) showToast("Guardado"); isDirty=false; updateUnsaved(); return true; }
+        function moveToTrash(id){ const d=drafts.find(x=>x.id===id); if(d){ d.deletedAt=Date.now(); dbSaveDraft(d); updateProjectList(); if(currentDraftId===id) clearEditor(true); showToast("Papelera"); } }
+        function deleteForever(id){ drafts=drafts.filter(x=>x.id!==id); dbDeleteDraft(id); updateProjectList(); renderLibraryContent(); showToast("Borrado"); }
+        function restoreDraft(id){ const d=drafts.find(x=>x.id===id); if(d){ d.deletedAt=null; dbSaveDraft(d); updateProjectList(); renderLibraryContent(); showToast("Restaurado"); } }
+        function compressImage(file, mW, mH, q) { return new Promise((resolve, reject) => { const r = new FileReader(); r.readAsDataURL(file); r.onload = e => { const i = new Image(); i.src = e.target.result; i.onload = () => { const c = document.createElement('canvas'); let w = i.width, h = i.height; if (w > h) { if (w > mW) { h *= mW / w; w = mW; } } else { if (h > mH) { w *= mH / h; h = mH; } } c.width = w; c.height = h; const x = c.getContext('2d'); x.drawImage(i, 0, 0, w, h); resolve(c.toDataURL('image/jpeg', q)); }; i.onerror = reject; }; r.onerror = reject; }); }
+        async function previewAuthAvatar(i) { const f = i.files[0]; if(f) { try { const r = await compressImage(f, 150, 150, 0.7); currentAvatarData = r; getEl('auth-avatar-img').src = r; getEl('auth-avatar-img').classList.remove('hidden'); getEl('auth-default-icon').classList.add('hidden'); } catch(e) {} } }
+        async function previewSettingsAvatar(i) { const f = i.files[0]; if(f) { try { const r = await compressImage(f, 150, 150, 0.7); currentAvatarData = r; getEl('settings-avatar-img').src = r; getEl('settings-avatar-img').classList.remove('hidden'); getEl('settings-default-icon').classList.add('hidden'); } catch(e) {} } }
+        function updateUnsaved(){const e=getEl('stat-unsaved');if(e)e.classList.toggle('hidden',!isDirty);}
+        function handleInput(){ const t = editor.innerText.trim(); if(getEl('stat-words')) getEl('stat-words').textContent=t?t.split(/\s+/).length:0; if(getEl('stat-sentences')) getEl('stat-sentences').textContent=t?t.split(/[.!?]+/).filter(x=>x.trim()).length:0; isDirty=true; updateUnsaved(); if(getEl('selection-menu').style.display!=='none') hideSelectionMenu(); }
+        function format(c, v=null) { document.execCommand(c, false, v); editor.focus(); handleInput(); }
+        function showToast(m){const t=getEl('toast');getEl('toast-msg').textContent=m;t.classList.remove('translate-y-40');setTimeout(()=>t.classList.add('translate-y-40'),3000);}
+        function setTheme(mode) { document.body.setAttribute('data-theme', mode); setReaderTheme(mode); if(currentUser) currentUser.theme = mode; }
+        function setReaderTheme(mode) { const reader = getEl('view-reader'); if(reader) reader.setAttribute('data-reader-theme', mode); ['light', 'sepia', 'dark'].forEach(m => { const btn = getEl(`rt-btn-${m}`); if(btn) { if(m === mode) btn.classList.add('active-reader-theme'); else btn.classList.remove('active-reader-theme'); } }); if (bookRendition) { const themes = { 'light': { body: { color: '#222', background: '#fcfbf9' } }, 'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } } }; try { bookRendition.themes.default(themes[mode]); } catch(e) {} } }
+        function toggleSettings(){ getEl('settings-modal').classList.toggle('hidden'); getEl('api-key-input').value = localStorage.getItem('scriptorium_api_key') || ""; currentAvatarData = null; }
+        function logout(){ if(confirm("¿Salir?")){ location.reload(); }}
+        function updateAiStatus(){const d=getEl('ai-status-dot'); if(localStorage.getItem('scriptorium_api_key')){d.classList.remove('bg-red-500');d.classList.add('bg-emerald-500');}else{d.classList.remove('bg-emerald-500');d.classList.add('bg-red-500');}}
+        function switchView(v){ ['editor','library','home','reader','mentor'].forEach(x=>getEl(`view-${x}`)?.classList.add('hidden')); const view = getEl(`view-${v}`); if(view) view.classList.remove('hidden'); ['btn-editor','btn-library','btn-home','btn-mentor'].forEach(x=>{const b=getEl(x); if(b){b.classList.remove('active', 'bg-stone-100','text-stone-900','shadow-md'); b.classList.add('text-stone-400');}}); const activeBtn = getEl(`btn-${v}`); if(activeBtn){activeBtn.classList.remove('text-stone-400'); activeBtn.classList.add('active', 'bg-stone-100','text-stone-900','shadow-md');} if(v==='home')renderHome(); if(v==='library')updateProjectList(); if(v==='mentor')renderMentorChat(); }
+        function renderTags() { const container = getEl('active-tags-container'); container.innerHTML = currentTags.map(t => `<span class="tag-pill">${t}<button onclick="removeTag('${t}')" class="hover:text-red-300 ml-1">×</button></span>`).join(''); }
+        function handleTagInput(e) { if (e.key === 'Enter') { e.preventDefault(); const val = e.target.value.trim(); if (val && !currentTags.includes(val)) { currentTags.push(val); renderTags(); e.target.value = ''; isDirty = true; updateUnsaved(); } } }
+        function removeTag(t) { currentTags = currentTags.filter(tag => tag !== t); renderTags(); isDirty = true; updateUnsaved(); }
+        function clearEditor(s=false){ if(!s&&isDirty) saveDraft(true); editor.innerHTML=""; getEl('doc-title').value=""; getEl('doc-project').value=""; typeSelect.value="Borrador"; currentTags = []; renderTags(); currentDraftId=null; isDirty=false; updateUnsaved(); if(!s) showToast("Limpio"); }
+        function loadDraft(id){ if(isDirty) saveDraft(true); const d = drafts.find(x=>x.id===id); if(d && !d.deletedAt){ currentDraftId = d.id; getEl('doc-title').value = d.title; editor.innerHTML = d.text; getEl('doc-project').value = d.project; if(d.type) typeSelect.value = d.type; else typeSelect.value = "Borrador"; currentTags = d.tags || []; renderTags(); switchView('editor'); showToast("Cargado"); } }
+        function copyToClipboard(){const r=document.createRange();r.selectNode(editor);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();showToast("Copiado");}
+        function getCleanText(html){const t=document.createElement("div");t.innerHTML=html.replace(/<br>/g,'\n').replace(/<\/p>/g,'\n\n');return t.innerText||t.textContent||"";}
+        function downloadCurrentTxt(){ const blob = new Blob([getCleanText(editor.innerHTML)], {type:'text/plain'}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (getEl('doc-title').value || "Borrador") + ".txt"; a.click(); }
+        function downloadDraft(id, format) { const d = drafts.find(x => x.id === id); if (!d) return; const plainText = getCleanText(d.text); const title = d.title || "Documento"; if (format === 'txt') { const blob = new Blob([plainText], {type: 'text/plain'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${title}.txt`; link.click(); } else if (format === 'pdf') { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "bold"); doc.setFontSize(18); doc.text(title, 105, 20, { align: "center" }); doc.setFont("times", "normal"); doc.setFontSize(12); const splitText = doc.splitTextToSize(plainText, 170); let y = 30; splitText.forEach(line => { if (y > 280) { doc.addPage(); y = 20; } doc.text(line, 20, y); y += 7; }); doc.save(`${title}.pdf`); } else if (format === 'doc') { const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word Document with JavaScript</title></head><body>"; const footer = "</body></html>"; const sourceHTML = header + `<h1>${title}</h1>` + d.text + footer; const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${title}.doc`; link.click(); } }
+        function renderStats(){ const a=drafts.filter(d=>!d.deletedAt), t=drafts.filter(d=>d.deletedAt), w=a.reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0); if(getEl('stat-total-docs')) getEl('stat-total-docs').textContent=a.length; if(getEl('stat-total-words')) getEl('stat-total-words').textContent=w.toLocaleString(); if(getEl('stat-total-trash')) getEl('stat-total-trash').textContent=t.length; const c = getEl('projects-progress-container'); if(c) { const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))]; if(ps.length===0){ c.innerHTML = `<div class="text-center text-sm text-stone-400 col-span-2">Sin proyectos.</div>`; } else { c.innerHTML = ps.map(p=>{ const pw=a.filter(d=>(d.project||"Sin Proyecto")===p).reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0); const pct=Math.min(100,Math.round((pw/50000)*100)); return `<div class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-all"><div class="flex justify-between mb-3"><span class="font-bold text-lg truncate">${p}</span><span class="text-xs bg-stone-100 px-2 py-1 rounded-full font-mono">${pw}/50k</span></div><div class="w-full bg-stone-100 h-3 rounded-full"><div class="bg-amber-500 h-3 rounded-full" style="width:${pct}%"></div></div><div class="text-xs text-stone-400 mt-2 text-right">${pct}% Completado</div></div>`; }).join(''); } } }
+        function renderHome(){ fetchBookExcerpt(); renderStats(); }
+        function startExcerptRotation() { if(excerptInterval) clearInterval(excerptInterval); fetchBookExcerpt(); excerptInterval = setInterval(() => { const homeView = document.getElementById('view-home'); if(homeView && !homeView.classList.contains('hidden')){ fetchBookExcerpt(); } }, 45000); }
+        async function fetchBookExcerpt() { const container = getEl('excerpt-text'); if(!container) return; const mainContainer = getEl('excerpt-container'); mainContainer.style.opacity = '0'; setTimeout(async () => { const apiKey = localStorage.getItem('scriptorium_api_key'); let excerpt = null; if (apiKey) { try { const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso. JSON: { "book": "...", "author": "...", "text": "..." }`; const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } }); if (result) excerpt = result; } catch (e) {} } if (!excerpt) excerpt = FAMOUS_EXCERPTS[Math.floor(Math.random() * FAMOUS_EXCERPTS.length)]; if(getEl('excerpt-book')) getEl('excerpt-book').textContent = excerpt.book; if(getEl('excerpt-author')) getEl('excerpt-author').textContent = `— ${excerpt.author}`; if(getEl('excerpt-text')) getEl('excerpt-text').textContent = `"${excerpt.text}"`; if(mainContainer) mainContainer.style.opacity = '1'; }, 300); }
+        function createNewInProject(p) { clearEditor(true); getEl('doc-project').value = p; switchView('editor'); }
+        function handleSelection(e) { const s=window.getSelection(); const t=s.toString().trim(); if(t.length>3 && s.rangeCount > 0 && editor.contains(s.anchorNode)){ currentSelection=t; const r=s.getRangeAt(0).getBoundingClientRect(); showSelectionMenu(r.left + r.width/2, r.top - 40); } else hideSelectionMenu(); } 
+        function showSelectionMenu(x,y){ if(x>window.innerWidth-200)x=window.innerWidth-200; if(y<20)y=20; selectionMenu.style.left=`${x}px`; selectionMenu.style.top=`${y}px`; selectionMenu.classList.remove('hidden'); selectionMenu.style.display='flex'; } 
+        function hideSelectionMenu(){ if(selectionMenu) { selectionMenu.classList.add('hidden'); selectionMenu.style.display='none'; } }
+        function suggestContinuationCheck() { hideSelectionMenu(); if(localStorage.getItem('scriptorium_api_key')) { alert("Funcionalidad de sugerencias en mantenimiento."); } else { alert("Configura tu API Key primero."); } }
+        
+        // --- LIBRARY FUNCTIONS ---
         function selectTrash(){isTrashView=true;selectedProject=null;renderLibraryContent();}
         function selectProject(p){selectedProject=p;isTrashView=false;renderLibraryContent();}
         
@@ -833,7 +984,6 @@
                         </div>
                         <p class="text-sm font-serif text-stone-600 line-clamp-4 leading-relaxed cursor-pointer">${getCleanText(d.preview)}</p>
                     </div>
-                    
                     <div class="mt-4 pt-4 border-t border-stone-100 flex justify-between items-center opacity-40 group-hover:opacity-100 transition-opacity">
                         <button onclick="openPreview(${d.id})" class="text-stone-500 hover:text-stone-800" title="Vista Previa"><i data-lucide="eye" class="w-4 h-4"></i></button>
                         <div class="flex gap-2">
@@ -849,212 +999,21 @@
             lucide.createIcons();
         }
 
-        // --- AVATAR HELPERS ---
-        function compressImage(file, maxWidth, maxHeight, quality) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = function(event) {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width; let height = img.height;
-                        if (width > height) { if (width > maxWidth) { height *= maxWidth / width; width = maxWidth; } } 
-                        else { if (height > maxHeight) { width *= maxHeight / height; height = maxHeight; } }
-                        canvas.width = width; canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', quality));
-                    };
-                    img.onerror = reject;
-                };
-                reader.onerror = reject;
-            });
-        }
-
-        async function previewAuthAvatar(input) {
-            const file = input.files[0];
-            if(file) {
-                try {
-                    const resized = await compressImage(file, 150, 150, 0.7);
-                    currentAvatarData = resized;
-                    const img = getEl('auth-avatar-img');
-                    const icon = getEl('auth-default-icon');
-                    img.src = resized; img.classList.remove('hidden'); icon.classList.add('hidden');
-                } catch(e) { console.error(e); }
-            }
-        }
-
-        async function previewSettingsAvatar(input) {
-            const file = input.files[0];
-            if(file) {
-                try {
-                    const resized = await compressImage(file, 150, 150, 0.7);
-                    currentAvatarData = resized;
-                    const img = getEl('settings-avatar-img');
-                    const icon = getEl('settings-default-icon');
-                    img.src = resized; img.classList.remove('hidden'); icon.classList.add('hidden');
-                } catch(e) { console.error(e); }
-            }
-        }
-
-        // --- CORE UI FUNCTIONS ---
-        function updateUnsaved(){const e=getEl('stat-unsaved');if(e)e.classList.toggle('hidden',!isDirty);}
-        function handleInput(){ 
-            const t = editor.innerText.trim(); 
-            if(getEl('stat-words')) getEl('stat-words').textContent=t?t.split(/\s+/).length:0; 
-            if(getEl('stat-sentences')) getEl('stat-sentences').textContent=t?t.split(/[.!?]+/).filter(x=>x.trim()).length:0; 
-            isDirty=true; updateUnsaved(); 
-            if(getEl('selection-menu').style.display!=='none') hideSelectionMenu(); 
-        }
-        function format(c, v=null) { document.execCommand(c, false, v); editor.focus(); handleInput(); }
-        function showToast(m){const t=getEl('toast');getEl('toast-msg').textContent=m;t.classList.remove('translate-y-40');setTimeout(()=>t.classList.add('translate-y-40'),3000);}
-        function setTheme(mode) {
-            document.body.setAttribute('data-theme', mode);
-            ['light', 'dark', 'warm'].forEach(m => {
-                const btn = getEl(`theme-btn-${m}`);
-                if(btn) {
-                    if(m === mode) btn.classList.add('ring-2', 'ring-amber-500', 'border-amber-500');
-                    else btn.classList.remove('ring-2', 'ring-amber-500', 'border-amber-500');
-                }
-            });
-            
-            // Also update reader theme if active
-            setReaderTheme(mode);
-            
-            if(currentUser) currentUser.theme = mode; 
-        }
-        
-        function setReaderTheme(mode) {
-            // Update CSS variables and attributes for both HTML and PDF
-            const reader = getEl('view-reader');
-            if(reader) reader.setAttribute('data-reader-theme', mode);
-            
-            ['light', 'sepia', 'dark'].forEach(m => {
-                const btn = getEl(`rt-btn-${m}`);
-                if(btn) { 
-                    if(m === mode) btn.classList.add('active-reader-theme'); 
-                    else btn.classList.remove('active-reader-theme'); 
-                }
-            });
-
-            // Update EPUB theme if active
-            if (bookRendition) {
-                const themes = { 
-                    'light': { body: { color: '#222', background: '#fcfbf9' } }, 
-                    'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 
-                    'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } } 
-                };
-                // Try to inject styling for better compatibility
-                try {
-                     bookRendition.themes.default(themes[mode]);
-                } catch(e) { console.log("Theme update error", e); }
-            }
-        }
-
-        function toggleSettings(){ getEl('settings-modal').classList.toggle('hidden'); getEl('api-key-input').value = localStorage.getItem('scriptorium_api_key') || ""; currentAvatarData = null; }
-        function logout(){ if(confirm("¿Salir?")){ 
-            // Optional: dbDeleteUser() if you want to clear session fully
-            location.reload(); 
-        }}
-        function updateAiStatus(){const d=getEl('ai-status-dot'); if(localStorage.getItem('scriptorium_api_key')){d.classList.remove('bg-red-500');d.classList.add('bg-emerald-500');}else{d.classList.remove('bg-emerald-500');d.classList.add('bg-red-500');}}
-        function switchView(v){
-            ['editor','library','home','reader','mentor'].forEach(x=>getEl(`view-${x}`)?.classList.add('hidden')); 
-            const view = getEl(`view-${v}`); if(view) view.classList.remove('hidden');
-            ['btn-editor','btn-library','btn-home','btn-mentor'].forEach(x=>{const b=getEl(x); if(b){b.classList.remove('active', 'bg-stone-100','text-stone-900','shadow-md'); b.classList.add('text-stone-400');}});
-            const activeBtn = getEl(`btn-${v}`); if(activeBtn){activeBtn.classList.remove('text-stone-400'); activeBtn.classList.add('active', 'bg-stone-100','text-stone-900','shadow-md');}
-            if(v==='home')renderHome(); if(v==='library')updateProjectList();
-            if(v==='mentor')renderMentorChat();
-        }
-        function renderTags() {
-            const container = getEl('active-tags-container');
-            container.innerHTML = currentTags.map(t => `<span class="tag-pill">${t}<button onclick="removeTag('${t}')" class="hover:text-red-300 ml-1">×</button></span>`).join('');
-        }
-        function handleTagInput(e) { if (e.key === 'Enter') { e.preventDefault(); const val = e.target.value.trim(); if (val && !currentTags.includes(val)) { currentTags.push(val); renderTags(); e.target.value = ''; isDirty = true; updateUnsaved(); } } }
-        function removeTag(t) { currentTags = currentTags.filter(tag => tag !== t); renderTags(); isDirty = true; updateUnsaved(); }
-        function clearEditor(s=false){ if(!s&&isDirty) saveDraft(true); editor.innerHTML=""; getEl('doc-title').value=""; getEl('doc-project').value=""; typeSelect.value="Borrador"; currentTags = []; renderTags(); currentDraftId=null; isDirty=false; updateUnsaved(); if(!s) showToast("Limpio"); }
-        function loadDraft(id){ if(isDirty) saveDraft(true); const d = drafts.find(x=>x.id===id); if(d && !d.deletedAt){ currentDraftId = d.id; getEl('doc-title').value = d.title; editor.innerHTML = d.text; getEl('doc-project').value = d.project; if(d.type) typeSelect.value = d.type; else typeSelect.value = "Borrador"; currentTags = d.tags || []; renderTags(); switchView('editor'); showToast("Cargado"); } }
-        function copyToClipboard(){const r=document.createRange();r.selectNode(editor);window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');window.getSelection().removeAllRanges();showToast("Copiado");}
-        function getCleanText(html){const t=document.createElement("div");t.innerHTML=html.replace(/<br>/g,'\n').replace(/<\/p>/g,'\n\n');return t.innerText||t.textContent||"";}
-        function downloadCurrentTxt(){ const blob = new Blob([getCleanText(editor.innerHTML)], {type:'text/plain'}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (getEl('doc-title').value || "Borrador") + ".txt"; a.click(); }
-        function downloadDraft(id, format) { const d = drafts.find(x => x.id === id); if (!d) return; const plainText = getCleanText(d.text); const title = d.title || "Documento"; if (format === 'txt') { const blob = new Blob([plainText], {type: 'text/plain'}); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${title}.txt`; link.click(); } else if (format === 'pdf') { const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "bold"); doc.setFontSize(18); doc.text(title, 105, 20, { align: "center" }); doc.setFont("times", "normal"); doc.setFontSize(12); const splitText = doc.splitTextToSize(plainText, 170); let y = 30; splitText.forEach(line => { if (y > 280) { doc.addPage(); y = 20; } doc.text(line, 20, y); y += 7; }); doc.save(`${title}.pdf`); } else if (format === 'doc') { const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export HTML to Word Document with JavaScript</title></head><body>"; const footer = "</body></html>"; const sourceHTML = header + `<h1>${title}</h1>` + d.text + footer; const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `${title}.doc`; link.click(); } }
-        
-        // --- RESTORED RENDER STATS (Previously Missing) ---
-        function renderStats(){
-            const a=drafts.filter(d=>!d.deletedAt), t=drafts.filter(d=>d.deletedAt), w=a.reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0);
-            
-            // Stats Elements - Check if they exist first
-            if(getEl('stat-total-docs')) getEl('stat-total-docs').textContent=a.length;
-            if(getEl('stat-total-words')) getEl('stat-total-words').textContent=w.toLocaleString();
-            if(getEl('stat-total-trash')) getEl('stat-total-trash').textContent=t.length;
-
-            const c = getEl('projects-progress-container');
-            if(c) {
-                const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))];
-                if(ps.length===0){
-                    c.innerHTML = `<div class="text-center text-sm text-stone-400 col-span-2">Sin proyectos.</div>`;
-                } else {
-                    c.innerHTML = ps.map(p=>{ 
-                        const pw=a.filter(d=>(d.project||"Sin Proyecto")===p).reduce((x,d)=>x+(d.text?getCleanText(d.text).split(/\s+/).length:0),0);
-                        const pct=Math.min(100,Math.round((pw/50000)*100)); 
-                        return `<div class="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition-all"><div class="flex justify-between mb-3"><span class="font-bold text-lg truncate">${p}</span><span class="text-xs bg-stone-100 px-2 py-1 rounded-full font-mono">${pw}/50k</span></div><div class="w-full bg-stone-100 h-3 rounded-full"><div class="bg-amber-500 h-3 rounded-full" style="width:${pct}%"></div></div><div class="text-xs text-stone-400 mt-2 text-right">${pct}% Completado</div></div>`; 
-                    }).join('');
-                }
-            }
-        }
-
-        // --- CORRECTED RENDER HOME ---
-        function renderHome(){ 
-            fetchBookExcerpt(); 
-            renderStats(); 
-        }
-        
-        // --- FIXED EXCERPT ROTATION ---
-        function startExcerptRotation() {
-            if(excerptInterval) clearInterval(excerptInterval);
-            fetchBookExcerpt(); 
-            excerptInterval = setInterval(() => {
-                const homeView = document.getElementById('view-home');
-                if(homeView && !homeView.classList.contains('hidden')){ fetchBookExcerpt(); }
-            }, 45000); 
-        }
-
-        async function fetchBookExcerpt() { const container = getEl('excerpt-text'); if(!container) return; const mainContainer = getEl('excerpt-container'); mainContainer.style.opacity = '0'; setTimeout(async () => { const apiKey = localStorage.getItem('scriptorium_api_key'); let excerpt = null; if (apiKey) { try { const prompt = `Genera un extracto breve (máximo 150 palabras) de un libro famoso. JSON: { "book": "...", "author": "...", "text": "..." }`; const result = await callGemini(prompt, { type: "OBJECT", properties: { book: {type: "STRING"}, author: {type: "STRING"}, text: {type: "STRING"} } }); if (result) excerpt = result; } catch (e) {} } if (!excerpt) excerpt = FAMOUS_EXCERPTS[Math.floor(Math.random() * FAMOUS_EXCERPTS.length)]; if(getEl('excerpt-book')) getEl('excerpt-book').textContent = excerpt.book; if(getEl('excerpt-author')) getEl('excerpt-author').textContent = `— ${excerpt.author}`; if(getEl('excerpt-text')) getEl('excerpt-text').textContent = `"${excerpt.text}"`; if(mainContainer) mainContainer.style.opacity = '1'; }, 300); }
-        function createNewInProject(p) { clearEditor(true); getEl('doc-project').value = p; switchView('editor'); }
-        function handleSelection(e) { const s=window.getSelection(); const t=s.toString().trim(); if(t.length>3 && s.rangeCount > 0 && editor.contains(s.anchorNode)){ currentSelection=t; const r=s.getRangeAt(0).getBoundingClientRect(); showSelectionMenu(r.left + r.width/2, r.top - 40); } else hideSelectionMenu(); } 
-        function showSelectionMenu(x,y){ if(x>window.innerWidth-200)x=window.innerWidth-200; if(y<20)y=20; selectionMenu.style.left=`${x}px`; selectionMenu.style.top=`${y}px`; selectionMenu.classList.remove('hidden'); selectionMenu.style.display='flex'; } 
-        function hideSelectionMenu(){ if(selectionMenu) { selectionMenu.classList.add('hidden'); selectionMenu.style.display='none'; } }
-        function suggestContinuationCheck() { hideSelectionMenu(); if(localStorage.getItem('scriptorium_api_key')) { alert("Funcionalidad de sugerencias en mantenimiento."); } else { alert("Configura tu API Key primero."); } }
-        
-        // Listeners
-        editor.addEventListener('input', handleInput); 
-        editor.addEventListener('mouseup', handleSelection); 
-        [titleInput, projectInput, typeSelect].forEach(el => el.addEventListener('input', () => { isDirty=true; updateUnsaved(); })); 
-        document.addEventListener('mousedown', e=>{if(selectionMenu && !selectionMenu.contains(e.target)&&e.target!==editor)hideSelectionMenu();}); 
-        const mentorInputEl = getEl('mentor-input'); if(mentorInputEl) { mentorInputEl.addEventListener('keydown', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMentorMessage(); } }); }
-
-        // READER DATABASE (Same connection, different store)
+        // Reader database logic (same connection)
         function saveBookToLibrary(file) {
             if(!db) return alert("Base de datos no lista.");
             const reader = new FileReader();
             reader.onload = function(e) {
-                let fileType = file.type;
-                if (!fileType) {
-                    if (file.name.endsWith('.pdf')) fileType = 'application/pdf';
-                    if (file.name.endsWith('.epub')) fileType = 'application/epub+zip';
-                }
-                const blob = new Blob([e.target.result], { type: fileType });
-                const id = Date.now(); // Store ID immediately
-                const bookData = { id: id, name: file.name, type: fileType, data: blob, date: new Date().toLocaleDateString(), progress: null };
+                const blob = new Blob([e.target.result], { type: file.type });
+                const id = Date.now();
+                const bookData = { id: id, name: file.name, type: file.type, data: blob, date: new Date().toLocaleDateString(), progress: null };
                 const tx = db.transaction(['books'], 'readwrite');
                 tx.objectStore('books').add(bookData);
                 tx.oncomplete = () => { 
                     showToast("Libro guardado en biblioteca"); 
-                    currentReaderBookId = id; // Set global ID for immediate tracking
+                    currentReaderBookId = id;
                     refreshReaderLibrary(); 
-                    // Load the file now that it is saved and ID is set
-                    const fileObj = new File([blob], file.name, { type: fileType });
+                    const fileObj = new File([blob], file.name, { type: file.type });
                     loadBookFile(fileObj);
                 };
                 tx.onerror = () => alert("Error al guardar libro.");
@@ -1066,9 +1025,7 @@
         function deleteBookFromLibrary(id) { if(!confirm("¿Eliminar este libro de la biblioteca?")) return; const tx = db.transaction(['books'], 'readwrite'); tx.objectStore('books').delete(id); tx.oncomplete = () => { showToast("Libro eliminado"); refreshReaderLibrary(); }; }
         function loadBookFromLibrary(id) { const tx = db.transaction(['books'], 'readonly'); const request = tx.objectStore('books').get(id); request.onsuccess = () => { const book = request.result; if(book) { currentReaderBookId = book.id; const file = new File([book.data], book.name, { type: book.type }); loadBookFile(file, book.progress); } }; }
         function handleBookImport(input) { const file = input.files[0]; if(!file) return; currentReaderBookId = null; if(confirm(`¿Quieres guardar "${file.name}" en tu biblioteca permanente?`)) { saveBookToLibrary(file); loadBookFile(file); } else { loadBookFile(file); } input.value = ''; }
-        function loadBookFile(file, savedProgress = null) { getEl('reader-library-view').classList.add('hidden'); getEl('reader-content-view').classList.remove('hidden'); getEl('reader-controls').classList.remove('opacity-0'); getEl('reader-nav-controls').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('flex'); const reader = new FileReader(); const epubViewer = document.getElementById('epub-viewer'); const pdfCanvas = document.getElementById('pdf-render'); const pageInfo = document.getElementById('reader-page-info'); pageInfo.textContent = "Cargando..."; if (file.name.endsWith('.epub') || file.type.includes('epub')) { epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden'); if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } const arrayBufferReader = new FileReader(); arrayBufferReader.onload = function(e) { const bookData = e.target.result; try { if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); const book = window.ePub(bookData); bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated", manager: "default" }); const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); displayPromise.catch(err => fallbackEpubToPdf(file)); bookRendition.on("relocated", function(location){ if(location && location.start) { if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); try { const percent = location.start.percentage; if(percent !== undefined) { const p = Math.round(percent * 100); pageInfo.textContent = `${p}%`; getEl('reader-progress-bar').style.width = `${p}%`; } } catch(e) {} } }); const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; setReaderTheme(currentTheme); } catch(e) { fallbackEpubToPdf(file); } }; arrayBufferReader.readAsArrayBuffer(file); } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) { if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden'); 
-        if (pdfRenderTask) { pdfRenderTask.cancel(); pdfRenderTask = null; }
-        reader.readAsArrayBuffer(file); reader.onload = async function(e) { try { const typedarray = new Uint8Array(e.target.result); pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise; renderPdfPage(savedProgress || 1); } catch(err) { alert("Error al leer PDF: " + err.message); } } } }
+        function loadBookFile(file, savedProgress = null) { getEl('reader-library-view').classList.add('hidden'); getEl('reader-content-view').classList.remove('hidden'); getEl('reader-controls').classList.remove('opacity-0'); getEl('reader-nav-controls').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('flex'); const reader = new FileReader(); const epubViewer = document.getElementById('epub-viewer'); const pdfCanvas = document.getElementById('pdf-render'); const pageInfo = document.getElementById('reader-page-info'); pageInfo.textContent = "Cargando..."; if (file.name.endsWith('.epub') || file.type.includes('epub')) { epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden'); if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } const arrayBufferReader = new FileReader(); arrayBufferReader.onload = function(e) { const bookData = e.target.result; try { if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); const book = window.ePub(bookData); bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated", manager: "default" }); const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); displayPromise.catch(err => fallbackEpubToPdf(file)); bookRendition.on("relocated", function(location){ if(location && location.start) { if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); try { const percent = location.start.percentage; if(percent !== undefined) { const p = Math.round(percent * 100); pageInfo.textContent = `${p}%`; getEl('reader-progress-bar').style.width = `${p}%`; } } catch(e) {} } }); const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; setReaderTheme(currentTheme); } catch(e) { fallbackEpubToPdf(file); } }; arrayBufferReader.readAsArrayBuffer(file); } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) { if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden'); if (pdfRenderTask) { pdfRenderTask.cancel(); pdfRenderTask = null; } reader.readAsArrayBuffer(file); reader.onload = async function(e) { try { const typedarray = new Uint8Array(e.target.result); pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise; renderPdfPage(savedProgress || 1); } catch(err) { alert("Error al leer PDF: " + err.message); } } } }
         function fallbackEpubToPdf(file) { if(!confirm("El visor de EPUB ha fallado. ¿Intentar convertir el contenido a un formato legible?")) return; const reader = new FileReader(); reader.onload = function(e) { const zip = new JSZip(); zip.loadAsync(e.target.result).then(function(contents) { let fullText = ""; const promises = []; Object.keys(contents.files).forEach(function(filename) { if (filename.endsWith(".html") || filename.endsWith(".xhtml")) { promises.push(zip.file(filename).async("string").then(function(content) { const temp = document.createElement("div"); temp.innerHTML = content; fullText += temp.innerText + "\n\n"; })); } }); Promise.all(promises).then(function() { if(!fullText.trim()) { alert("No se pudo extraer texto del EPUB."); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "normal"); doc.setFontSize(12); const splitText = doc.splitTextToSize(fullText, 180); let pageHeight = doc.internal.pageSize.height; let y = 15; for (let i = 0; i < splitText.length; i++) { if (y > pageHeight - 15) { doc.addPage(); y = 15; } doc.text(splitText[i], 15, y); y += 7; } const pdfBlob = doc.output('blob'); const pdfFile = new File([pdfBlob], file.name.replace('.epub', '.pdf'), { type: 'application/pdf' }); loadBookFile(pdfFile); }); }).catch(err => alert("Error crítico: El archivo está dañado.")); }; reader.readAsArrayBuffer(file); }
         function renderPdfPage(num) { if (pdfRenderTask) { pdfRenderTask.cancel(); } if (!pdfDoc) return; if(currentReaderBookId) updateBookProgress(currentReaderBookId, num); readerPage = num; const pageInfo = document.getElementById('reader-page-info'); pdfDoc.getPage(num).then(page => { const canvas = document.getElementById('pdf-render'); const ctx = canvas.getContext('2d'); const containerWidth = document.getElementById('reader-content-view').clientWidth; const unscaledViewport = page.getViewport({scale: 1}); const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); const viewport = page.getViewport({scale: scale}); canvas.height = viewport.height; canvas.width = viewport.width; const renderContext = { canvasContext: ctx, viewport: viewport }; pdfRenderTask = page.render(renderContext); pdfRenderTask.promise.then(() => { pdfRenderTask = null; const pct = Math.round((num / pdfDoc.numPages) * 100); pageInfo.textContent = `Pág ${num} / ${pdfDoc.numPages} (${pct}%)`; getEl('reader-progress-bar').style.width = `${pct}%`; }).catch(err => { if (err.name !== 'RenderingCancelledException') console.error(err); }); }); }
         function readerPrevPage() { if (bookRendition) bookRendition.prev(); if (pdfDoc && readerPage > 1) renderPdfPage(readerPage - 1); }
@@ -1077,81 +1034,6 @@
         function openReaderMode() { const readerDiv = document.getElementById('view-reader'); readerDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; document.addEventListener('keydown', handleReaderKeydown); readerDiv.focus(); if(getEl('reader-content-view').classList.contains('hidden')) refreshReaderLibrary(); }
         function closeReaderMode() { document.getElementById('view-reader').classList.add('hidden'); document.body.style.overflow = 'auto'; document.removeEventListener('keydown', handleReaderKeydown); }
         function handleReaderKeydown(e) { if (document.getElementById('view-reader').classList.contains('hidden')) return; if (e.key === 'ArrowLeft') readerPrevPage(); if (e.key === 'ArrowRight') readerNextPage(); if (e.key === 'Escape') closeReaderMode(); }
-
-        // === MOTOR DE CORRECCIÓN OFFLINE (JAVASCRIPT PURO) ===
-        const commonErrors = [
-            { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." },
-            { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Escritura incorrecta." },
-            { regex: /\bsiudad\b/gi, fix: "ciudad", type: "Ortografía", context: "S/C." },
-            { regex: /\bdetectibe\b/gi, fix: "detective", type: "Ortografía", context: "B/V." },
-            { regex: /\bbarias\b/gi, fix: "varias", type: "Ortografía", context: "B/V." },
-            { regex: /\bdemaciado\b/gi, fix: "demasiado", type: "Ortografía", context: "S/C." },
-            { regex: /\boracion\b/gi, fix: "oración", type: "Ortografía", context: "Falta tilde." },
-            { regex: /\bconclucion\b/gi, fix: "conclusión", type: "Ortografía", context: "S/C y tilde." },
-            { regex: /\ [,\.]/g, fix: ",", type: "Gramática", context: "Espacio antes de puntuación." },
-            { regex: /\b([a-zñáéíóú]+)\s\./g, fix: "$1.", type: "Puntuación", context: "Espacio antes del punto." },
-            { regex: /^\s*[a-zñáéíóú]/m, fix: "Mayúscula", type: "Gramática", context: "Inicio de oración minúscula." }
-        ];
-
-        async function runGrammarCheck() {
-            const t = editor.innerText;
-            if(!t) return showToast("Escribe algo primero.");
-            
-            getEl('ai-loading-overlay').classList.remove('hidden');
-            
-            // Simular un pequeño retraso para la UX
-            setTimeout(() => {
-                const issues = [];
-                
-                // 1. Verificar Errores de Diccionario
-                commonErrors.forEach(rule => {
-                    let match;
-                    if(rule.regex.global) rule.regex.lastIndex = 0;
-                    const matches = t.match(rule.regex);
-                    if(matches) {
-                        matches.forEach(m => {
-                            if(!issues.some(i => i.error === m)) {
-                                 issues.push({ type: rule.type, error: m, fix: rule.fix, context: rule.context });
-                            }
-                        });
-                    }
-                });
-
-                // 2. Verificar Mayúsculas (Heurística simple)
-                const sentences = t.split(/[.!?]+/);
-                sentences.forEach(s => {
-                    const trimmed = s.trim();
-                    if(trimmed.length > 0 && /^[a-zñáéíóú]/.test(trimmed)) {
-                         issues.push({ type: "Gramática", error: trimmed.substring(0, 10) + "...", fix: trimmed.charAt(0).toUpperCase() + "...", context: "Mayúscula al inicio de oración." });
-                    }
-                });
-
-                renderIssues(issues);
-                getEl('ai-loading-overlay').classList.add('hidden');
-            }, 500);
-        }
-
-        function renderIssues(issues) {
-            const container = getEl('issues-container');
-            if(issues.length > 0) {
-                container.innerHTML = issues.map(i => {
-                    return `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4 animate-fade-in">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${i.type}</span>
-                        </div>
-                        <div class="mb-2">
-                            <p class="text-red-500 text-sm line-through decoration-red-300 decoration-2">${i.error}</p>
-                            <p class="text-stone-800 font-bold text-base flex items-center gap-2"><i data-lucide="arrow-right" class="w-3 h-3 text-stone-400"></i> ${i.fix}</p>
-                        </div>
-                        <p class="text-xs text-stone-500 italic border-t border-stone-100 pt-2 mt-2">${i.context}</p>
-                    </div>`
-                }).join('');
-                lucide.createIcons();
-            } else {
-                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-emerald-600 py-10 text-center px-4 animate-fade-in"><div class="bg-emerald-50 p-4 rounded-full mb-3 border border-emerald-100"><i data-lucide="check-check" class="w-8 h-8"></i></div><p class="font-bold text-lg mb-1">¡Perfecto!</p><p class="text-xs opacity-80">No encontré errores comunes en mi base de datos local.</p></div>`;
-                lucide.createIcons();
-            }
-        }
 
         // Start DB
         initDB();
