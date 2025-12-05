@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- MODIFICADO: Añadido width=device-width y eliminado maximum-scale/user-scalable para mejor adaptabilidad -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- CONFIGURACIÓN iOS (PANTALLA DE INICIO) -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -132,6 +133,31 @@
         /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- OPTIMIZACIONES VISTA MÓVIL (MAX-WIDTH: 767px) --- */
+        @media (max-width: 767px) {
+            /* Ocultar los controles de click/hover que serán reemplazados por swipe */
+            #reader-content-view > div:nth-child(3), 
+            #reader-content-view > div:nth-child(4) {
+                display: none !important;
+            }
+
+            /* Quitar el padding excesivo para aprovechar la pantalla completa */
+            #reader-content-view {
+                padding: 0; 
+            }
+            
+            /* Ajustar el padding del visor EPUB para que ocupe más espacio */
+            #epub-viewer {
+                padding: 0 !important;
+            }
+
+            /* Simplificar la cuadrícula de la biblioteca para mejor visualización */
+            #reader-library-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important; 
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body data-theme="light" class="h-screen flex flex-col overflow-hidden relative">
@@ -233,7 +259,8 @@
     <div id="tool-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in"><div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"><div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center shrink-0"><h3 id="tool-title" class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Taller</h3><button onclick="closeToolModal()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-6 overflow-y-auto bg-stone-50 flex-1"><div class="mb-4"><label id="tool-prompt-label" class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-2">Descripción</label><textarea id="tool-input" class="w-full bg-white border border-stone-200 rounded-lg p-3 text-stone-800 focus:ring-2 focus:ring-amber-200 focus:border-amber-500 min-h-[100px]" placeholder="Describe..."></textarea></div><button onclick="runTool()" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><i data-lucide="zap" class="w-4 h-4"></i> <span id="tool-action-text">Generar</span></button><div id="tool-result-container" class="mt-6 hidden"><div class="flex justify-between items-center mb-2"><span class="text-xs font-bold text-stone-500 uppercase">Resultado</span><div class="flex gap-2"><button onclick="copyToolResult()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="copy" class="w-3 h-3"></i> Copiar</button><button onclick="saveToolAsNote()" class="text-xs text-stone-400 hover:text-stone-800 flex items-center gap-1"><i data-lucide="save" class="w-3 h-3"></i> Guardar Nota</button></div></div><div id="tool-output" class="bg-white p-4 rounded-lg border border-stone-200 text-sm text-stone-800 font-serif leading-relaxed whitespace-pre-wrap"></div></div><div id="tool-loading" class="mt-6 hidden flex justify-center py-4"><div class="w-8 h-8 border-4 border-stone-200 border-t-amber-500 rounded-full animate-spin"></div></div></div></div></div>
 
     <!-- VISTA: READER -->
-    <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode" data-reader-theme="light" tabindex="0">
+    <!-- Agregada clase 'no-select' para facilitar la detección de swipes en el móvil -->
+    <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode no-select" data-reader-theme="light" tabindex="0">
         <div class="p-2 md:p-4 flex flex-wrap justify-between items-center bg-transparent absolute top-0 left-0 w-full z-40 hover:bg-white/90 transition-colors duration-300 opacity-0 hover:opacity-100 gap-2" id="reader-controls">
             <button onclick="closeReaderMode()" class="p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 transition-all shadow-md"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
             
@@ -278,12 +305,13 @@
 
         <!-- 2. CONTENT VIEW (Hidden by default) -->
         <div id="reader-content-view" class="hidden flex-1 w-full h-full overflow-hidden relative flex items-center justify-center z-10 bg-white">
+            <!-- MODIFICADO: Añadido padding-0 en móvil y ajustes para que EPUB y PDF llenen el espacio -->
             <div id="epub-viewer" class="w-full h-full shadow-2xl hidden bg-transparent"></div>
             <canvas id="pdf-render" class="max-h-full max-w-full shadow-2xl hidden"></canvas>
             
-            <!-- Click zones for nav -->
-            <div class="absolute inset-y-0 left-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
-            <div class="absolute inset-y-0 right-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
+            <!-- Click zones for nav - Solo visibles en escritorio -->
+            <div class="absolute inset-y-0 left-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors hidden md:flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
+            <div class="absolute inset-y-0 right-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors hidden md:flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
         </div>
         
         <div class="absolute bottom-0 left-0 w-full h-1 bg-stone-200 z-50"><div id="reader-progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div></div>
@@ -503,6 +531,7 @@
         let currentTags = []; 
         let isPanelOpen = false;
         let currentAvatarData = null;
+        let initialTouchX = null; // Para el swipe
 
         const FAMOUS_EXCERPTS = [
             { book: "Cien años de soledad", author: "Gabriel García Márquez", text: "Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo." },
@@ -673,7 +702,43 @@
                  mentorInput.removeEventListener('keydown', handleChatEnter); 
                  mentorInput.addEventListener('keydown', handleChatEnter);
             }
+            // Agrega la configuración de gestos al iniciar
+            setupSwipeGestures();
         }
+
+        // --- GESTOS DE SWIPE (EXCLUSIVO MÓVIL) ---
+        function setupSwipeGestures() {
+            const readerContentView = getEl('reader-content-view');
+            if (!readerContentView) return;
+
+            readerContentView.addEventListener('touchstart', (e) => {
+                // Solo guardar el toque si es un solo dedo
+                if (e.touches.length === 1) {
+                    initialTouchX = e.touches[0].clientX;
+                }
+            }, { passive: true });
+
+            readerContentView.addEventListener('touchend', (e) => {
+                if (initialTouchX === null) return;
+
+                const finalTouchX = e.changedTouches[0].clientX;
+                const deltaX = finalTouchX - initialTouchX;
+                const swipeThreshold = 50; // Mínimo de píxeles para ser considerado swipe
+
+                if (Math.abs(deltaX) > swipeThreshold) {
+                    if (deltaX > 0) {
+                        // Swipe Right (Page Back)
+                        readerPrevPage();
+                    } else {
+                        // Swipe Left (Page Forward)
+                        readerNextPage();
+                    }
+                }
+
+                initialTouchX = null;
+            }, { passive: true });
+        }
+
 
         // --- MENTOR CHAT LOGIC ---
         function renderMentorChat(){
@@ -1076,15 +1141,211 @@
         function deleteBookFromLibrary(id) { if(!confirm("¿Eliminar este libro de la biblioteca?")) return; const tx = db.transaction(['books'], 'readwrite'); tx.objectStore('books').delete(id); tx.oncomplete = () => { showToast("Libro eliminado"); refreshReaderLibrary(); }; }
         function loadBookFromLibrary(id) { const tx = db.transaction(['books'], 'readonly'); const request = tx.objectStore('books').get(id); request.onsuccess = () => { const book = request.result; if(book) { currentReaderBookId = book.id; const file = new File([book.data], book.name, { type: book.type }); loadBookFile(file, book.progress); } }; }
         function handleBookImport(input) { const file = input.files[0]; if(!file) return; currentReaderBookId = null; if(confirm(`¿Quieres guardar "${file.name}" en tu biblioteca permanente?`)) { saveBookToLibrary(file); loadBookFile(file); } else { loadBookFile(file); } input.value = ''; }
-        function loadBookFile(file, savedProgress = null) { getEl('reader-library-view').classList.add('hidden'); getEl('reader-content-view').classList.remove('hidden'); getEl('reader-controls').classList.remove('opacity-0'); getEl('reader-nav-controls').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('flex'); const reader = new FileReader(); const epubViewer = document.getElementById('epub-viewer'); const pdfCanvas = document.getElementById('pdf-render'); const pageInfo = document.getElementById('reader-page-info'); pageInfo.textContent = "Cargando..."; if (file.name.endsWith('.epub') || file.type.includes('epub')) { epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden'); if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } const arrayBufferReader = new FileReader(); arrayBufferReader.onload = function(e) { const bookData = e.target.result; try { if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); const book = window.ePub(bookData); bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated", manager: "default" }); const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); displayPromise.catch(err => fallbackEpubToPdf(file)); bookRendition.on("relocated", function(location){ if(location && location.start) { if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); try { const percent = location.start.percentage; if(percent !== undefined) { const p = Math.round(percent * 100); pageInfo.textContent = `${p}%`; getEl('reader-progress-bar').style.width = `${p}%`; } } catch(e) {} } }); const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; setReaderTheme(currentTheme); } catch(e) { fallbackEpubToPdf(file); } }; arrayBufferReader.readAsArrayBuffer(file); } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) { if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden'); if (pdfRenderTask) { pdfRenderTask.cancel(); pdfRenderTask = null; } reader.readAsArrayBuffer(file); reader.onload = async function(e) { try { const typedarray = new Uint8Array(e.target.result); pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise; renderPdfPage(savedProgress || 1); } catch(err) { alert("Error al leer PDF: " + err.message); } } } }
+        function loadBookFile(file, savedProgress = null) { 
+            getEl('reader-library-view').classList.add('hidden'); 
+            getEl('reader-content-view').classList.remove('hidden'); 
+            getEl('reader-controls').classList.remove('opacity-0'); 
+            getEl('reader-nav-controls').classList.remove('hidden'); 
+            getEl('reader-nav-controls').classList.add('flex'); 
+            
+            const reader = new FileReader(); 
+            const epubViewer = document.getElementById('epub-viewer'); 
+            const pdfCanvas = document.getElementById('pdf-render'); 
+            const pageInfo = document.getElementById('reader-page-info'); 
+            pageInfo.textContent = "Cargando..."; 
+
+            if (file.name.endsWith('.epub') || file.type.includes('epub')) {
+                epubViewer.classList.remove('hidden'); 
+                pdfCanvas.classList.add('hidden'); 
+                if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } 
+                
+                const arrayBufferReader = new FileReader(); 
+                arrayBufferReader.onload = function(e) { 
+                    const bookData = e.target.result; 
+                    try { 
+                        if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); 
+                        const book = window.ePub(bookData); 
+                        bookRendition = book.renderTo("epub-viewer", { 
+                            width: "100%", 
+                            height: "100%", 
+                            flow: "paginated", 
+                            manager: "default" 
+                        }); 
+                        
+                        const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); 
+                        displayPromise.catch(err => fallbackEpubToPdf(file)); 
+                        
+                        bookRendition.on("relocated", function(location){ 
+                            if(location && location.start) { 
+                                if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); 
+                                try { 
+                                    const percent = location.start.percentage; 
+                                    if(percent !== undefined) { 
+                                        const p = Math.round(percent * 100); 
+                                        pageInfo.textContent = `${p}%`; 
+                                        getEl('reader-progress-bar').style.width = `${p}%`; 
+                                    } 
+                                } catch(e) {} 
+                            } 
+                        }); 
+                        
+                        const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; 
+                        setReaderTheme(currentTheme); 
+                        
+                        // FIX: Ajustar el tamaño del visor EPUB después de la carga para asegurar el reflow en iOS PWA
+                        // Forzamos un redimensionamiento después de un pequeño retraso
+                        setTimeout(() => {
+                            if (bookRendition && bookRendition.resize) {
+                                bookRendition.resize();
+                            }
+                        }, 100);
+
+                    } catch(e) { fallbackEpubToPdf(file); } 
+                }; 
+                arrayBufferReader.readAsArrayBuffer(file); 
+            } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) {
+                if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } 
+                epubViewer.classList.add('hidden'); 
+                pdfCanvas.classList.remove('hidden'); 
+                if (pdfRenderTask) { pdfRenderTask.cancel(); pdfRenderTask = null; } 
+                
+                reader.readAsArrayBuffer(file); 
+                reader.onload = async function(e) { 
+                    try { 
+                        const typedarray = new Uint8Array(e.target.result); 
+                        pdfDoc = await window.pdfjsLib.getDocument({data: typedarray}).promise; 
+                        renderPdfPage(savedProgress || 1); 
+
+                        // Listener para redimensionar el canvas en cambios de orientación/tamaño de ventana
+                        // Esto es clave para el fix de borrosidad en iOS PWA
+                        window.removeEventListener('resize', resizeAndRenderPdf);
+                        window.addEventListener('resize', resizeAndRenderPdf);
+                    } catch(err) { alert("Error al leer PDF: " + err.message); } 
+                } 
+            } 
+        }
+
+        // Función auxiliar para re-renderizar PDF en redimensionamiento
+        function resizeAndRenderPdf() {
+            if (pdfDoc) {
+                renderPdfPage(readerPage);
+            }
+        }
+        
         function fallbackEpubToPdf(file) { if(!confirm("El visor de EPUB ha fallado. ¿Intentar convertir el contenido a un formato legible?")) return; const reader = new FileReader(); reader.onload = function(e) { const zip = new JSZip(); zip.loadAsync(e.target.result).then(function(contents) { let fullText = ""; const promises = []; Object.keys(contents.files).forEach(function(filename) { if (filename.endsWith(".html") || filename.endsWith(".xhtml")) { promises.push(zip.file(filename).async("string").then(function(content) { const temp = document.createElement("div"); temp.innerHTML = content; fullText += temp.innerText + "\n\n"; })); } }); Promise.all(promises).then(function() { if(!fullText.trim()) { alert("No se pudo extraer texto del EPUB."); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "normal"); doc.setFontSize(12); const splitText = doc.splitTextToSize(fullText, 180); let pageHeight = doc.internal.pageSize.height; let y = 15; for (let i = 0; i < splitText.length; i++) { if (y > pageHeight - 15) { doc.addPage(); y = 15; } doc.text(splitText[i], 15, y); y += 7; } const pdfBlob = doc.output('blob'); const pdfFile = new File([pdfBlob], file.name.replace('.epub', '.pdf'), { type: 'application/pdf' }); loadBookFile(pdfFile); }); }).catch(err => alert("Error crítico: El archivo está dañado.")); }; reader.readAsArrayBuffer(file); }
-        function renderPdfPage(num) { if (pdfRenderTask) { pdfRenderTask.cancel(); } if (!pdfDoc) return; if(currentReaderBookId) updateBookProgress(currentReaderBookId, num); readerPage = num; const pageInfo = document.getElementById('reader-page-info'); pdfDoc.getPage(num).then(page => { const canvas = document.getElementById('pdf-render'); const ctx = canvas.getContext('2d'); const containerWidth = document.getElementById('reader-content-view').clientWidth; const unscaledViewport = page.getViewport({scale: 1}); const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); const viewport = page.getViewport({scale: scale}); canvas.height = viewport.height; canvas.width = viewport.width; const renderContext = { canvasContext: ctx, viewport: viewport }; pdfRenderTask = page.render(renderContext); pdfRenderTask.promise.then(() => { pdfRenderTask = null; const pct = Math.round((num / pdfDoc.numPages) * 100); pageInfo.textContent = `Pág ${num} / ${pdfDoc.numPages} (${pct}%)`; getEl('reader-progress-bar').style.width = `${pct}%`; }).catch(err => { if (err.name !== 'RenderingCancelledException') console.error(err); }); }); }
-        function readerPrevPage() { if (bookRendition) bookRendition.prev(); if (pdfDoc && readerPage > 1) renderPdfPage(readerPage - 1); }
-        function readerNextPage() { if (bookRendition) bookRendition.next(); if (pdfDoc && readerPage < pdfDoc.numPages) renderPdfPage(readerPage + 1); }
-        function closeBookAndShowLibrary() { getEl('reader-content-view').classList.add('hidden'); getEl('reader-library-view').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('hidden'); getEl('reader-nav-controls').classList.remove('flex'); refreshReaderLibrary(); }
-        function openReaderMode() { const readerDiv = document.getElementById('view-reader'); readerDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; document.addEventListener('keydown', handleReaderKeydown); readerDiv.focus(); if(getEl('reader-content-view').classList.contains('hidden')) refreshReaderLibrary(); }
-        function closeReaderMode() { document.getElementById('view-reader').classList.add('hidden'); document.body.style.overflow = 'auto'; document.removeEventListener('keydown', handleReaderKeydown); }
-        function handleReaderKeydown(e) { if (document.getElementById('view-reader').classList.contains('hidden')) return; if (e.key === 'ArrowLeft') readerPrevPage(); if (e.key === 'ArrowRight') readerNextPage(); if (e.key === 'Escape') closeReaderMode(); }
+        
+        // MODIFICADO: Ajustes de escala y densidad de píxeles (DPR) para evitar borrosidad
+        function renderPdfPage(num) { 
+            if (pdfRenderTask) { pdfRenderTask.cancel(); } 
+            if (!pdfDoc) return; 
+            
+            if(currentReaderBookId) updateBookProgress(currentReaderBookId, num); 
+            readerPage = num; 
+            
+            const pageInfo = document.getElementById('reader-page-info'); 
+            const canvas = document.getElementById('pdf-render');
+            const ctx = canvas.getContext('2d');
+
+            pdfDoc.getPage(num).then(page => { 
+                const container = document.getElementById('reader-content-view');
+                const containerWidth = container.clientWidth;
+                const containerHeight = container.clientHeight;
+
+                const unscaledViewport = page.getViewport({scale: 1}); 
+
+                // 1. Determinar el factor de escala (ajustar al contenedor)
+                const scale = Math.min((containerWidth - 20) / unscaledViewport.width, (containerHeight - 20) / unscaledViewport.height);
+                
+                // 2. Usar la densidad de píxeles del dispositivo (DPR) para mejorar la calidad
+                const dpr = window.devicePixelRatio || 1;
+                const finalScale = scale * dpr;
+
+                const viewport = page.getViewport({scale: finalScale}); 
+                
+                // 3. Establecer el tamaño *físico* del canvas (multiplicado por DPR)
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                // 4. Establecer el tamaño *visual* del canvas (dividido por DPR para la vista)
+                canvas.style.width = `${viewport.width / dpr}px`;
+                canvas.style.height = `${viewport.height / dpr}px`;
+                
+                // 5. Escalar el contexto de renderizado por el DPR
+                ctx.scale(dpr, dpr);
+                
+                const renderContext = { 
+                    canvasContext: ctx, 
+                    viewport: page.getViewport({scale: scale}) // Pasar el viewport *visual* sin DPR para la posición
+                }; 
+
+                pdfRenderTask = page.render(renderContext); 
+                pdfRenderTask.promise.then(() => { 
+                    pdfRenderTask = null; 
+                    const pct = Math.round((num / pdfDoc.numPages) * 100); 
+                    pageInfo.textContent = `Pág ${num} / ${pdfDoc.numPages} (${pct}%)`; 
+                    getEl('reader-progress-bar').style.width = `${pct}%`; 
+                }).catch(err => { 
+                    if (err.name !== 'RenderingCancelledException') console.error(err); 
+                }); 
+            }); 
+        }
+
+        // --- Navegación del lector ---
+        function readerPrevPage() { 
+            // EPUB
+            if (bookRendition) {
+                bookRendition.prev();
+            }
+            
+            // PDF
+            if (pdfDoc && readerPage > 1) {
+                renderPdfPage(readerPage - 1);
+            }
+        }
+
+        function readerNextPage() { 
+            // EPUB
+            if (bookRendition) {
+                bookRendition.next();
+            }
+            
+            // PDF
+            if (pdfDoc && readerPage < pdfDoc.numPages) {
+                renderPdfPage(readerPage + 1);
+            }
+        }
+
+        function closeBookAndShowLibrary() { 
+            getEl('reader-content-view').classList.add('hidden'); 
+            getEl('reader-library-view').classList.remove('hidden'); 
+            getEl('reader-nav-controls').classList.add('hidden'); 
+            getEl('reader-nav-controls').classList.remove('flex'); 
+            // Eliminar listener de resize de PDF si existe
+            window.removeEventListener('resize', resizeAndRenderPdf);
+            refreshReaderLibrary(); 
+        }
+        
+        function openReaderMode() { 
+            const readerDiv = document.getElementById('view-reader'); 
+            readerDiv.classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; 
+            document.addEventListener('keydown', handleReaderKeydown); 
+            readerDiv.focus(); 
+            if(getEl('reader-content-view').classList.contains('hidden')) refreshReaderLibrary(); 
+        }
+        
+        function closeReaderMode() { 
+            document.getElementById('view-reader').classList.add('hidden'); 
+            document.body.style.overflow = 'auto'; 
+            document.removeEventListener('keydown', handleReaderKeydown); 
+        }
+        
+        function handleReaderKeydown(e) { 
+            if (document.getElementById('view-reader').classList.contains('hidden')) return; 
+            if (e.key === 'ArrowLeft') readerPrevPage(); 
+            if (e.key === 'ArrowRight') readerNextPage(); 
+            if (e.key === 'Escape') closeReaderMode(); 
+        }
 
         // Start DB
         initDB();
