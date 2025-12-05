@@ -809,41 +809,163 @@
             }, { passive: true });
         }
 
+        // --- FUNCIÓN GEMINI MEJORADA ---
         async function callGemini(prompt, schema = null, silent = false) {
             const apiKey = currentUser.apiKey; 
-            if (!apiKey) { if(!silent) alert("Por favor, configura tu API Key en Ajustes."); return null; }
             
-            // Use gemini-1.5-flash for broader compatibility
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-            currentController = new AbortController();
-            const payload = { contents: [{ parts: [{ text: prompt }] }] };
-            if (schema) { payload.generationConfig = { responseMimeType: "application/json", responseSchema: schema }; }
+            // Verificación más amigable de la API Key
+            if (!apiKey) { 
+                if(!silent) {
+                    alert("⚠️ Falta la API Key.\n\nPor favor, ve a Configuración (⚙️) > Sistema y pega tu API Key de Google Gemini para activar al Mentor.");
+                    // Abrir configuración automáticamente para ayudar al usuario
+                    toggleSettings();
+                    document.getElementById('api-key-input').focus();
+                }
+                return null; 
+            }
+            
+            // Usamos gemini-2.5-flash-preview-09-2025 para compatibilidad con el entorno de previsualización
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            // CONFIGURACIÓN DE SEGURIDAD CRUCIAL
+            // Esto evita que Gemini bloquee tu historia si contiene conflictos, drama o romance.
+            const safetySettings = [
+                { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+            ];
+
+            const payload = { 
+                contents: [{ parts: [{ text: prompt }] }],
+                safetySettings: safetySettings
+            };
+            
+            if (schema) { 
+                payload.generationConfig = { 
+                    responseMimeType: "application/json", 
+                    responseSchema: schema 
+                }; 
+            }
+            
             try {
-                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: currentController.signal });
-                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                const response = await fetch(url, { 
+                    method: 'POST', 
+                    headers: { 'Content-Type': 'application/json' }, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                if (!response.ok) {
+                    const errorDetails = await response.json().catch(() => ({}));
+                    console.error("Gemini API Error:", errorDetails);
+                    throw new Error(`Error ${response.status}: ${errorDetails.error?.message || response.statusText}`);
+                }
+                
                 const data = await response.json();
+                
+                // Verificar si Gemini bloqueó la respuesta
+                if (data.promptFeedback && data.promptFeedback.blockReason) {
+                    throw new Error(`La IA bloqueó la respuesta por: ${data.promptFeedback.blockReason}`);
+                }
+
+                if (!data.candidates || data.candidates.length === 0) {
+                    throw new Error("La IA no devolvió ninguna respuesta.");
+                }
+
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                if (schema && text) { const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim(); return JSON.parse(cleanText); }
+                
+                if (schema && text) { 
+                    // Limpieza robusta para JSON (quita bloques de código markdown si existen)
+                    const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim(); 
+                    return JSON.parse(cleanText); 
+                }
+                
                 return text;
-            } catch (error) { if(!silent && error.name !== 'AbortError') console.error(error); return null; }
+
+            } catch (error) { 
+                if(!silent) {
+                    console.error(error); 
+                    // Mostramos el error en un Toast en lugar de alert para no interrumpir tanto
+                    showToast(`Error IA: ${error.message}`);
+                }
+                return null; 
+            }
         }
 
+        // --- FUNCIÓN CHAT MENTOR MEJORADA ---
         async function sendMentorMessage() {
-            const input = getEl('mentor-input'); const msg = input.value.trim(); if(!msg) return;
-            if (!currentUser.apiKey) { showToast("Error: Configura tu API Key en Ajustes."); return; }
+            const input = getEl('mentor-input'); 
+            const msg = input.value.trim(); 
+            if(!msg) return;
+            
+            if (!currentUser.apiKey) { 
+                showToast("⚠️ Configura tu API Key primero");
+                toggleSettings();
+                return; 
+            }
+            
             const container = getEl('mentor-messages');
-            container.innerHTML += `<div class="mentor-bubble mentor-user shadow-sm animate-fade-in"><p>${msg}</p></div>`;
-            input.value = ""; container.scrollTop = container.scrollHeight;
-            const activeDrafts = drafts.filter(d => !d.deletedAt);
-            const librarySummary = activeDrafts.map(d => `- Título: "${d.title}" | Proyecto: ${d.project}`).slice(0, 30).join('\n');
-            const prompt = `Actúa como un mentor literario experto. BIBLIOTECA DEL USUARIO:\n${librarySummary}\nPREGUNTA: "${msg}"\nResponde conciso y en Markdown.`;
-            const loadingId = Date.now();
-            container.innerHTML += `<div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm animate-pulse text-stone-400 text-xs">Pensando...</div>`;
+            
+            // 1. Mostrar mensaje del usuario
+            container.innerHTML += `
+                <div class="mentor-bubble mentor-user shadow-sm animate-fade-in">
+                    <p>${msg.replace(/\n/g, '<br>')}</p>
+                </div>`;
+            input.value = ""; 
             container.scrollTop = container.scrollHeight;
+            
+            // 2. Preparar contexto de la biblioteca (Limitado para no exceder tokens gratuitos)
+            const activeDrafts = drafts.filter(d => !d.deletedAt);
+            const librarySummary = activeDrafts
+                .slice(0, 40) // Leemos solo los primeros 40 títulos para no saturar
+                .map(d => `- [${d.type || 'Doc'}] "${d.title}" (${d.project || 'Sin Proyecto'})`)
+                .join('\n');
+            
+            const prompt = `
+                Actúa como un mentor literario experto, creativo y analítico llamado "Scriptorium AI".
+                Tu objetivo es ayudar al usuario a desbloquear su creatividad y mejorar sus textos.
+
+                RESUMEN DE LA BIBLIOTECA DEL USUARIO:
+                ${librarySummary || "(La biblioteca está vacía)"}
+
+                PREGUNTA DEL USUARIO: 
+                "${msg}"
+
+                INSTRUCCIONES:
+                1. Responde en formato Markdown (usa negritas para énfasis).
+                2. Sé conciso pero útil.
+                3. Si el usuario pregunta por una historia específica de su lista, úsala de referencia.
+            `;
+            
+            // 3. Indicador de carga
+            const loadingId = Date.now();
+            container.innerHTML += `
+                <div id="load-${loadingId}" class="mentor-bubble mentor-ai shadow-sm animate-pulse text-stone-400 text-xs flex items-center gap-2">
+                    <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Pensando...
+                </div>`;
+            lucide.createIcons();
+            container.scrollTop = container.scrollHeight;
+            
+            // 4. Llamada a la API
             const response = await callGemini(prompt);
-            const loader = document.getElementById(`load-${loadingId}`); if(loader) loader.remove();
-            if(response) { container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${marked.parse(response)}</div>`; } 
-            else { container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm text-red-500">Error de conexión. Verifica tu Key.</div>`; }
+            
+            // 5. Limpiar loader
+            const loader = document.getElementById(`load-${loadingId}`); 
+            if(loader) loader.remove();
+            
+            // 6. Mostrar respuesta
+            if(response) { 
+                // Usamos marked para formatear la respuesta de la IA
+                const htmlContent = marked.parse(response);
+                container.innerHTML += `<div class="mentor-bubble mentor-ai shadow-sm animate-fade-in">${htmlContent}</div>`; 
+            } else { 
+                container.innerHTML += `
+                    <div class="mentor-bubble mentor-ai shadow-sm text-red-500 bg-red-50 border border-red-100">
+                        <p><strong>Error de conexión.</strong></p>
+                        <p class="text-xs mt-1">Verifica tu API Key en Configuración o tu conexión a internet.</p>
+                    </div>`; 
+            }
+            
             container.scrollTop = container.scrollHeight;
         }
 
