@@ -113,6 +113,7 @@
 
         /* Reader Layout */
         #reader-canvas { font-family: 'Libre Baskerville', serif; line-height: 1.8; font-size: 1.15rem; max-width: 750px; margin: 0 auto; height: 100%; padding: 2rem; overflow: hidden; }
+        .reader-theme-btn { transition: transform 0.2s; }
         .reader-theme-btn.active-reader-theme { border-color: var(--accent); border-width: 2px; transform: scale(1.1); }
 
         /* Avatar */
@@ -140,7 +141,7 @@
                 </div>
 
                 <h2 class="text-3xl font-display text-stone-800 mb-2">Scriptorium</h2>
-                <p class="text-stone-500 text-sm mb-8">Crea tu perfil de autor.</p>
+                <p class="text-stone-500 text-sm mb-8">Crea tu perfil de autor (Offline).</p>
                 <div class="space-y-4 text-left">
                     <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre</label><input type="text" id="auth-name" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-3" placeholder="Ej: J.L. Borges"></div>
                     <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Meta Diaria</label><input type="number" id="auth-goal" class="w-full bg-stone-50 border border-stone-200 rounded-lg p-3" value="500"></div>
@@ -157,6 +158,7 @@
                 <div class="relative group"><i data-lucide="feather" class="w-6 h-6 text-amber-500 transition-transform group-hover:rotate-12"></i><div id="ai-status-dot" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" title="IA Desconectada"></div></div>
                 <div><h1 class="text-xl font-display font-bold tracking-wider leading-none flex items-center gap-2 text-stone-100">SCRIPTORIUM <span class="text-[9px] bg-stone-800 border border-stone-600 text-amber-500 px-1.5 py-0.5 rounded font-sans tracking-normal">AI</span></h1></div>
             </div>
+            <!-- Mobile Settings Toggle shown only on small screens -->
             <button onclick="toggleSettings()" class="md:hidden p-2 text-stone-400 hover:text-white rounded-lg"><i data-lucide="settings" class="w-5 h-5"></i></button>
         </div>
         
@@ -173,6 +175,7 @@
         </div>
     </header>
 
+    <!-- TOAST & MENUS -->
     <div id="toast" class="fixed bottom-6 right-6 bg-stone-900 text-stone-100 px-5 py-4 rounded-lg shadow-2xl transform translate-y-40 transition-transform duration-500 z-50 flex items-center gap-4 border border-stone-700 max-w-[90vw]"><div class="bg-amber-500/20 p-2 rounded-full"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i></div><span id="toast-msg" class="font-medium text-sm">Notificación</span></div>
     
     <!-- SETTINGS MODAL -->
@@ -180,6 +183,7 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
             <div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center"><h3 class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-amber-500"></i> Configuración</h3><button onclick="toggleSettings()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
             <div class="p-6 space-y-6">
+                <!-- AVATAR SETTINGS -->
                 <div>
                     <label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-3">Foto de Perfil</label>
                     <div class="flex items-center gap-4">
@@ -188,7 +192,10 @@
                             <img id="settings-avatar-img" class="w-full h-full object-cover hidden">
                         </div>
                         <div class="flex flex-col gap-1">
-                            <label class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors inline-block text-center shadow-sm">Cambiar Foto<input type="file" id="settings-avatar-input" accept="image/*" class="hidden" onchange="previewSettingsAvatar(this)"></label>
+                            <label class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors inline-block text-center shadow-sm">
+                                Cambiar Foto
+                                <input type="file" id="settings-avatar-input" accept="image/*" class="hidden" onchange="previewSettingsAvatar(this)">
+                            </label>
                             <button onclick="removeAvatar()" class="text-xs text-red-400 hover:text-red-600 text-left px-1">Eliminar foto</button>
                         </div>
                     </div>
@@ -218,14 +225,17 @@
 
     <!-- VISTA: READER -->
     <div id="view-reader" class="hidden fixed inset-0 z-[60] flex flex-col reader-mode" data-reader-theme="light" tabindex="0">
+        <!-- HEADER READER -->
         <div class="p-2 md:p-4 flex flex-wrap justify-between items-center bg-transparent absolute top-0 left-0 w-full z-40 hover:bg-white/90 transition-colors duration-300 opacity-0 hover:opacity-100 gap-2" id="reader-controls">
             <button onclick="closeReaderMode()" class="p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-700 transition-all shadow-md"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+            
             <div id="reader-nav-controls" class="hidden flex gap-2 md:gap-4 items-center bg-stone-100/80 backdrop-blur-sm px-3 py-1.5 md:px-4 md:py-2 rounded-full shadow-sm">
                 <button onclick="closeBookAndShowLibrary()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500 mr-2 border-r border-stone-300 pr-3" title="Volver a Biblioteca"><i data-lucide="library" class="w-4 h-4"></i></button>
                 <button onclick="readerPrevPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-left" class="w-5 h-5"></i></button>
-                <span id="reader-page-info" class="text-xs font-mono text-stone-600 font-bold min-w-[50px] md:min-w-[60px] text-center">-- / --</span>
+                <span id="reader-page-info" class="text-xs font-mono text-stone-600 font-bold min-w-[50px] md:min-w-[60px] text-center whitespace-nowrap">-- / --</span>
                 <button onclick="readerNextPage()" class="p-1 rounded-full hover:bg-stone-200 text-stone-500"><i data-lucide="chevron-right" class="w-5 h-5"></i></button>
             </div>
+
             <div class="flex gap-2 bg-stone-100/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm ml-auto md:ml-0">
                 <button onclick="setReaderTheme('light')" id="rt-btn-light" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fcfbf9] border border-stone-300 shadow-sm active-reader-theme" title="Día"></button>
                 <button onclick="setReaderTheme('sepia')" id="rt-btn-sepia" class="reader-theme-btn w-6 h-6 rounded-full bg-[#f4ecd8] border border-[#d4c5a8] shadow-sm" title="Sepia"></button>
@@ -240,22 +250,34 @@
         <div id="reader-library-view" class="flex-1 w-full h-full overflow-y-auto bg-stone-100 p-8 pt-20 relative z-20">
             <div class="max-w-5xl mx-auto">
                 <div class="flex justify-between items-end mb-8 border-b border-stone-300 pb-4">
-                    <div><h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2><p class="text-stone-500">Lecturas guardadas</p></div>
-                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg"><i data-lucide="upload" class="w-4 h-4"></i> Importar Libro</label>
+                    <div>
+                        <h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2>
+                        <p class="text-stone-500">Lecturas guardadas</p>
+                    </div>
+                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg">
+                        <i data-lucide="upload" class="w-4 h-4"></i> Importar Libro
+                    </label>
                 </div>
                 <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    <div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>
+                    <!-- Books will be injected here -->
+                    <div class="col-span-full text-center py-20 text-stone-400 italic">
+                        <i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i>
+                        <p>No tienes libros guardados aún.</p>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. CONTENT VIEW -->
+        <!-- 2. CONTENT VIEW (Hidden by default) -->
         <div id="reader-content-view" class="hidden flex-1 w-full h-full overflow-hidden relative flex items-center justify-center z-10 bg-white">
             <div id="epub-viewer" class="w-full h-full shadow-2xl hidden bg-transparent"></div>
             <canvas id="pdf-render" class="max-h-full max-w-full shadow-2xl hidden"></canvas>
+            
+            <!-- Click zones for nav -->
             <div class="absolute inset-y-0 left-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
             <div class="absolute inset-y-0 right-0 w-16 z-30 cursor-pointer hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity"></i></div>
         </div>
+        
         <div class="absolute bottom-0 left-0 w-full h-1 bg-stone-200 z-50"><div id="reader-progress-bar" class="h-full bg-amber-500 transition-all duration-300" style="width: 0%"></div></div>
     </div>
 
@@ -273,7 +295,7 @@
                     </div>
                 </div>
                 
-                <!-- TARJETA: MODO LECTURA -->
+                <!-- TARJETA: MODO LECTURA (RESTAURADA) -->
                 <div onclick="openReaderMode()" class="bg-gradient-to-br from-emerald-600 to-teal-800 p-6 md:p-8 rounded-2xl shadow-lg text-white relative overflow-hidden group cursor-pointer hover:shadow-2xl transition-all transform hover:-translate-y-1">
                     <div class="absolute -right-6 -bottom-6 opacity-20 group-hover:opacity-30 transition-opacity transform rotate-12">
                         <i data-lucide="book-open" class="w-32 h-32 md:w-40 md:h-40 text-white"></i>
@@ -455,6 +477,7 @@
         const DB_NAME = 'ScriptoriumDB'; // Nombre unificado
         const DB_VERSION = 2; // Version incrementada para migración
         const TRASH_LIFETIME = 30 * 24 * 60 * 60 * 1000;
+        let pdfRenderTask = null; // Task for PDF rendering
         
         let currentUser = null;
         let drafts = [];
@@ -751,7 +774,80 @@
             }
         }
 
-        // ... [Rest of the helper functions remain similar but rely on the updated 'drafts' array which is synced] ...
+        // --- LIBRARY FUNCTIONS (RESTORED) ---
+        function selectTrash(){isTrashView=true;selectedProject=null;renderLibraryContent();}
+        function selectProject(p){selectedProject=p;isTrashView=false;renderLibraryContent();}
+        
+        function updateProjectList(){
+            const a=drafts.filter(d=>!d.deletedAt),t=drafts.filter(d=>d.deletedAt);
+            if(getEl('trash-count'))getEl('trash-count').textContent=t.length;
+            const ps=[...new Set(a.map(d=>d.project||"Sin Proyecto"))].sort();
+            const listEl=getEl('project-list');
+            const dl=getEl('projects-datalist');
+            if(dl)dl.innerHTML=ps.map(p=>`<option value="${p}">`).join('');
+            
+            if(listEl) {
+                if(ps.length===0){listEl.innerHTML=`<div class="text-white/50 text-xs text-center italic mt-10">Estantería vacía</div>`; return;}
+                const colors = ['#8d6e63', '#5d4037', '#4e342e', '#3e2723', '#795548', '#a1887f', '#2e3b55', '#37474f', '#455a64'];
+                listEl.innerHTML = ps.map((p, idx)=>{
+                    const color = colors[idx % colors.length];
+                    const safeP = p.replace(/'/g,"\\'");
+                    return `<div onclick="selectProject('${safeP}')" class="book-spine h-32 w-14 rounded-sm flex items-center justify-center text-white/90 shadow-lg border-l-4 border-white/10 hover:scale-105 transition-transform relative" style="background: linear-gradient(to right, ${color}, #1a1a1a); writing-mode: vertical-rl; transform: none;">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-white/20"></div>
+                        <span class="book-title text-xs tracking-wider font-bold" style="writing-mode: vertical-rl; text-orientation: mixed;">${p}</span>
+                    </div>`;
+                }).join('');
+            }
+        }
+        
+        function renderLibraryContent(){
+            const c=getEl('library-content');
+            if(isTrashView){const dd=drafts.filter(d=>d.deletedAt);c.innerHTML=dd.map(d=>`<div class="bg-red-50 p-4 mb-2 rounded flex justify-between text-sm font-medium"><span>${d.title}</span><div class="flex gap-2"><button onclick="restoreDraft(${d.id})" class="text-blue-600 hover:underline">Recuperar</button><button onclick="deleteForever(${d.id})" class="text-red-600 hover:underline">X</button></div></div>`).join('');return;}
+            if(!selectedProject){c.innerHTML=`<div class="flex flex-col items-center justify-center h-full text-stone-400 pt-20"><i data-lucide="library" class="w-16 h-16 mb-4 opacity-20"></i><p class="text-lg">Selecciona un libro de la estantería</p></div>`;return;}
+            const ds=drafts.filter(d=>(d.project||"Sin Proyecto")===selectedProject&&!d.deletedAt);
+            
+            c.innerHTML=`<div class="mb-6 border-b border-stone-300 pb-4 flex flex-col md:flex-row justify-between items-end gap-4">
+                <div>
+                    <h2 class="text-4xl font-display font-bold text-stone-800">${selectedProject}</h2>
+                    <p class="text-stone-500 mt-1">${ds.length} documentos</p>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="createNewInProject('${selectedProject.replace(/'/g,"\\'")}')" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-stone-700">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nuevo Escrito
+                    </button>
+                </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">` + 
+            ds.map(d => {
+                const typeLabel = d.type ? `<span class="bg-stone-200 text-stone-700 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border border-stone-300">${d.type}</span>` : '';
+                const tagsHtml = (d.tags || []).map(t => `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border border-amber-200">${t}</span>`).join('');
+                
+                return `
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-amber-300 transition-all group relative flex flex-col h-full">
+                    <div class="flex-1" onclick="loadDraft(${d.id})">
+                        <h4 class="font-bold text-stone-800 mb-2 text-lg group-hover:text-amber-700 cursor-pointer line-clamp-1" title="${d.title}">${d.title}</h4>
+                        <div class="flex items-center gap-2 mb-3 flex-wrap">
+                            ${typeLabel}
+                            ${tagsHtml}
+                            <span class="text-xs text-stone-400 ml-auto">${d.date}</span>
+                        </div>
+                        <p class="text-sm font-serif text-stone-600 line-clamp-4 leading-relaxed cursor-pointer">${getCleanText(d.preview)}</p>
+                    </div>
+                    
+                    <div class="mt-4 pt-4 border-t border-stone-100 flex justify-between items-center opacity-40 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openPreview(${d.id})" class="text-stone-500 hover:text-stone-800" title="Vista Previa"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                        <div class="flex gap-2">
+                            <button onclick="downloadDraft(${d.id}, 'pdf')" class="text-stone-400 hover:text-red-500 text-[10px] font-bold" title="PDF">PDF</button>
+                            <button onclick="downloadDraft(${d.id}, 'doc')" class="text-stone-400 hover:text-blue-500 text-[10px] font-bold" title="DOC">DOC</button>
+                            <button onclick="downloadDraft(${d.id}, 'txt')" class="text-stone-400 hover:text-stone-600 text-[10px] font-bold" title="TXT">TXT</button>
+                            <div class="w-px h-3 bg-stone-300 mx-1"></div>
+                            <button onclick="moveToTrash(${d.id})" class="text-stone-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('') + `</div>`;
+            lucide.createIcons();
+        }
 
         // --- AVATAR HELPERS ---
         function compressImage(file, maxWidth, maxHeight, quality) {
@@ -823,8 +919,40 @@
                     else btn.classList.remove('ring-2', 'ring-amber-500', 'border-amber-500');
                 }
             });
+            
+            // Also update reader theme if active
+            setReaderTheme(mode);
+            
             if(currentUser) currentUser.theme = mode; 
         }
+        
+        function setReaderTheme(mode) {
+            // Update CSS variables and attributes for both HTML and PDF
+            const reader = getEl('view-reader');
+            if(reader) reader.setAttribute('data-reader-theme', mode);
+            
+            ['light', 'sepia', 'dark'].forEach(m => {
+                const btn = getEl(`rt-btn-${m}`);
+                if(btn) { 
+                    if(m === mode) btn.classList.add('active-reader-theme'); 
+                    else btn.classList.remove('active-reader-theme'); 
+                }
+            });
+
+            // Update EPUB theme if active
+            if (bookRendition) {
+                const themes = { 
+                    'light': { body: { color: '#222', background: '#fcfbf9' } }, 
+                    'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 
+                    'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } } 
+                };
+                // Try to inject styling for better compatibility
+                try {
+                     bookRendition.themes.default(themes[mode]);
+                } catch(e) { console.log("Theme update error", e); }
+            }
+        }
+
         function toggleSettings(){ getEl('settings-modal').classList.toggle('hidden'); getEl('api-key-input').value = localStorage.getItem('scriptorium_api_key') || ""; currentAvatarData = null; }
         function logout(){ if(confirm("¿Salir?")){ 
             // Optional: dbDeleteUser() if you want to clear session fully
@@ -911,11 +1039,24 @@
             if(!db) return alert("Base de datos no lista.");
             const reader = new FileReader();
             reader.onload = function(e) {
-                const blob = new Blob([e.target.result], { type: file.type });
-                const bookData = { id: Date.now(), name: file.name, type: file.type, data: blob, date: new Date().toLocaleDateString(), progress: null };
+                let fileType = file.type;
+                if (!fileType) {
+                    if (file.name.endsWith('.pdf')) fileType = 'application/pdf';
+                    if (file.name.endsWith('.epub')) fileType = 'application/epub+zip';
+                }
+                const blob = new Blob([e.target.result], { type: fileType });
+                const id = Date.now(); // Store ID immediately
+                const bookData = { id: id, name: file.name, type: fileType, data: blob, date: new Date().toLocaleDateString(), progress: null };
                 const tx = db.transaction(['books'], 'readwrite');
                 tx.objectStore('books').add(bookData);
-                tx.oncomplete = () => { showToast("Libro guardado en biblioteca"); refreshReaderLibrary(); };
+                tx.oncomplete = () => { 
+                    showToast("Libro guardado en biblioteca"); 
+                    currentReaderBookId = id; // Set global ID for immediate tracking
+                    refreshReaderLibrary(); 
+                    // Load the file now that it is saved and ID is set
+                    const fileObj = new File([blob], file.name, { type: fileType });
+                    loadBookFile(fileObj);
+                };
                 tx.onerror = () => alert("Error al guardar libro.");
             };
             reader.readAsArrayBuffer(file);
@@ -925,15 +1066,92 @@
         function deleteBookFromLibrary(id) { if(!confirm("¿Eliminar este libro de la biblioteca?")) return; const tx = db.transaction(['books'], 'readwrite'); tx.objectStore('books').delete(id); tx.oncomplete = () => { showToast("Libro eliminado"); refreshReaderLibrary(); }; }
         function loadBookFromLibrary(id) { const tx = db.transaction(['books'], 'readonly'); const request = tx.objectStore('books').get(id); request.onsuccess = () => { const book = request.result; if(book) { currentReaderBookId = book.id; const file = new File([book.data], book.name, { type: book.type }); loadBookFile(file, book.progress); } }; }
         function handleBookImport(input) { const file = input.files[0]; if(!file) return; currentReaderBookId = null; if(confirm(`¿Quieres guardar "${file.name}" en tu biblioteca permanente?`)) { saveBookToLibrary(file); loadBookFile(file); } else { loadBookFile(file); } input.value = ''; }
-        function loadBookFile(file, savedProgress = null) { getEl('reader-library-view').classList.add('hidden'); getEl('reader-content-view').classList.remove('hidden'); getEl('reader-controls').classList.remove('opacity-0'); getEl('reader-nav-controls').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('flex'); const reader = new FileReader(); const epubViewer = document.getElementById('epub-viewer'); const pdfCanvas = document.getElementById('pdf-render'); const pageInfo = document.getElementById('reader-page-info'); pageInfo.textContent = "Cargando..."; if (file.name.endsWith('.epub') || file.type.includes('epub')) { epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden'); if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } const arrayBufferReader = new FileReader(); arrayBufferReader.onload = function(e) { const bookData = e.target.result; try { if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); const book = window.ePub(bookData); bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated", manager: "default" }); const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); displayPromise.catch(err => fallbackEpubToPdf(file)); bookRendition.on("relocated", function(location){ if(location && location.start) { if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); try { const percent = location.start.percentage; if(percent !== undefined) { const p = Math.round(percent * 100); pageInfo.textContent = `${p}%`; getEl('reader-progress-bar').style.width = `${p}%`; } } catch(e) {} } }); const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; setReaderTheme(currentTheme); } catch(e) { fallbackEpubToPdf(file); } }; arrayBufferReader.readAsArrayBuffer(file); } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) { if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden'); reader.readAsArrayBuffer(file); reader.onload = async function(e) { try { const typedarray = new Uint8Array(e.target.result); pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise; renderPdfPage(savedProgress || 1); } catch(err) { alert("Error al leer PDF: " + err.message); } } } }
+        function loadBookFile(file, savedProgress = null) { getEl('reader-library-view').classList.add('hidden'); getEl('reader-content-view').classList.remove('hidden'); getEl('reader-controls').classList.remove('opacity-0'); getEl('reader-nav-controls').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('flex'); const reader = new FileReader(); const epubViewer = document.getElementById('epub-viewer'); const pdfCanvas = document.getElementById('pdf-render'); const pageInfo = document.getElementById('reader-page-info'); pageInfo.textContent = "Cargando..."; if (file.name.endsWith('.epub') || file.type.includes('epub')) { epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden'); if (bookRendition) { try { bookRendition.destroy(); } catch(e){} } const arrayBufferReader = new FileReader(); arrayBufferReader.onload = function(e) { const bookData = e.target.result; try { if (typeof window.ePub === 'undefined') throw new Error("Librería EPUB no cargada."); const book = window.ePub(bookData); bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated", manager: "default" }); const displayPromise = savedProgress ? bookRendition.display(savedProgress) : bookRendition.display(); displayPromise.catch(err => fallbackEpubToPdf(file)); bookRendition.on("relocated", function(location){ if(location && location.start) { if(currentReaderBookId) updateBookProgress(currentReaderBookId, location.start.cfi); try { const percent = location.start.percentage; if(percent !== undefined) { const p = Math.round(percent * 100); pageInfo.textContent = `${p}%`; getEl('reader-progress-bar').style.width = `${p}%`; } } catch(e) {} } }); const currentTheme = document.getElementById('view-reader').getAttribute('data-reader-theme') || 'light'; setReaderTheme(currentTheme); } catch(e) { fallbackEpubToPdf(file); } }; arrayBufferReader.readAsArrayBuffer(file); } else if (file.name.endsWith('.pdf') || file.type.includes('pdf')) { if (typeof window.pdfjsLib === 'undefined') { alert("Librería PDF no cargada"); return; } epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden'); 
+        if (pdfRenderTask) { pdfRenderTask.cancel(); pdfRenderTask = null; }
+        reader.readAsArrayBuffer(file); reader.onload = async function(e) { try { const typedarray = new Uint8Array(e.target.result); pdfDoc = await window.pdfjsLib.getDocument(typedarray).promise; renderPdfPage(savedProgress || 1); } catch(err) { alert("Error al leer PDF: " + err.message); } } } }
         function fallbackEpubToPdf(file) { if(!confirm("El visor de EPUB ha fallado. ¿Intentar convertir el contenido a un formato legible?")) return; const reader = new FileReader(); reader.onload = function(e) { const zip = new JSZip(); zip.loadAsync(e.target.result).then(function(contents) { let fullText = ""; const promises = []; Object.keys(contents.files).forEach(function(filename) { if (filename.endsWith(".html") || filename.endsWith(".xhtml")) { promises.push(zip.file(filename).async("string").then(function(content) { const temp = document.createElement("div"); temp.innerHTML = content; fullText += temp.innerText + "\n\n"; })); } }); Promise.all(promises).then(function() { if(!fullText.trim()) { alert("No se pudo extraer texto del EPUB."); return; } const { jsPDF } = window.jspdf; const doc = new jsPDF(); doc.setFont("times", "normal"); doc.setFontSize(12); const splitText = doc.splitTextToSize(fullText, 180); let pageHeight = doc.internal.pageSize.height; let y = 15; for (let i = 0; i < splitText.length; i++) { if (y > pageHeight - 15) { doc.addPage(); y = 15; } doc.text(splitText[i], 15, y); y += 7; } const pdfBlob = doc.output('blob'); const pdfFile = new File([pdfBlob], file.name.replace('.epub', '.pdf'), { type: 'application/pdf' }); loadBookFile(pdfFile); }); }).catch(err => alert("Error crítico: El archivo está dañado.")); }; reader.readAsArrayBuffer(file); }
-        function renderPdfPage(num) { if (!pdfDoc) return; if(currentReaderBookId) updateBookProgress(currentReaderBookId, num); readerPage = num; const pageInfo = document.getElementById('reader-page-info'); pdfDoc.getPage(num).then(page => { const canvas = document.getElementById('pdf-render'); const ctx = canvas.getContext('2d'); const containerWidth = document.getElementById('reader-content-view').clientWidth; const unscaledViewport = page.getViewport({scale: 1}); const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); const viewport = page.getViewport({scale: scale}); canvas.height = viewport.height; canvas.width = viewport.width; const renderContext = { canvasContext: ctx, viewport: viewport }; page.render(renderContext); pageInfo.textContent = `${num} / ${pdfDoc.numPages}`; const pct = (num / pdfDoc.numPages) * 100; getEl('reader-progress-bar').style.width = `${pct}%`; }); }
+        function renderPdfPage(num) { if (pdfRenderTask) { pdfRenderTask.cancel(); } if (!pdfDoc) return; if(currentReaderBookId) updateBookProgress(currentReaderBookId, num); readerPage = num; const pageInfo = document.getElementById('reader-page-info'); pdfDoc.getPage(num).then(page => { const canvas = document.getElementById('pdf-render'); const ctx = canvas.getContext('2d'); const containerWidth = document.getElementById('reader-content-view').clientWidth; const unscaledViewport = page.getViewport({scale: 1}); const scale = Math.min((containerWidth - 40) / unscaledViewport.width, 1.5); const viewport = page.getViewport({scale: scale}); canvas.height = viewport.height; canvas.width = viewport.width; const renderContext = { canvasContext: ctx, viewport: viewport }; pdfRenderTask = page.render(renderContext); pdfRenderTask.promise.then(() => { pdfRenderTask = null; const pct = Math.round((num / pdfDoc.numPages) * 100); pageInfo.textContent = `Pág ${num} / ${pdfDoc.numPages} (${pct}%)`; getEl('reader-progress-bar').style.width = `${pct}%`; }).catch(err => { if (err.name !== 'RenderingCancelledException') console.error(err); }); }); }
         function readerPrevPage() { if (bookRendition) bookRendition.prev(); if (pdfDoc && readerPage > 1) renderPdfPage(readerPage - 1); }
         function readerNextPage() { if (bookRendition) bookRendition.next(); if (pdfDoc && readerPage < pdfDoc.numPages) renderPdfPage(readerPage + 1); }
         function closeBookAndShowLibrary() { getEl('reader-content-view').classList.add('hidden'); getEl('reader-library-view').classList.remove('hidden'); getEl('reader-nav-controls').classList.add('hidden'); getEl('reader-nav-controls').classList.remove('flex'); refreshReaderLibrary(); }
         function openReaderMode() { const readerDiv = document.getElementById('view-reader'); readerDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; document.addEventListener('keydown', handleReaderKeydown); readerDiv.focus(); if(getEl('reader-content-view').classList.contains('hidden')) refreshReaderLibrary(); }
         function closeReaderMode() { document.getElementById('view-reader').classList.add('hidden'); document.body.style.overflow = 'auto'; document.removeEventListener('keydown', handleReaderKeydown); }
         function handleReaderKeydown(e) { if (document.getElementById('view-reader').classList.contains('hidden')) return; if (e.key === 'ArrowLeft') readerPrevPage(); if (e.key === 'ArrowRight') readerNextPage(); if (e.key === 'Escape') closeReaderMode(); }
+
+        // === MOTOR DE CORRECCIÓN OFFLINE (JAVASCRIPT PURO) ===
+        const commonErrors = [
+            { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." },
+            { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Escritura incorrecta." },
+            { regex: /\bsiudad\b/gi, fix: "ciudad", type: "Ortografía", context: "S/C." },
+            { regex: /\bdetectibe\b/gi, fix: "detective", type: "Ortografía", context: "B/V." },
+            { regex: /\bbarias\b/gi, fix: "varias", type: "Ortografía", context: "B/V." },
+            { regex: /\bdemaciado\b/gi, fix: "demasiado", type: "Ortografía", context: "S/C." },
+            { regex: /\boracion\b/gi, fix: "oración", type: "Ortografía", context: "Falta tilde." },
+            { regex: /\bconclucion\b/gi, fix: "conclusión", type: "Ortografía", context: "S/C y tilde." },
+            { regex: /\ [,\.]/g, fix: ",", type: "Gramática", context: "Espacio antes de puntuación." },
+            { regex: /\b([a-zñáéíóú]+)\s\./g, fix: "$1.", type: "Puntuación", context: "Espacio antes del punto." },
+            { regex: /^\s*[a-zñáéíóú]/m, fix: "Mayúscula", type: "Gramática", context: "Inicio de oración minúscula." }
+        ];
+
+        async function runGrammarCheck() {
+            const t = editor.innerText;
+            if(!t) return showToast("Escribe algo primero.");
+            
+            getEl('ai-loading-overlay').classList.remove('hidden');
+            
+            // Simular un pequeño retraso para la UX
+            setTimeout(() => {
+                const issues = [];
+                
+                // 1. Verificar Errores de Diccionario
+                commonErrors.forEach(rule => {
+                    let match;
+                    if(rule.regex.global) rule.regex.lastIndex = 0;
+                    const matches = t.match(rule.regex);
+                    if(matches) {
+                        matches.forEach(m => {
+                            if(!issues.some(i => i.error === m)) {
+                                 issues.push({ type: rule.type, error: m, fix: rule.fix, context: rule.context });
+                            }
+                        });
+                    }
+                });
+
+                // 2. Verificar Mayúsculas (Heurística simple)
+                const sentences = t.split(/[.!?]+/);
+                sentences.forEach(s => {
+                    const trimmed = s.trim();
+                    if(trimmed.length > 0 && /^[a-zñáéíóú]/.test(trimmed)) {
+                         issues.push({ type: "Gramática", error: trimmed.substring(0, 10) + "...", fix: trimmed.charAt(0).toUpperCase() + "...", context: "Mayúscula al inicio de oración." });
+                    }
+                });
+
+                renderIssues(issues);
+                getEl('ai-loading-overlay').classList.add('hidden');
+            }, 500);
+        }
+
+        function renderIssues(issues) {
+            const container = getEl('issues-container');
+            if(issues.length > 0) {
+                container.innerHTML = issues.map(i => {
+                    return `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4 animate-fade-in">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">${i.type}</span>
+                        </div>
+                        <div class="mb-2">
+                            <p class="text-red-500 text-sm line-through decoration-red-300 decoration-2">${i.error}</p>
+                            <p class="text-stone-800 font-bold text-base flex items-center gap-2"><i data-lucide="arrow-right" class="w-3 h-3 text-stone-400"></i> ${i.fix}</p>
+                        </div>
+                        <p class="text-xs text-stone-500 italic border-t border-stone-100 pt-2 mt-2">${i.context}</p>
+                    </div>`
+                }).join('');
+                lucide.createIcons();
+            } else {
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-emerald-600 py-10 text-center px-4 animate-fade-in"><div class="bg-emerald-50 p-4 rounded-full mb-3 border border-emerald-100"><i data-lucide="check-check" class="w-8 h-8"></i></div><p class="font-bold text-lg mb-1">¡Perfecto!</p><p class="text-xs opacity-80">No encontré errores comunes en mi base de datos local.</p></div>`;
+                lucide.createIcons();
+            }
+        }
 
         // Start DB
         initDB();
