@@ -53,12 +53,17 @@
             --bg-main: #fdf6e3; --bg-panel: #fffbf0; --bg-secondary: #f7f1de; --text-main: #433422; --text-muted: #8a7668; --border: #e6dcc8; --accent: #b45309; --accent-light: #fde68a; --shadow-color: rgba(92, 64, 51, 0.1); --input-bg: transparent; --shelf-bg: #5d4037; --shelf-border: #8d6e63; --active-tool: #e6dcc8;
             --paper-shadow: 0 4px 6px -1px rgba(92, 64, 51, 0.05);
         }
+        [data-theme='pink'] {
+            --bg-main: #fff1f2; --bg-panel: #ffffff; --bg-secondary: #ffe4e6; --text-main: #881337; --text-muted: #be123c; --border: #fecdd3; --accent: #db2777; --accent-light: #fbcfe8; --shadow-color: rgba(136, 19, 55, 0.1); --input-bg: transparent; --shelf-bg: #881337; --shelf-border: #9f1239; --active-tool: #fecdd3;
+            --paper-shadow: 0 4px 6px -1px rgba(136, 19, 55, 0.05);
+        }
 
         /* Reader Mode Styles */
         #view-reader { background-color: var(--bg-reader); color: var(--text-reader); transition: background-color 0.3s ease, color 0.3s ease; }
         [data-reader-theme='light'] { --bg-reader: #fcfbf9; --text-reader: #1c1917; }
         [data-reader-theme='sepia'] { --bg-reader: #f4ecd8; --text-reader: #5b4636; }
         [data-reader-theme='dark'] { --bg-reader: #1c1917; --text-reader: #d6d3d1; }
+        [data-reader-theme='pink'] { --bg-reader: #fff1f2; --text-reader: #881337; }
         [data-reader-theme='dark'] #pdf-render { filter: invert(0.9) hue-rotate(180deg); }
 
         /* Base Styles */
@@ -67,7 +72,11 @@
         .text-stone-900, .text-stone-800, .text-stone-700 { color: var(--text-main) !important; } .text-stone-600, .text-stone-500, .text-stone-400, .text-stone-300 { color: var(--text-muted) !important; }
         .border-stone-200, .border-stone-300, .border-stone-100 { border-color: var(--border) !important; }
         .shadow-xl, .shadow-md, .shadow-sm { box-shadow: 0 4px 6px -1px var(--shadow-color), 0 2px 4px -1px var(--shadow-color) !important; }
-        [data-theme='dark'] .bg-stone-900 { background-color: #0f172a !important; border-bottom-color: #334155 !important; } [data-theme='warm'] .bg-stone-900 { background-color: #43302b !important; }
+        [data-theme='dark'] .bg-stone-900 { background-color: #0f172a !important; border-bottom-color: #334155 !important; } 
+        [data-theme='warm'] .bg-stone-900 { background-color: #43302b !important; }
+        [data-theme='pink'] .bg-stone-900 { background-color: #be123c !important; border-bottom-color: #9f1239 !important; } /* Pink header overrides */
+        [data-theme='pink'] .text-stone-200 { color: #ffe4e6 !important; }
+
         textarea, input[type="text"], input[type="password"], select { background-color: var(--input-bg) !important; color: var(--text-main) !important; }
         textarea::placeholder, input::placeholder { color: var(--text-muted) !important; opacity: 0.7; }
         [data-theme='dark'] .border-l-4 { border-left-color: var(--accent) !important; }
@@ -166,7 +175,9 @@
         <div class="flex items-center justify-between w-full md:w-auto">
             <div class="flex items-center space-x-3 cursor-default">
                 <div class="relative group"><i data-lucide="feather" class="w-6 h-6 text-amber-500 transition-transform group-hover:rotate-12"></i><div id="ai-status-dot" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" title="IA Desconectada"></div></div>
-                <div><h1 class="text-xl font-display font-bold tracking-wider leading-none flex items-center gap-2 text-stone-100">SCRIPTORIUM <span class="text-[9px] bg-stone-800 border border-stone-600 text-amber-500 px-1.5 py-0.5 rounded font-sans tracking-normal">CLOUD</span></h1></div>
+                <div><h1 class="text-xl font-display font-bold tracking-wider leading-none flex items-center gap-2 text-stone-100">
+                    <span id="app-title" contenteditable="true" onblur="saveAppTitle()" class="outline-none hover:border-b border-stone-500/50 transition-all cursor-text whitespace-nowrap overflow-hidden">SCRIPTORIUM</span> 
+                </h1></div>
             </div>
             <button onclick="toggleSettings()" class="md:hidden p-2 text-stone-400 hover:text-white rounded-lg"><i data-lucide="settings" class="w-5 h-5"></i></button>
         </div>
@@ -188,20 +199,75 @@
     <div id="toast" class="fixed bottom-6 right-6 bg-stone-900 text-stone-100 px-5 py-4 rounded-lg shadow-2xl transform translate-y-40 transition-transform duration-500 z-50 flex items-center gap-4 border border-stone-700 max-w-[90vw]"><div class="bg-amber-500/20 p-2 rounded-full"><i data-lucide="info" class="w-5 h-5 text-amber-500"></i></div><span id="toast-msg" class="font-medium text-sm">Notificación</span></div>
     
     <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+    <div id="settings-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 fade-in overflow-y-auto">
+        <div class="bg-white rounded-xl shadow-2xl w-11/12 max-w-md md:max-w-4xl overflow-hidden my-8">
             <div class="bg-stone-900 p-4 border-b border-stone-700 flex justify-between items-center"><h3 class="text-stone-100 font-bold flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-amber-500"></i> Configuración</h3><button onclick="toggleSettings()" class="text-stone-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-            <div class="p-6 space-y-6">
-                <div class="text-center">
-                     <p class="text-xs font-bold text-stone-400 uppercase">Cuenta Vinculada</p>
-                     <p id="settings-email-display" class="text-sm font-bold text-stone-800 mt-1">Sin vincular</p>
+            <div class="p-6 md:p-8">
+                <!-- GRID LAYOUT PARA ESCRITORIO -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- COLUMNA IZQUIERDA: PERFIL -->
+                    <div class="space-y-6">
+                        <div class="text-center md:text-left">
+                             <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Perfil de Usuario</h4>
+                             
+                             <div class="flex flex-col items-center md:items-start gap-4 mb-4">
+                                <!-- AVATAR -->
+                                <div class="flex items-center gap-4">
+                                    <div id="settings-avatar-preview" class="w-20 h-20 rounded-full bg-stone-100 border border-stone-300 flex items-center justify-center overflow-hidden shadow-md">
+                                        <i data-lucide="user" class="w-8 h-8 text-stone-400" id="settings-default-icon"></i>
+                                        <img id="settings-avatar-img" class="w-full h-full object-cover hidden">
+                                    </div>
+                                    <div class="flex flex-col gap-2">
+                                        <label class="cursor-pointer bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded text-xs font-bold transition-colors inline-block text-center shadow-sm">
+                                            Cambiar Foto
+                                            <input type="file" id="settings-avatar-input" accept="image/*" class="hidden" onchange="previewSettingsAvatar(this)">
+                                        </label>
+                                        <button onclick="removeAvatar()" class="text-xs text-red-400 hover:text-red-600 text-left px-1">Restaurar default</button>
+                                    </div>
+                                </div>
+                             </div>
+
+                             <div class="space-y-3 w-full">
+                                <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre (Local)</label><input type="text" id="settings-name" class="w-full bg-stone-50 border border-stone-300 rounded p-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></div>
+                                <div>
+                                    <p class="text-xs font-bold text-stone-400 uppercase mt-2">Cuenta Vinculada</p>
+                                    <p id="settings-email-display" class="text-sm font-bold text-stone-800 mt-1 mb-2 bg-stone-50 p-2 rounded border border-stone-200">Sin vincular</p>
+                                    <button id="settings-login-btn" onclick="registerUser()" class="hidden w-full bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-colors mb-2 shadow-sm">
+                                        <i data-lucide="log-in" class="w-3 h-3 text-red-500"></i> Conectar con Google
+                                    </button>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- COLUMNA DERECHA: APARIENCIA Y SISTEMA -->
+                    <div class="space-y-6">
+                        <div>
+                            <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Apariencia</h4>
+                            <label class="block text-xs font-bold text-stone-500 uppercase mb-3">Tema Visual</label>
+                            <div class="grid grid-cols-4 gap-3">
+                                <button onclick="setTheme('light')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-light"><div class="w-8 h-8 rounded-full bg-stone-100 border border-stone-300"></div><span class="text-xs font-medium">Día</span></button>
+                                <button onclick="setTheme('dark')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-dark"><div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-700"></div><span class="text-xs font-medium">Noche</span></button>
+                                <button onclick="setTheme('warm')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-warm"><div class="w-8 h-8 rounded-full bg-[#fdf6e3] border border-[#e6dcc8]"></div><span class="text-xs font-medium">Cálido</span></button>
+                                <button onclick="setTheme('pink')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-pink-500 transition-all" id="theme-btn-pink"><div class="w-8 h-8 rounded-full bg-[#fff1f2] border border-[#fecdd3]"></div><span class="text-xs font-medium">Rosa</span></button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Sistema</h4>
+                            <div class="space-y-4">
+                                <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Gemini API Key</label><input type="password" id="api-key-input" class="w-full bg-stone-50 border border-stone-300 rounded p-2.5 text-sm text-stone-800 focus:ring-2 focus:ring-amber-500" placeholder="Pegar clave aquí..."></div>
+                                <div><button onclick="openReaderMode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-md"><i data-lucide="book-open" class="w-4 h-4"></i> Entrar en Modo Solo Lectura</button><p class="text-xs text-stone-500 mt-2 text-center">Un espacio aislado para leer .epub y .pdf.</p></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <hr class="border-stone-200">
-                <div><label class="block text-xs font-bold text-stone-500 uppercase mb-3">Tema Visual</label><div class="grid grid-cols-3 gap-3"><button onclick="setTheme('light')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-light"><div class="w-8 h-8 rounded-full bg-stone-100 border border-stone-300"></div><span class="text-xs font-medium">Día</span></button><button onclick="setTheme('dark')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-dark"><div class="w-8 h-8 rounded-full bg-slate-900 border border-slate-700"></div><span class="text-xs font-medium">Noche</span></button><button onclick="setTheme('warm')" class="flex flex-col items-center gap-2 p-2 rounded-lg border border-stone-200 hover:border-amber-500 transition-all" id="theme-btn-warm"><div class="w-8 h-8 rounded-full bg-[#fdf6e3] border border-[#e6dcc8]"></div><span class="text-xs font-medium">Cálido</span></button></div></div>
-                <hr class="border-stone-200">
-                <div><button onclick="openReaderMode()" class="w-full bg-stone-800 hover:bg-amber-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"><i data-lucide="book-open" class="w-4 h-4"></i> Entrar en Modo Solo Lectura</button><p class="text-xs text-stone-500 mt-2 text-center">Un espacio aislado para leer .epub y .pdf.</p></div>
-                <hr class="border-stone-200">
-                <div class="space-y-4"><div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre (Local)</label><input type="text" id="settings-name" class="w-full bg-stone-100 border border-stone-300 rounded p-2 text-sm"></div><div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Gemini API Key</label><input type="password" id="api-key-input" class="w-full bg-stone-100 border border-stone-300 rounded p-2 text-sm text-stone-800" placeholder="Pegar clave aquí..."></div></div><hr class="border-stone-200"><div class="flex justify-between items-center"><button onclick="logout()" class="text-xs text-red-500 hover:underline">Cerrar Sesión</button><button onclick="saveSettings()" class="bg-stone-900 hover:bg-stone-700 text-white px-4 py-2 rounded text-sm font-bold transition-colors">Guardar Cambios</button></div>
+                
+                <hr class="border-stone-200 my-6">
+                <div class="flex justify-between items-center">
+                    <button onclick="logout()" class="text-xs text-red-500 hover:underline font-bold px-2">Cerrar Sesión</button>
+                    <button onclick="saveSettings()" class="bg-stone-900 hover:bg-stone-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold transition-colors shadow-lg transform hover:-translate-y-0.5">Guardar Cambios</button>
+                </div>
             </div>
         </div>
     </div>
@@ -233,6 +299,7 @@
                 <button onclick="setReaderTheme('light')" id="rt-btn-light" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fcfbf9] border border-stone-300 shadow-sm active-reader-theme" title="Día"></button>
                 <button onclick="setReaderTheme('sepia')" id="rt-btn-sepia" class="reader-theme-btn w-6 h-6 rounded-full bg-[#f4ecd8] border border-[#d4c5a8] shadow-sm" title="Sepia"></button>
                 <button onclick="setReaderTheme('dark')" id="rt-btn-dark" class="reader-theme-btn w-6 h-6 rounded-full bg-[#1a1a1a] border border-stone-700 shadow-sm" title="Noche"></button>
+                <button onclick="setReaderTheme('pink')" id="rt-btn-pink" class="reader-theme-btn w-6 h-6 rounded-full bg-[#fff1f2] border border-[#fecdd3] shadow-sm" title="Rosa"></button>
                 <div class="w-px h-6 bg-stone-300 mx-1"></div>
                 <label for="book-upload" class="cursor-pointer p-1 text-stone-500 hover:text-stone-800 transition-all" title="Importar nuevo"><i data-lucide="plus" class="w-4 h-4"></i></label>
                 <input type="file" id="book-upload" class="hidden" accept=".epub,.pdf" onchange="handleBookImport(this)">
@@ -243,7 +310,10 @@
             <div class="max-w-5xl mx-auto">
                 <div class="flex justify-between items-end mb-8 border-b border-stone-300 pb-4">
                     <div><h2 class="text-3xl font-display font-bold text-stone-800">Tu Biblioteca</h2><p class="text-stone-500">Lecturas guardadas</p></div>
-                    <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg"><i data-lucide="upload" class="w-4 h-4"></i> Importar Libro</label>
+                    <div class="flex gap-2">
+                        <label for="book-upload" class="bg-stone-800 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-stone-700 cursor-pointer shadow-lg"><i data-lucide="upload" class="w-4 h-4"></i> Importar Libro</label>
+                        <button onclick="closeReaderMode()" class="bg-stone-200 text-stone-600 px-3 py-2 rounded-lg hover:bg-stone-300 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                    </div>
                 </div>
                 <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
                     <div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>
@@ -464,7 +534,7 @@
         let currentAvatarData = null;
         let initialTouchX = null;
         let isOnlineUser = false; // Estado de conexión
-        let currentPreviewId = null; // Defined missing variable
+        let currentPreviewId = null;
 
         const FAMOUS_EXCERPTS = [
             { book: "Cien años de soledad", author: "Gabriel García Márquez", text: "Muchos años después, frente al pelotón de fusilamiento, el coronel Aureliano Buendía había de recordar aquella tarde remota en que su padre lo llevó a conocer el hielo." },
@@ -534,7 +604,6 @@
         }
 
         async function loadInitialData() {
-            // Cargar usuario local
             const userTx = db.transaction(['user'], 'readonly');
             const userReq = userTx.objectStore('user').get('current');
             
@@ -542,19 +611,20 @@
                 if (userReq.result) {
                     currentUser = userReq.result;
                 } else {
-                    currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light', apiKey: '' };
+                    currentUser = { name: "Invitado", goal: 500, joined: new Date().toLocaleDateString(), theme: 'light', apiKey: '', appTitle: 'SCRIPTORIUM' };
                 }
                 
-                // Escuchar estado de autenticación de Firebase
                 if(auth) {
                     auth.onAuthStateChanged((user) => {
                         if (user) {
-                            // Usuario logueado en nube
                             isOnlineUser = true;
-                            // Actualizar datos locales con los de Google
+                            // Si el usuario tiene una foto local personalizada y no de Google, preferimos la local
+                            // Pero si acaba de loguearse y no hay local, usamos Google
+                            if (!currentUser.avatar || (currentUser.avatar.includes('googleusercontent') && user.photoURL)) {
+                                 currentUser.avatar = user.photoURL;
+                            }
                             currentUser.name = user.displayName || currentUser.name;
                             currentUser.email = user.email;
-                            currentUser.avatar = user.photoURL || currentUser.avatar;
                             currentUser.uid = user.uid;
                             dbSaveUser(currentUser);
                             
@@ -576,7 +646,6 @@
                 }
             };
 
-            // Cargar borradores locales mientras esperamos la nube
             const draftsTx = db.transaction(['drafts'], 'readonly');
             const draftsReq = draftsTx.objectStore('drafts').getAll();
             draftsReq.onsuccess = () => {
@@ -587,24 +656,15 @@
             };
         }
         
-        // --- FUNCIÓN CLAVE: CARGAR DE LA NUBE ---
         async function loadCloudData(uid) {
             if(!firestore) return;
-            
-            // Leer Borradores de Firestore
             try {
                 const snapshot = await firestore.collection('users').doc(uid).collection('drafts').get();
                 if (!snapshot.empty) {
                     const cloudDrafts = [];
                     snapshot.forEach(doc => cloudDrafts.push(doc.data()));
-                    
-                    // Estrategia simple: La nube gana por ahora. 
-                    // (Idealmente se fusionaría comparando fechas)
                     drafts = cloudDrafts;
-                    
-                    // Actualizar DB local
                     drafts.forEach(d => dbSaveDraft(d));
-                    
                     updateProjectList();
                     renderHome();
                     showToast("Datos sincronizados de la nube");
@@ -617,10 +677,10 @@
         function initAppUI() {
             if(getEl('user-name-display')) getEl('user-name-display').textContent = currentUser.name;
             if(getEl('welcome-name')) getEl('welcome-name').textContent = currentUser.name;
+            if(currentUser.appTitle) getEl('app-title').textContent = currentUser.appTitle;
             
             const avatarContainer = getEl('user-avatar');
             if(currentUser.avatar && typeof currentUser.avatar === 'string') {
-                 // Soporte para URL (Google) o Base64 (Local)
                 avatarContainer.innerHTML = `<img src="${currentUser.avatar}" class="avatar-img" alt="Avatar">`;
                 avatarContainer.style.background = 'transparent';
                 avatarContainer.style.border = 'none';
@@ -633,6 +693,22 @@
             if(getEl('settings-name')) getEl('settings-name').value = currentUser.name;
             if(getEl('settings-email-display')) getEl('settings-email-display').textContent = currentUser.email || "Cuenta Local (Offline)";
             
+            // Show/Hide Login button in settings based on status
+            const loginBtn = getEl('settings-login-btn');
+            if(loginBtn) {
+                if(isOnlineUser) loginBtn.classList.add('hidden');
+                else loginBtn.classList.remove('hidden');
+            }
+
+            // Avatar in settings
+            if(currentUser.avatar) {
+                const sImg = getEl('settings-avatar-img');
+                const sIcon = getEl('settings-default-icon');
+                sImg.src = currentUser.avatar;
+                sImg.classList.remove('hidden');
+                sIcon.classList.add('hidden');
+            }
+
             if(getEl('user-display')) {
                 getEl('user-display').classList.remove('hidden');
                 getEl('user-display').classList.add('flex');
@@ -641,7 +717,6 @@
             setTheme(currentUser.theme || 'light');
             updateAiStatus();
             renderHome();
-            // Solo cambiar vista si no estamos ya en una
             if(document.getElementById('view-home').classList.contains('hidden') && 
                document.getElementById('view-editor').classList.contains('hidden') && 
                document.getElementById('view-library').classList.contains('hidden')) {
@@ -651,7 +726,6 @@
             startExcerptRotation();
             setupSwipeGestures();
             
-            // Si estamos logueados, ocultar modal si está abierto
             if(isOnlineUser) getEl('auth-modal').classList.add('hidden');
 
             const mentorInput = getEl('mentor-input');
@@ -661,6 +735,137 @@
             }
         }
 
+        // --- APP TITLE ---
+        function saveAppTitle() {
+            const newTitle = getEl('app-title').textContent.trim();
+            if(newTitle) {
+                currentUser.appTitle = newTitle;
+                dbSaveUser(currentUser);
+                showToast("Título actualizado");
+            }
+        }
+
+        // --- CREATIVE TOOLS (RESTAURADO) ---
+        function openTool(type) {
+            currentToolType = type;
+            getEl('tool-modal').classList.remove('hidden');
+            getEl('tool-modal').classList.add('flex');
+            getEl('tool-result-container').classList.add('hidden');
+            getEl('tool-input').value = '';
+            
+            const titles = { 'char': 'Creador de Personajes', 'names': 'Generador de Nombres/Mundos', 'plot': 'Desbloqueo de Tramas' };
+            const prompts = { 'char': 'Describe el rol (ej: villano elegante)', 'names': 'Describe el ambiente (ej: ciudad futurista sucia)', 'plot': 'Describe el problema actual' };
+            const actions = { 'char': 'Generar Ficha', 'names': 'Inventar Nombres', 'plot': 'Sugerir Giros' };
+            
+            getEl('tool-title').innerHTML = `<i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> ${titles[type]}`;
+            getEl('tool-prompt-label').textContent = prompts[type];
+            getEl('tool-action-text').textContent = actions[type];
+            lucide.createIcons();
+        }
+
+        function closeToolModal() {
+            getEl('tool-modal').classList.add('hidden');
+            getEl('tool-modal').classList.remove('flex');
+        }
+
+        async function runTool() {
+            const input = getEl('tool-input').value.trim();
+            if(!input) return showToast("Escribe una descripción primero");
+            
+            getEl('tool-loading').classList.remove('hidden');
+            getEl('tool-result-container').classList.add('hidden');
+            
+            let prompt = "";
+            if (currentToolType === 'char') prompt = `Genera una ficha de personaje literario detallada basada en: "${input}". Incluye Nombre, Edad, Rol, Apariencia, Personalidad y Secreto.`;
+            else if (currentToolType === 'names') prompt = `Genera una lista de 10 nombres creativos y únicos para: "${input}". Mezcla estilos y da breve significado.`;
+            else if (currentToolType === 'plot') prompt = `Actúa como asistente de escritura. El usuario está atascado en: "${input}". Dame 3 opciones de giros argumentales o soluciones creativas para continuar la historia.`;
+
+            const result = await callGemini(prompt);
+            
+            getEl('tool-loading').classList.add('hidden');
+            if(result) {
+                getEl('tool-output').textContent = result; // Markdown text
+                getEl('tool-result-container').classList.remove('hidden');
+            } else {
+                // Better error feedback
+                if (!currentUser.apiKey) showToast("Falta API Key en Configuración");
+                else showToast("Error conectando con IA (Ver consola)");
+            }
+        }
+
+        function copyToolResult() {
+            const text = getEl('tool-output').textContent;
+            navigator.clipboard.writeText(text).then(() => showToast("Copiado al portapapeles"));
+        }
+
+        function saveToolAsNote() {
+            const text = getEl('tool-output').textContent;
+            const titles = { 'char': 'Personaje', 'names': 'Nombres', 'plot': 'Ideas Trama' };
+            const nd = { 
+                id: Date.now(), 
+                title: `${titles[currentToolType]} - ${new Date().toLocaleTimeString()}`, 
+                text: text.replace(/\n/g, '<br>'), 
+                project: "Notas Creativas", 
+                type: 'Idea', 
+                tags: ['IA', 'Nota'], 
+                date: new Date().toLocaleDateString(), 
+                preview: text.substring(0, 100), 
+                deletedAt: null 
+            };
+            drafts.unshift(nd); 
+            dbSaveDraft(nd); 
+            if(isOnlineUser) saveDraftToCloud(nd);
+            updateProjectList(); 
+            showToast("Guardado en Notas Creativas");
+            closeToolModal();
+        }
+
+        // --- FUNCIONES DE IMAGEN ---
+        function compressImage(file, mW, mH, q) { 
+            return new Promise((resolve, reject) => { 
+                const r = new FileReader(); 
+                r.readAsDataURL(file); 
+                r.onload = e => { 
+                    const i = new Image(); 
+                    i.src = e.target.result; 
+                    i.onload = () => { 
+                        const c = document.createElement('canvas'); 
+                        let w = i.width, h = i.height; 
+                        if (w > h) { if (w > mW) { h *= mW / w; w = mW; } } else { if (h > mH) { w *= mH / h; h = mH; } } 
+                        c.width = w; c.height = h; 
+                        const x = c.getContext('2d'); 
+                        x.drawImage(i, 0, 0, w, h); 
+                        resolve(c.toDataURL('image/jpeg', q)); 
+                    }; 
+                    i.onerror = reject; 
+                }; 
+                r.onerror = reject; 
+            }); 
+        }
+
+        async function previewSettingsAvatar(i) { 
+            const f = i.files[0]; 
+            if(f) { 
+                try { 
+                    const r = await compressImage(f, 150, 150, 0.7); 
+                    currentAvatarData = r; 
+                    getEl('settings-avatar-img').src = r; 
+                    getEl('settings-avatar-img').classList.remove('hidden'); 
+                    getEl('settings-default-icon').classList.add('hidden'); 
+                } catch(e) { console.error(e); } 
+            } 
+        }
+
+        function removeAvatar() { 
+            currentAvatarData = null; 
+            if(currentUser) currentUser.avatar = null; 
+            getEl('settings-avatar-img').classList.add('hidden'); 
+            getEl('settings-default-icon').classList.remove('hidden'); 
+            getEl('settings-avatar-input').value = ""; 
+            saveSettings(); 
+        }
+
+        // --- LOGIC ---
         function setupSwipeGestures() {
             const readerContentView = getEl('reader-content-view');
             if (!readerContentView) return;
@@ -677,18 +882,20 @@
         async function callGemini(prompt, schema = null, silent = false) {
             const apiKey = currentUser.apiKey; 
             if (!apiKey) { if(!silent) alert("Por favor, configura tu API Key en Ajustes."); return null; }
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            
+            // Use gemini-1.5-flash for broader compatibility
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             currentController = new AbortController();
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             if (schema) { payload.generationConfig = { responseMimeType: "application/json", responseSchema: schema }; }
             try {
                 const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: currentController.signal });
-                if (!response.ok) throw new Error("Error en API");
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
                 const data = await response.json();
                 const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (schema && text) { const cleanText = text.replace(/```json/g, '').replace(/```/g, '').trim(); return JSON.parse(cleanText); }
                 return text;
-            } catch (error) { if(!silent && error.name !== 'AbortError') showToast("Error conectando con IA"); return null; }
+            } catch (error) { if(!silent && error.name !== 'AbortError') console.error(error); return null; }
         }
 
         async function sendMentorMessage() {
@@ -710,30 +917,29 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // Fix for missing function reference
-        function renderMentorChat(){
-             const container = getEl('mentor-messages');
-             if(container) container.scrollTop = container.scrollHeight;
-        }
+        function renderMentorChat(){ const container = getEl('mentor-messages'); if(container) container.scrollTop = container.scrollHeight; }
+        function handleChatEnter(e) { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMentorMessage(); } }
+        function toggleAnalysisPanel() { const panel = getEl('analysis-panel'); panel.classList.toggle('translate-x-full'); isPanelOpen = !isPanelOpen; }
 
-        function handleChatEnter(e) {
-            if(e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMentorMessage();
-            }
-        }
-
-        function toggleAnalysisPanel() {
-            const panel = getEl('analysis-panel');
-            panel.classList.toggle('translate-x-full'); isPanelOpen = !isPanelOpen;
-        }
-
+        // --- CORRECTOR OFFLINE POTENCIADO ---
         async function runGrammarCheck() {
             const t = editor.innerText; if(!t) return showToast("Escribe algo primero.");
             getEl('ai-loading-overlay').classList.remove('hidden');
             setTimeout(() => {
                 const issues = [];
-                const commonErrors = [ { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." }, { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Error común." } ];
+                const commonErrors = [
+                    { regex: /\b(h)?abia\b/gi, fix: "había", type: "Ortografía", context: "Verbo haber." },
+                    { regex: /\bnoxe\b/gi, fix: "noche", type: "Ortografía", context: "Escritura incorrecta." },
+                    { regex: /\bsiudad\b/gi, fix: "ciudad", type: "Ortografía", context: "S/C." },
+                    { regex: /\bdetectibe\b/gi, fix: "detective", type: "Ortografía", context: "B/V." },
+                    { regex: /\bbarias\b/gi, fix: "varias", type: "Ortografía", context: "B/V." },
+                    { regex: /\bdemaciado\b/gi, fix: "demasiado", type: "Ortografía", context: "S/C." },
+                    { regex: /\boracion\b/gi, fix: "oración", type: "Ortografía", context: "Falta tilde." },
+                    { regex: /\bconclucion\b/gi, fix: "conclusión", type: "Ortografía", context: "S/C y tilde." },
+                    { regex: /\ [,\.]/g, fix: ",", type: "Gramática", context: "Espacio antes de puntuación." },
+                    { regex: /\b([a-zñáéíóú]+)\s\./g, fix: "$1.", type: "Puntuación", context: "Espacio antes del punto." },
+                    { regex: /^\s*[a-zñáéíóú]/m, fix: "Mayúscula", type: "Gramática", context: "Inicio de oración minúscula." }
+                ];
                 commonErrors.forEach(rule => { let match; if(rule.regex.global) rule.regex.lastIndex = 0; const matches = t.match(rule.regex); if(matches) matches.forEach(m => issues.push({ type: rule.type, error: m, fix: rule.fix, context: rule.context })); });
                 renderIssues(issues); getEl('ai-loading-overlay').classList.add('hidden');
             }, 500);
@@ -742,7 +948,7 @@
         function renderIssues(issues) {
             const container = getEl('issues-container');
             if(issues.length > 0) {
-                container.innerHTML = issues.map(i => `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4"><p class="text-red-500 line-through">${i.error}</p><p class="font-bold">${i.fix}</p></div>`).join('');
+                container.innerHTML = issues.map(i => `<div class="bg-white p-4 rounded-lg border-l-4 border-emerald-500 shadow-sm mb-4"><p class="text-red-500 line-through">${i.error}</p><p class="font-bold">${i.fix}</p><p class="text-xs text-stone-500 mt-1">${i.context}</p></div>`).join('');
             } else {
                 container.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-emerald-600 py-10"><p>No se detectaron errores simples.</p></div>`;
             }
@@ -799,6 +1005,7 @@
             
             currentUser.theme = currentTheme; 
             if(n) currentUser.name = n; 
+            if(currentAvatarData) currentUser.avatar = currentAvatarData; // Save manual avatar
             currentUser.apiKey = k; 
             
             dbSaveUser(currentUser); 
@@ -895,7 +1102,29 @@
         function handleInput(){ const t = editor.innerText.trim(); if(getEl('stat-words')) getEl('stat-words').textContent=t?t.split(/\s+/).length:0; if(getEl('stat-sentences')) getEl('stat-sentences').textContent=t?t.split(/[.!?]+/).filter(x=>x.trim()).length:0; isDirty=true; updateUnsaved(); }
         function showToast(m){const t=getEl('toast');getEl('toast-msg').textContent=m;t.classList.remove('translate-y-40');setTimeout(()=>t.classList.add('translate-y-40'),3000);}
         function setTheme(mode) { document.body.setAttribute('data-theme', mode); setReaderTheme(mode); if(currentUser) currentUser.theme = mode; }
-        function setReaderTheme(mode) { const reader = getEl('view-reader'); if(reader) reader.setAttribute('data-reader-theme', mode); if (bookRendition) { const themes = { 'light': { body: { color: '#222', background: '#fcfbf9' } }, 'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } } }; try { bookRendition.themes.default(themes[mode]); } catch(e) {} } }
+        function setReaderTheme(mode) { 
+            const reader = getEl('view-reader'); 
+            if(reader) reader.setAttribute('data-reader-theme', mode); 
+            
+            // Sync active button
+            ['light', 'sepia', 'dark', 'pink'].forEach(m => {
+                const btn = getEl(`rt-btn-${m}`);
+                if(btn) {
+                    if(m === mode) btn.classList.add('active-reader-theme');
+                    else btn.classList.remove('active-reader-theme');
+                }
+            });
+
+            if (bookRendition) { 
+                const themes = { 
+                    'light': { body: { color: '#222', background: '#fcfbf9' } }, 
+                    'sepia': { body: { color: '#5b4636', background: '#f4ecd8' } }, 
+                    'dark': { body: { color: '#d6d3d1', background: '#1a1a1a' } },
+                    'pink': { body: { color: '#881337', background: '#fff1f2' } } 
+                }; 
+                try { bookRendition.themes.default(themes[mode]); } catch(e) {} 
+            } 
+        }
         
         function toggleSettings(){ 
             getEl('settings-modal').classList.toggle('hidden'); 
@@ -1003,8 +1232,57 @@
             };
             reader.readAsArrayBuffer(file);
         }
-        function updateBookProgress(id, progress) { if(!db || !id) return; const tx = db.transaction(['books'], 'readwrite'); const store = tx.objectStore('books'); const request = store.get(id); request.onsuccess = () => { const data = request.result; if(data) { data.progress = progress; store.put(data); } }; }
-        function refreshReaderLibrary() { if(!db) return; const grid = getEl('reader-library-grid'); if(!grid) return; const tx = db.transaction(['books'], 'readonly'); const store = tx.objectStore('books'); const request = store.getAll(); request.onsuccess = () => { const books = request.result; if(books.length === 0) { grid.innerHTML = `<div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>`; } else { grid.innerHTML = books.map(book => { const isPdf = book.type.includes('pdf'); const icon = isPdf ? 'file-text' : 'book-open'; return ` <div onclick="loadBookFromLibrary(${book.id})" class="group cursor-pointer flex flex-col gap-2"> <div class="aspect-[2/3] ${isPdf ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'} border rounded-lg shadow-sm flex flex-col items-center justify-center p-4 transition-transform group-hover:-translate-y-1 relative"> <i data-lucide="${icon}" class="w-12 h-12 mb-2 opacity-50"></i> <button onclick="event.stopPropagation(); deleteBookFromLibrary(${book.id})" class="absolute top-2 right-2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button> </div> <h4 class="text-xs font-bold text-stone-700 truncate text-center px-1">${book.name}</h4> </div>`; }).join(''); lucide.createIcons(); } }; }
+        function updateBookProgress(id, progress) { 
+            if(!db || !id) return; 
+            const tx = db.transaction(['books'], 'readwrite'); 
+            const store = tx.objectStore('books'); 
+            const request = store.get(id); 
+            request.onsuccess = () => { 
+                const data = request.result; 
+                if(data) { 
+                    // Store percentage directly if possible, or just the CFI
+                    data.progress = progress; 
+                    store.put(data); 
+                } 
+            }; 
+        }
+        
+        function refreshReaderLibrary() { 
+            if(!db) return; 
+            const grid = getEl('reader-library-grid'); 
+            if(!grid) return; 
+            const tx = db.transaction(['books'], 'readonly'); 
+            const store = tx.objectStore('books'); 
+            const request = store.getAll(); 
+            request.onsuccess = () => { 
+                const books = request.result; 
+                if(books.length === 0) { 
+                    grid.innerHTML = `<div class="col-span-full text-center py-20 text-stone-400 italic"><i data-lucide="library" class="w-12 h-12 mx-auto mb-2 opacity-20"></i><p>No tienes libros guardados aún.</p></div>`; 
+                } else { 
+                    grid.innerHTML = books.map(book => { 
+                        const isPdf = book.type.includes('pdf'); 
+                        const icon = isPdf ? 'file-text' : 'book-open'; 
+                        const colorClass = isPdf ? 'bg-red-50 text-red-600 border-red-200' : 'bg-amber-50 text-amber-600 border-amber-200'; 
+                        let progressLabel = ""; 
+                        
+                        // Parse progress for display
+                        if(book.progress) { 
+                            if(typeof book.progress === 'number') {
+                                progressLabel = `${book.progress} pág`;
+                            } else if (typeof book.progress === 'string' && book.progress.includes('epubcfi')) {
+                                progressLabel = 'Leyendo'; // Can't easily calculate % from CFI without loading book
+                            } else {
+                                progressLabel = 'Empezado';
+                            }
+                        }
+
+                        return ` <div onclick="loadBookFromLibrary(${book.id})" class="group cursor-pointer flex flex-col gap-2"> <div class="aspect-[2/3] ${colorClass} border rounded-lg shadow-sm flex flex-col items-center justify-center p-4 transition-transform group-hover:-translate-y-1 group-hover:shadow-md relative"> <i data-lucide="${icon}" class="w-12 h-12 mb-2 opacity-50"></i> <span class="text-[10px] font-bold uppercase tracking-widest opacity-60">${isPdf ? 'PDF' : 'EPUB'}</span> ${progressLabel ? `<div class="absolute bottom-2 right-2 bg-white/90 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm text-stone-600">${progressLabel}</div>` : ''} <button onclick="event.stopPropagation(); deleteBookFromLibrary(${book.id})" class="absolute top-2 right-2 text-stone-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button> </div> <h4 class="text-xs font-bold text-stone-700 truncate text-center px-1">${book.name}</h4> <p class="text-[10px] text-stone-400 text-center">${book.date}</p> </div>`; 
+                    }).join(''); 
+                    lucide.createIcons(); 
+                } 
+            }; 
+        }
+        
         function deleteBookFromLibrary(id) { if(!confirm("¿Eliminar este libro de la biblioteca local?")) return; const tx = db.transaction(['books'], 'readwrite'); tx.objectStore('books').delete(id); tx.oncomplete = () => { showToast("Libro eliminado"); refreshReaderLibrary(); }; }
         function loadBookFromLibrary(id) { const tx = db.transaction(['books'], 'readonly'); const request = tx.objectStore('books').get(id); request.onsuccess = () => { const book = request.result; if(book) { currentReaderBookId = book.id; const file = new File([book.data], book.name, { type: book.type }); loadBookFile(file, book.progress); } }; }
         function handleBookImport(input) { const file = input.files[0]; if(!file) return; currentReaderBookId = null; if(confirm(`¿Guardar "${file.name}" en biblioteca local?`)) { saveBookToLibrary(file); } else { loadBookFile(file); } input.value = ''; }
@@ -1031,6 +1309,8 @@
         function openReaderMode() { const readerDiv = document.getElementById('view-reader'); readerDiv.classList.remove('hidden'); document.body.style.overflow = 'hidden'; document.addEventListener('keydown', handleReaderKeydown); readerDiv.focus(); if(getEl('reader-content-view').classList.contains('hidden')) refreshReaderLibrary(); }
         function closeReaderMode() { document.getElementById('view-reader').classList.add('hidden'); document.body.style.overflow = 'auto'; document.removeEventListener('keydown', handleReaderKeydown); }
         function handleReaderKeydown(e) { if (document.getElementById('view-reader').classList.contains('hidden')) return; if (e.key === 'ArrowLeft') readerPrevPage(); if (e.key === 'ArrowRight') readerNextPage(); if (e.key === 'Escape') closeReaderMode(); }
+        function editFromPreview(){closePreview();loadDraft(currentPreviewId);}
+        function closePreview(){getEl('preview-modal').classList.add('hidden');}
         
         // Start DB
         initDB();
