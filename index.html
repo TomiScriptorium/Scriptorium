@@ -207,7 +207,7 @@
                     <!-- COLUMNA IZQUIERDA: PERFIL -->
                     <div class="space-y-6">
                         <div class="text-center md:text-left">
-                             <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Perfil de Usuario</h4>
+                             <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Perfil Local</h4>
                              
                              <div class="flex flex-col items-center md:items-start gap-4 mb-4">
                                 <!-- AVATAR -->
@@ -228,8 +228,14 @@
 
                              <div class="space-y-3 w-full">
                                 <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Nombre (Local)</label><input type="text" id="settings-name" class="w-full bg-stone-50 border border-stone-300 rounded p-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500"></div>
-                                <div class="hidden">
-                                    <!-- Espacio reservado para futuras opciones -->
+                                <div class="mt-4 p-4 bg-stone-50 rounded-lg border border-stone-200">
+                                    <h5 class="text-xs font-bold text-stone-700 uppercase mb-2 flex items-center gap-2"><i data-lucide="archive" class="w-3 h-3 text-amber-500"></i> Copia de Seguridad Completa</h5>
+                                    <p class="text-[10px] text-stone-500 mb-3 leading-relaxed">Guarda todo tu trabajo, incluyendo libros importados, en un único archivo ZIP para llevar a otro dispositivo.</p>
+                                    <div class="flex gap-2">
+                                        <button onclick="exportFullBackup()" class="flex-1 bg-white border border-stone-300 text-stone-700 py-2 rounded text-xs font-bold hover:bg-stone-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i data-lucide="download" class="w-3 h-3"></i> Exportar ZIP</button>
+                                        <button onclick="document.getElementById('backup-upload').click()" class="flex-1 bg-white border border-stone-300 text-stone-700 py-2 rounded text-xs font-bold hover:bg-stone-100 transition-colors shadow-sm flex items-center justify-center gap-2"><i data-lucide="upload" class="w-3 h-3"></i> Importar ZIP</button>
+                                        <input type="file" id="backup-upload" class="hidden" accept=".zip" onchange="importFullBackup(this)">
+                                    </div>
                                 </div>
                              </div>
                         </div>
@@ -251,7 +257,13 @@
                         <div>
                             <h4 class="text-xs font-bold text-stone-400 uppercase mb-4 border-b border-stone-100 pb-2">Sistema</h4>
                             <div class="space-y-4">
-                                <div><label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Gemini API Key</label><input type="password" id="api-key-input" class="w-full bg-stone-50 border border-stone-300 rounded p-2.5 text-sm text-stone-800 focus:ring-2 focus:ring-amber-500" placeholder="Pegar clave aquí..."></div>
+                                <div>
+                                    <label class="block text-xs font-bold text-stone-500 uppercase tracking-wide mb-1">Gemini API Key</label>
+                                    <input type="password" id="api-key-input" class="w-full bg-stone-50 border border-stone-300 rounded p-2.5 text-sm text-stone-800 focus:ring-2 focus:ring-amber-500" placeholder="Pegar clave aquí...">
+                                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="w-full bg-white border border-stone-300 hover:bg-stone-50 text-stone-700 py-2 rounded text-xs font-bold flex items-center justify-center gap-2 transition-colors mt-2 shadow-sm">
+                                        <i data-lucide="key" class="w-3 h-3 text-amber-500"></i> Obtener API Key (Gratis)
+                                    </a>
+                                </div>
                                 <div><button onclick="openReaderMode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2 shadow-md"><i data-lucide="book-open" class="w-4 h-4"></i> Entrar en Modo Solo Lectura</button><p class="text-xs text-stone-500 mt-2 text-center">Un espacio aislado para leer .epub y .pdf.</p></div>
                             </div>
                         </div>
@@ -361,7 +373,7 @@
 
                 <!-- TALLER CREATIVO ELIMINADO -->
                 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2 space-y-6"><div class="flex items-center justify-between"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Tus Proyectos</h3></div><div id="projects-progress-container" class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="space-y-6"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="save" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Seguridad</h3><div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200 flex flex-col gap-4 justify-center h-full"><div class="text-center mb-2"><div class="bg-stone-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="shield-check" class="w-8 h-8 text-stone-400"></i></div><p class="text-sm text-stone-500">Tus historias son valiosas.</p></div><button onclick="exportBackup()" class="w-full border-2 border-stone-100 hover:border-amber-500 hover:bg-amber-50 text-stone-600 hover:text-amber-700 font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 text-sm"><i data-lucide="download-cloud" class="w-4 h-4"></i> Descargar Todo</button><input type="file" id="import-file" class="hidden" onchange="importBackup(this)"><button onclick="document.getElementById('import-file').click()" class="w-full text-xs text-stone-400 hover:text-stone-600 hover:underline text-center mt-2">Restaurar desde archivo</button></div></div></div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="lg:col-span-2 space-y-6"><div class="flex items-center justify-between"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Tus Proyectos</h3></div><div id="projects-progress-container" class="space-y-4 grid grid-cols-1 md:grid-cols-2 gap-4"></div></div><div class="space-y-6"><h3 class="text-lg md:text-xl font-bold text-stone-700 flex items-center gap-2"><i data-lucide="save" class="w-5 h-5 md:w-6 md:h-6 text-stone-400"></i> Seguridad</h3><div class="bg-white p-8 rounded-2xl shadow-md border border-stone-200 flex flex-col gap-4 justify-center h-full"><div class="text-center mb-2"><div class="bg-stone-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="shield-check" class="w-8 h-8 text-stone-400"></i></div><p class="text-sm text-stone-500">Tus historias son valiosas.</p></div><button onclick="exportFullBackup()" class="w-full border-2 border-stone-100 hover:border-amber-500 hover:bg-amber-50 text-stone-600 hover:text-amber-700 font-bold py-3 rounded-xl transition-all flex justify-center items-center gap-2 text-sm"><i data-lucide="download-cloud" class="w-4 h-4"></i> Descargar Todo (ZIP)</button><input type="file" id="import-file" class="hidden" accept=".zip" onchange="importFullBackup(this)"><button onclick="document.getElementById('import-file').click()" class="w-full text-xs text-stone-400 hover:text-stone-600 hover:underline text-center mt-2">Restaurar desde ZIP</button></div></div></div>
             </div>
         </div>
 
@@ -934,6 +946,135 @@
             };
             if(f.name.endsWith('.docx')){ r.readAsArrayBuffer(f); } else { r.readAsText(f); } i.value='';
         }
+
+        // --- SISTEMA DE RESPALDO UNIVERSAL (ZIP) ---
+        async function exportFullBackup() {
+            if(!confirm("Se descargará un archivo ZIP con todos tus borradores, configuraciones y libros importados. Esto puede tardar si tienes muchos libros.")) return;
+            
+            showToast("Preparando respaldo...");
+            const zip = new JSZip();
+            
+            // 1. Datos JSON (Borradores y Usuario)
+            const data = {
+                user: currentUser,
+                drafts: drafts,
+                version: 1,
+                timestamp: Date.now()
+            };
+            zip.file("data.json", JSON.stringify(data, null, 2));
+
+            // 2. Libros desde IndexedDB
+            if(db) {
+                try {
+                    const tx = db.transaction(['books'], 'readonly');
+                    const store = tx.objectStore('books');
+                    const books = await new Promise((resolve, reject) => {
+                        const req = store.getAll();
+                        req.onsuccess = () => resolve(req.result);
+                        req.onerror = () => reject(req.error);
+                    });
+                    
+                    if(books.length > 0) {
+                        const bookFolder = zip.folder("books");
+                        const libraryMeta = books.map(b => ({
+                            id: b.id, name: b.name, type: b.type, date: b.date, progress: b.progress,
+                            filename: `${b.id}_${b.name}` // Identificador único
+                        }));
+                        zip.file("library.json", JSON.stringify(libraryMeta));
+                        
+                        books.forEach(b => {
+                            // b.data es el Blob del archivo original
+                            bookFolder.file(`${b.id}_${b.name}`, b.data);
+                        });
+                    }
+                } catch(e) {
+                    console.error("Error al exportar libros:", e);
+                    alert("Hubo un error guardando los libros, pero se guardarán tus textos.");
+                }
+            }
+            
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(content);
+            a.download = `Scriptorium_Backup_${new Date().toISOString().slice(0,10)}.zip`;
+            a.click();
+            showToast("Copia de seguridad descargada");
+        }
+
+        async function importFullBackup(input) {
+            const file = input.files[0];
+            if(!file) return;
+            
+            if(!confirm("ADVERTENCIA: Importar una copia de seguridad sobrescribirá tus datos actuales. ¿Deseas continuar?")) {
+                input.value = '';
+                return;
+            }
+
+            showToast("Leyendo archivo...");
+            
+            try {
+                const zip = await JSZip.loadAsync(file);
+                
+                // 1. Restaurar Datos
+                if (zip.file("data.json")) {
+                    const dataStr = await zip.file("data.json").async("string");
+                    const data = JSON.parse(dataStr);
+                    
+                    if(data.user) {
+                        currentUser = data.user;
+                        dbSaveUser(currentUser);
+                    }
+                    if(data.drafts) {
+                        drafts = data.drafts;
+                        // Limpiar y rellenar DB drafts
+                        const tx = db.transaction(['drafts'], 'readwrite');
+                        const store = tx.objectStore('drafts');
+                        await new Promise(resolve => {
+                            store.clear().onsuccess = resolve;
+                        });
+                        drafts.forEach(d => store.put(d));
+                    }
+                }
+
+                // 2. Restaurar Libros
+                if (zip.folder("books") && zip.file("library.json")) {
+                    const libMetaStr = await zip.file("library.json").async("string");
+                    const libraryMeta = JSON.parse(libMetaStr);
+                    const bookFolder = zip.folder("books");
+                    
+                    const tx = db.transaction(['books'], 'readwrite');
+                    const store = tx.objectStore('books');
+                    
+                    // Limpiar libros actuales (opcional, pero más limpio para "restaurar")
+                    // await new Promise(resolve => store.clear().onsuccess = resolve); 
+
+                    for (const meta of libraryMeta) {
+                        const blob = await bookFolder.file(meta.filename).async("blob");
+                        // Reconstruir objeto libro
+                        const bookObj = {
+                            id: meta.id,
+                            name: meta.name,
+                            type: meta.type,
+                            date: meta.date,
+                            progress: meta.progress,
+                            data: blob
+                        };
+                        store.put(bookObj);
+                    }
+                }
+
+                alert("Restauración completada con éxito. La página se recargará.");
+                location.reload();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error al importar el archivo: " + e.message);
+            }
+            input.value = '';
+        }
+
+        // --- EXPORTAR SOLO TXT INDIVIDUAL (Ya existente) ---
+        function downloadCurrentTxt(){ const blob = new Blob([getCleanText(editor.innerHTML)], {type:'text/plain'}); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = (getEl('doc-title').value || "Borrador") + ".txt"; a.click(); }
 
         // --- SETTINGS ---
         
