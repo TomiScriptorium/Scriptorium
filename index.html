@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- CONFIGURACIÓN iOS -->
+    <!-- CONFIGURACIÓN iOS y PWA -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Scriptorium">
+    <meta name="mobile-web-app-capable" content="yes">
 
     <title>Scriptorium</title>
     
-    <!-- FAVICON (Escritorio - Circular) -->
-    <link rel="icon" id="dynamic-favicon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23292524' stroke='%23d97706' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
-    
-    <!-- APPLE TOUCH ICON (iOS - Cuadrado, iOS lo redondea) -->
-    <link rel="apple-touch-icon" id="dynamic-apple-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23292524'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='%23d97706' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E">
+    <!-- FAVICONS DINÁMICOS (Basados en archivos PNG locales) -->
+    <!-- Por defecto inicia con el tema 'Día' -->
+    <link rel="icon" id="dynamic-favicon" type="image/png" href="Día.png">
+    <link rel="apple-touch-icon" id="dynamic-apple-icon" href="Día.png">
 
     <!-- Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -571,12 +571,13 @@
             { book: "Rayuela", author: "Julio Cortázar", text: "¿Encontraría a la Maga? Tantas veces me había bastado asomarme, viniendo por la rue de Seine, al arco que da al Quai de Conti, y apenas la luz de ceniza y olivo que flota sobre el río me dejaba distinguir las formas, ya su silueta delgada se inscribía en el Pont des Arts." }
         ];
 
-        // Temas de Favicon
-        const faviconThemes = {
-            light: { bg: '%23292524', stroke: '%23d97706' }, // Stone 800, Amber 600
-            dark: { bg: '%230f172a', stroke: '%2360a5fa' },  // Slate 900, Blue 400
-            warm: { bg: '%235d4037', stroke: '%23fde68a' },  // Brown 800, Amber 200
-            pink: { bg: '%23881337', stroke: '%23fbcfe8' }   // Pink 900, Pink 200
+        // --- MAPA DE ICONOS DE TEMA (Archivos PNG locales) ---
+        // Asegúrate de que estos archivos existan en la misma carpeta
+        const themeIcons = {
+            light: 'Día.png',    // Icono para modo día
+            dark: 'Noche.png',   // Icono para modo noche
+            warm: 'Cálido.png',  // Icono para modo cálido
+            pink: 'Pink.png'     // Icono para modo rosa (asumiendo que renombrarás 'Pink' a 'Pink.png')
         };
 
         let bookRendition = null;
@@ -594,26 +595,17 @@
         const analysisPanel = getEl('analysis-panel');
 
         lucide.createIcons();
-        setTimeout(generateIOSIcon, 500);
 
-        function generateIOSIcon() {
-            // Placeholder: en un entorno real, esto se regeneraría con updateFavicon
-        }
-
+        // --- FUNCIÓN PARA ACTUALIZAR FAVICONS ---
         function updateFavicons(theme) {
-            const colors = faviconThemes[theme] || faviconThemes['light'];
+            // Obtener la ruta del icono según el tema, o usar 'Día.png' por defecto
+            const iconPath = themeIcons[theme] || themeIcons['light'];
             
-            // 1. Regular Favicon SVG
-            const faviconSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='${colors.bg}' stroke='${colors.stroke}' stroke-width='4'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E`;
-            
-            // 2. Apple Touch Icon (Cuadrado) SVG - Mismo estilo elegante, fondo cuadrado completo
-            const appleSvg = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='${colors.bg}'/%3E%3Cg transform='translate(22,22) scale(2.3)'%3E%3Cpath d='M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z' fill='none' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='16' y1='8' x2='2' y2='22' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cline x1='17.5' y1='15' x2='9' y2='15' stroke='${colors.stroke}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/g%3E%3C/svg%3E`;
-
             const faviconLink = document.getElementById('dynamic-favicon');
             const appleLink = document.getElementById('dynamic-apple-icon');
             
-            if(faviconLink) faviconLink.href = faviconSvg;
-            if(appleLink) appleLink.href = appleSvg;
+            if(faviconLink) faviconLink.href = iconPath;
+            if(appleLink) appleLink.href = iconPath;
         }
 
         // --- DATABASE INIT ---
@@ -874,7 +866,6 @@
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             
             // CONFIGURACIÓN DE SEGURIDAD CRUCIAL
-            // Esto evita que Gemini bloquee tu historia si contiene conflictos, drama o romance.
             const safetySettings = [
                 { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                 { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -1202,7 +1193,7 @@
         function setTheme(mode) { 
             document.body.setAttribute('data-theme', mode); 
             setReaderTheme(mode); 
-            updateFavicons(mode); // Actualizar icono dinámicamente
+            updateFavicons(mode); // Actualizar icono dinámicamente según el tema
             if(currentUser) currentUser.theme = mode; 
         }
         function setReaderTheme(mode) { 
