@@ -33,7 +33,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
 
-    <!-- FIREBASE SDKs -->
+    <!-- FIREBASE SDKs (VERSIÓN COMPAT PARA HTML SIMPLE) -->
+    <!-- Mantenemos la versión compat porque es la más estable para archivos HTML sin bundlers -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -521,7 +522,7 @@
     <script>
         // --- 1. CONFIGURACIÓN Y VARIABLES ---
         
-        // --- TU CONFIGURACIÓN DE FIREBASE INTEGRADA (NUEVA) ---
+        // --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE MEJORADA ---
         const firebaseConfig = {
           apiKey: "AIzaSyBmv0HH4wS6aH3A14VfhHQsvH-HeCBb_mw",
           authDomain: "scriptoriumv2-4c761.firebaseapp.com",
@@ -530,13 +531,15 @@
           messagingSenderId: "329572312900",
           appId: "1:329572312900:web:62a62928ce9c4b4c899911"
         };
-        // ----------------------------------------------
-
-        // --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE MEJORADA ---
+        
         let auth, firestore;
         
         // Función para validar que Firebase cargó
         function initFirebase() {
+            if (window.location.protocol === 'file:') {
+                alert("⚠️ ADVERTENCIA: Estás ejecutando el archivo localmente (file://).\n\nEl inicio de sesión con Google NO funcionará así por seguridad.\n\nDebes usar un servidor local (ej: Live Server en VSCode) o subirlo a un hosting (ej: Vercel, Netlify, Firebase Hosting).");
+            }
+
             if (typeof firebase === 'undefined') {
                 console.error("Los scripts de Firebase no se han cargado. Revisa tu conexión a internet.");
                 return false;
@@ -1136,7 +1139,7 @@
                     if (error.code === 'auth/popup-closed-by-user') {
                         showToast("Inicio de sesión cancelado");
                     } else if (error.code === 'auth/unauthorized-domain') {
-                        alert("Error: Este dominio no está autorizado en Firebase Console.\n\nVe a Authentication > Settings > Authorized Domains y añade tu dominio actual.");
+                        alert("Error: Este dominio no está autorizado en Firebase Console.\n\nVe a Authentication > Settings > Authorized Domains y añade tu dominio actual.\n(Nota: localhost suele funcionar, pero file:// NUNCA funciona).");
                     } else if (error.code === 'auth/operation-not-allowed') {
                         alert("Error: El proveedor de Google no está habilitado en Firebase Console.");
                     } else {
