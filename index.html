@@ -522,48 +522,22 @@
     <script>
         // --- 1. CONFIGURACIÓN Y VARIABLES ---
         
-        // --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE MEJORADA ---
+        // --- CONFIGURACIÓN DE FIREBASE (SIMPLIFICADA) ---
         const firebaseConfig = {
-          apiKey: "AIzaSyBmv0HH4wS6aH3A14VfhHQsvH-HeCBb_mw",
-          authDomain: "scriptoriumv2-4c761.firebaseapp.com",
-          projectId: "scriptoriumv2-4c761",
-          storageBucket: "scriptoriumv2-4c761.firebasestorage.app",
-          messagingSenderId: "329572312900",
-          appId: "1:329572312900:web:62a62928ce9c4b4c899911"
+            apiKey: "AIzaSyBmv0HH4wS6aH3A14VfhHQsvH-HeCBb_mw",
+            authDomain: "scriptoriumv2-4c761.firebaseapp.com",
+            projectId: "scriptoriumv2-4c761",
+            storageBucket: "scriptoriumv2-4c761.firebasestorage.app",
+            messagingSenderId: "329572312900",
+            appId: "1:329572312900:web:62a62928ce9c4b4c899911"
         };
         
-        let auth, firestore;
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
         
-        // Función para validar que Firebase cargó
-        function initFirebase() {
-            if (window.location.protocol === 'file:') {
-                alert("⚠️ ADVERTENCIA: Estás ejecutando el archivo localmente (file://).\n\nEl inicio de sesión con Google NO funcionará así por seguridad.\n\nDebes usar un servidor local (ej: Live Server en VSCode) o subirlo a un hosting (ej: Vercel, Netlify, Firebase Hosting).");
-            }
-
-            if (typeof firebase === 'undefined') {
-                console.error("Los scripts de Firebase no se han cargado. Revisa tu conexión a internet.");
-                return false;
-            }
-            try {
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                }
-                auth = firebase.auth();
-                firestore = firebase.firestore();
-                
-                // Configurar idioma del dispositivo para el popup de Google
-                auth.useDeviceLanguage(); 
-                
-                return true;
-            } catch (e) {
-                console.error("Error inicializando Firebase:", e);
-                // Usamos console.error o alert porque showToast podría no estar definido todavía
-                return false;
-            }
-        }
-
-        // Ejecutar inicialización inmediatamente
-        initFirebase();
+        // Inicializar servicios globales
+        const auth = firebase.auth();
+        const firestore = firebase.firestore();
 
         let excerptInterval = null; 
         let db = null; // IndexedDB Local
@@ -1100,52 +1074,17 @@
 
         // --- AUTH & SETTINGS ---
 
-        // --- FUNCIÓN DE REGISTRO/LOGIN CORREGIDA ---
         function registerUser() { 
-            // 1. Verificar si Firebase está listo
-            if (!auth) {
-                const initialized = initFirebase();
-                if (!initialized) {
-                    alert("No se pudo conectar con los servicios de Google. Verifica tu conexión o recarga la página.");
-                    return;
-                }
-            }
-
-            // 2. Configurar el proveedor
             const provider = new firebase.auth.GoogleAuthProvider();
-            // Añadir scopes si fuera necesario (opcional)
-            provider.addScope('profile');
-            provider.addScope('email');
-
-            // 3. Feedback visual inmediato
-            showToast("Abriendo ventana de Google...");
-
-            // 4. Iniciar sesión con persistencia explícita
-            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-                .then(() => {
-                    return auth.signInWithPopup(provider);
-                })
-                .then((result) => {
-                    showToast("¡Bienvenido " + result.user.displayName + "!");
-                    // Ocultar modales si están abiertos
-                    const authModal = document.getElementById('auth-modal');
-                    if(authModal) authModal.classList.add('hidden');
-                    // initAppUI se activará automáticamente por el listener onAuthStateChanged
-                })
-                .catch((error) => {
-                    console.error("Error Auth:", error);
-                    
-                    // Manejo de errores comunes
-                    if (error.code === 'auth/popup-closed-by-user') {
-                        showToast("Inicio de sesión cancelado");
-                    } else if (error.code === 'auth/unauthorized-domain') {
-                        alert("Error: Este dominio no está autorizado en Firebase Console.\n\nVe a Authentication > Settings > Authorized Domains y añade tu dominio actual.\n(Nota: localhost suele funcionar, pero file:// NUNCA funciona).");
-                    } else if (error.code === 'auth/operation-not-allowed') {
-                        alert("Error: El proveedor de Google no está habilitado en Firebase Console.");
-                    } else {
-                        alert("Error de autenticación (" + error.code + "):\n" + error.message);
-                    }
-                });
+            auth.signInWithPopup(provider)
+            .then((result) => {
+                showToast("¡Bienvenido " + result.user.displayName + "!");
+                document.getElementById('auth-modal').classList.add('hidden');
+            })
+            .catch((error) => {
+                console.error("Error Auth:", error);
+                alert("Error de autenticación: " + error.message);
+            });
         }
         
         function saveSettings(){ 
