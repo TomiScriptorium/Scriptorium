@@ -532,15 +532,35 @@
         };
         // ----------------------------------------------
 
-        // Inicializar Firebase
+        // --- CONFIGURACIÓN E INICIALIZACIÓN DE FIREBASE MEJORADA ---
         let auth, firestore;
-        try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            firestore = firebase.firestore();
-        } catch (e) {
-            console.error("Error inicializando Firebase. Verifica la configuración.", e);
+        
+        // Función para validar que Firebase cargó
+        function initFirebase() {
+            if (typeof firebase === 'undefined') {
+                console.error("Los scripts de Firebase no se han cargado. Revisa tu conexión a internet.");
+                return false;
+            }
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                auth = firebase.auth();
+                firestore = firebase.firestore();
+                
+                // Configurar idioma del dispositivo para el popup de Google
+                auth.useDeviceLanguage(); 
+                
+                return true;
+            } catch (e) {
+                console.error("Error inicializando Firebase:", e);
+                // Usamos console.error o alert porque showToast podría no estar definido todavía
+                return false;
+            }
         }
+
+        // Ejecutar inicialización inmediatamente
+        initFirebase();
 
         let excerptInterval = null; 
         let db = null; // IndexedDB Local
@@ -578,7 +598,7 @@
             light: 'Día.png',    // Icono para modo día
             dark: 'Noche.png',   // Icono para modo noche
             warm: 'Cálido.png',  // Icono para modo cálido
-            pink: 'Pink.png'     // Icono para modo rosa (asumiendo que renombrarás 'Pink' a 'Pink.png')
+            pink: 'Pink.png'     // Icono para modo rosa
         };
 
         let bookRendition = null;
@@ -1076,16 +1096,53 @@
         }
 
         // --- AUTH & SETTINGS ---
+
+        // --- FUNCIÓN DE REGISTRO/LOGIN CORREGIDA ---
         function registerUser() { 
-            // NUEVO: Inicio de sesión con Google
-            if(!auth) { alert("Firebase no configurado. Revisa el código."); return; }
+            // 1. Verificar si Firebase está listo
+            if (!auth) {
+                const initialized = initFirebase();
+                if (!initialized) {
+                    alert("No se pudo conectar con los servicios de Google. Verifica tu conexión o recarga la página.");
+                    return;
+                }
+            }
+
+            // 2. Configurar el proveedor
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then((result) => {
-                showToast("Bienvenido " + result.user.displayName);
-                // El listener onAuthStateChanged se encargará del resto
-            }).catch((error) => {
-                alert("Error de autenticación (" + error.code + "): " + error.message);
-            });
+            // Añadir scopes si fuera necesario (opcional)
+            provider.addScope('profile');
+            provider.addScope('email');
+
+            // 3. Feedback visual inmediato
+            showToast("Abriendo ventana de Google...");
+
+            // 4. Iniciar sesión con persistencia explícita
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => {
+                    return auth.signInWithPopup(provider);
+                })
+                .then((result) => {
+                    showToast("¡Bienvenido " + result.user.displayName + "!");
+                    // Ocultar modales si están abiertos
+                    const authModal = document.getElementById('auth-modal');
+                    if(authModal) authModal.classList.add('hidden');
+                    // initAppUI se activará automáticamente por el listener onAuthStateChanged
+                })
+                .catch((error) => {
+                    console.error("Error Auth:", error);
+                    
+                    // Manejo de errores comunes
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showToast("Inicio de sesión cancelado");
+                    } else if (error.code === 'auth/unauthorized-domain') {
+                        alert("Error: Este dominio no está autorizado en Firebase Console.\n\nVe a Authentication > Settings > Authorized Domains y añade tu dominio actual.");
+                    } else if (error.code === 'auth/operation-not-allowed') {
+                        alert("Error: El proveedor de Google no está habilitado en Firebase Console.");
+                    } else {
+                        alert("Error de autenticación (" + error.code + "):\n" + error.message);
+                    }
+                });
         }
         
         function saveSettings(){ 
