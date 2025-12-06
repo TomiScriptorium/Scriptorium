@@ -1083,7 +1083,7 @@
                 showToast("Bienvenido " + result.user.displayName);
                 // El listener onAuthStateChanged se encargará del resto
             }).catch((error) => {
-                alert("Error al entrar: " + error.message);
+                alert("Error de autenticación (" + error.code + "): " + error.message);
             });
         }
         
