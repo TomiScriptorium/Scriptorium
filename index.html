@@ -9,10 +9,10 @@
 
     <title>Scriptorium</title>
     
-    <link rel="icon" id="dynamic-favicon" type="image/png" href="Día.png">
-    <link rel="apple-touch-icon-precomposed" id="dynamic-apple-icon" href="Día.png">
+    <link rel="icon" id="dynamic-favicon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
+    <link rel="apple-touch-icon-precomposed" id="dynamic-apple-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
 
-    <!-- Librerías Originales -->
+    <!-- Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -27,11 +27,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.93/epub.min.js"></script>
 
-    <!-- Fuentes Originales -->
+    <!-- Fuentes -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&family=Cinzel:wght@600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- ESTILOS SCRIPTORIUM 2.0 (Diseño Premium Original) --- */
+        /* --- ESTILOS SCRIPTORIUM 2.0 --- */
         :root {
             --font-ui: 'Inter', system-ui, sans-serif;
             --font-body: 'Merriweather', 'Noto Serif', serif;
@@ -91,7 +91,6 @@
         .border-theme { border-color: var(--border-subtle); }
         .text-theme-primary { color: var(--text-primary); }
         
-        /* Botones de Navegación */
         .btn-nav {
             display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
             border-radius: var(--radius-lg); color: var(--text-secondary); transition: all 0.2s; font-weight: 500;
@@ -99,7 +98,6 @@
         .btn-nav:hover { background-color: var(--bg-panel); color: var(--text-primary); transform: translateX(4px); }
         .btn-nav.active { background-color: var(--bg-panel); color: var(--accent-primary); box-shadow: var(--shadow-sm); font-weight: 600; }
         
-        /* Papel del Editor */
         .editor-paper {
             background-color: var(--bg-panel); box-shadow: var(--shadow-md);
             max-width: 850px; margin: 0 auto; min-height: calc(100vh - 4rem);
@@ -107,12 +105,32 @@
             line-height: 1.8; color: var(--text-primary); outline: none; transition: width 0.3s ease;
         }
         
+        /* Botones de formato activos */
+        .format-btn-active {
+            background-color: var(--bg-sidebar);
+            color: var(--accent-primary) !important;
+            box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+        }
+
         /* Reader Overlay */
         #view-reader { background-color: var(--bg-app); z-index: 50; }
-        /* Fix visibilidad */
         #reader-controls { opacity: 1 !important; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-subtle); } 
         
-        /* Animations */
+        /* Ajuste de PDF/Canvas para que se vea completo y nítido */
+        #pdf-render {
+            max-height: 85vh; /* Reduce un poco para dar espacio abajo */
+            max-width: 95vw;
+            object-fit: contain;
+            margin: auto;
+            /* box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); Mejor sombra */
+        }
+
+        /* Contenedor seguro para el lector */
+        .reader-safe-area {
+            padding-bottom: 6rem; /* Espacio extra abajo para que la barra no tape */
+            box-sizing: border-box;
+        }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
@@ -123,7 +141,7 @@
 </head>
 <body data-theme="light" class="h-screen w-screen overflow-hidden flex text-sm selection:bg-amber-200 selection:text-amber-900">
 
-    <!-- SIDEBAR (Navegación Desktop Original) -->
+    <!-- SIDEBAR -->
     <aside class="sidebar hidden md:flex w-64 h-full flex-col bg-sidebar border-r border-theme flex-shrink-0 transition-all duration-300 z-30" id="main-sidebar">
         <div class="p-6 pb-2">
             <div class="flex items-center gap-3 mb-6">
@@ -239,9 +257,9 @@
 
                 <div class="flex items-center gap-1 md:gap-2">
                     <div class="hidden md:flex items-center bg-sidebar rounded-lg p-1 border border-theme mr-2">
-                        <button onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                        <button onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary"><i data-lucide="italic" class="w-4 h-4"></i></button>
-                        <button onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                        <button id="btn-fmt-bold" onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                        <button id="btn-fmt-italic" onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                        <button id="btn-fmt-underline" onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="underline" class="w-4 h-4"></i></button>
                     </div>
                     <div class="flex items-center gap-1">
                         <button onclick="toggleAnalysisPanel()" class="p-2 text-theme-secondary hover:text-emerald-600 hover:bg-sidebar rounded-lg transition-colors" title="Corrector"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
@@ -282,23 +300,16 @@
             </div>
         </div>
 
-        <!-- 3. VISTA BIBLIOTECA -->
+        <!-- 3. VISTA BIBLIOTECA (RENOVADA) -->
         <div id="view-library" class="hidden h-full flex flex-col bg-app overflow-hidden">
              <div class="p-6 md:p-10 border-b border-theme bg-panel flex justify-between items-end shrink-0">
-                <div><h2 class="text-3xl font-display font-bold text-theme-primary">Biblioteca</h2><p class="text-theme-secondary text-sm mt-1">Archivo de manuscritos y libros importados.</p></div>
+                <div><h2 class="text-3xl font-display font-bold text-theme-primary">Biblioteca</h2><p class="text-theme-secondary text-sm mt-1">Archivo de manuscritos.</p></div>
                 <div class="flex gap-2">
                     <label class="btn-nav bg-sidebar cursor-pointer text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="upload" class="w-4 h-4"></i> Importar<input type="file" class="hidden" accept=".txt,.docx,.pdf" onchange="handleFileUpload(this)"></label>
                     <button onclick="exportFullBackup()" class="btn-nav bg-sidebar text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="download" class="w-4 h-4"></i> Backup</button>
                 </div>
             </div>
-            <div class="flex flex-1 overflow-hidden">
-                <div class="w-64 bg-sidebar border-r border-theme overflow-y-auto hidden md:block p-4">
-                    <h4 class="text-[10px] font-bold uppercase text-theme-tertiary mb-3 tracking-widest">Estanterías</h4>
-                    <div id="project-list" class="space-y-1"></div>
-                    <button onclick="selectTrash()" class="mt-6 w-full text-left px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 rounded-lg flex items-center justify-between"><span><i data-lucide="trash-2" class="w-3 h-3 inline mr-2"></i> Papelera</span><span id="trash-count" class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px]">0</span></button>
-                </div>
-                <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative"><div id="library-content" class="animate-fade-in pb-20"></div></div>
-            </div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
         </div>
 
         <!-- 4. VISTA MENTOR AI -->
@@ -321,7 +332,7 @@
              </div>
         </div>
 
-        <!-- 5. VISTA READER (LECTOR ZEN) -->
+        <!-- 5. VISTA READER (LECTOR ZEN MEJORADO) -->
         <div id="view-reader" class="hidden fixed inset-0 z-50 flex flex-col bg-white">
             <div id="reader-controls" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50">
                 <button onclick="closeReaderMode()" class="pointer-events-auto p-2 bg-panel rounded-full shadow-lg text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
@@ -342,13 +353,30 @@
             </div>
             
             <!-- Vista Contenido Libro -->
-            <div id="reader-content-view" class="hidden flex-1 relative h-full bg-white flex items-center justify-center">
-                <div id="epub-viewer" class="w-full h-full shadow-2xl max-w-4xl bg-panel"></div>
-                <canvas id="pdf-render" class="max-h-full max-w-full shadow-2xl"></canvas>
-                <div class="absolute inset-y-0 left-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
-                <div class="absolute inset-y-0 right-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
-                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-panel/80 px-3 py-1 rounded-full text-xs font-mono font-bold shadow-sm backdrop-blur text-stone-700" id="reader-page-info">0%</div>
+            <div id="reader-content-view" class="hidden flex-1 relative h-full bg-white flex items-center justify-center overflow-hidden touch-none" tabindex="0">
+                <!-- Se añade .reader-safe-area para dar padding inferior -->
+                <div id="epub-viewer" class="w-full h-full shadow-2xl max-w-4xl bg-panel reader-safe-area"></div>
+                <div id="pdf-container" class="w-full h-full flex items-center justify-center bg-zinc-900 overflow-auto reader-safe-area">
+                    <canvas id="pdf-render" class="shadow-2xl"></canvas>
+                </div>
+                
+                <!-- Zonas táctiles invisibles para Desktop -->
+                <div class="absolute inset-y-0 left-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
+                <div class="absolute inset-y-0 right-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
+                
+                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-panel/80 px-4 py-2 rounded-full shadow-lg backdrop-blur border border-theme flex items-center gap-3 z-50 transition-opacity duration-300 hover:opacity-100 opacity-90">
+                    <input type="number" id="page-input" class="w-10 bg-transparent text-center font-bold text-sm outline-none border-b border-theme text-theme-primary" value="1" onchange="jumpToPage(this.value)">
+                    <span class="text-xs font-bold text-theme-secondary">/ <span id="total-pages">?</span></span>
+                </div>
             </div>
+        </div>
+        
+        <!-- Mobile View Modal Preview -->
+        <div id="preview-modal" class="hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+             <div class="bg-panel w-full max-w-2xl rounded-2xl shadow-2xl border border-theme overflow-hidden h-[80vh] flex flex-col">
+                 <div class="p-4 border-b border-theme flex justify-between items-center"><h3 class="font-bold text-theme-primary" id="preview-title">Vista Previa</h3><button onclick="getEl('preview-modal').classList.add('hidden')" class="text-theme-secondary"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+                 <div id="preview-content" class="p-8 overflow-y-auto font-body text-theme-primary prose max-w-none"></div>
+             </div>
         </div>
 
         <nav class="md:hidden flex justify-around p-3 bg-panel border-t border-theme shrink-0 z-30 pb-safe">
@@ -392,6 +420,10 @@
         let readerPage = 1;
         let currentReaderBookId = null;
         let initialWordCount = 0;
+        
+        // Variables para Swipe
+        let touchStartX = 0;
+        let touchEndX = 0;
 
         const DB_NAME = 'ScriptoriumDB'; 
         const DB_VERSION = 3;
@@ -408,8 +440,29 @@
             const dateOptions = { weekday: 'long', day: 'numeric', month: 'long' };
             getEl('date-display').textContent = new Date().toLocaleDateString('es-ES', dateOptions);
             initDB().then(() => loadInitialData());
+            
+            // Editor Listeners
             editor.addEventListener('input', handleInput);
+            document.addEventListener('selectionchange', updateToolbarState);
+            
+            // Autosave loop
             setInterval(() => { if(isDirty) saveDraft(true); }, 5000);
+            
+            // Reader Listeners (Teclado)
+            document.addEventListener('keydown', (e) => {
+                if(getEl('view-reader').classList.contains('hidden') || getEl('reader-content-view').classList.contains('hidden')) return;
+                if(e.key === 'ArrowLeft') readerPrevPage();
+                if(e.key === 'ArrowRight') readerNextPage();
+            });
+            
+            // Reader Listeners (Swipe)
+            const readerView = getEl('reader-content-view');
+            readerView.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
+            readerView.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, {passive: true});
+            
             fetchBookExcerpt();
         }
 
@@ -482,8 +535,25 @@
             getEl('daily-progress').textContent = words;
             if(getEl('daily-progress-bar')) getEl('daily-progress-bar').style.width = `${progress}%`;
         }
+        
+        function updateToolbarState() {
+            // Actualiza visualmente los botones de formato si están activos
+            if (document.activeElement !== editor) return;
+            
+            const commands = ['bold', 'italic', 'underline'];
+            commands.forEach(cmd => {
+                const isActive = document.queryCommandState(cmd);
+                const btn = getEl(`btn-fmt-${cmd}`);
+                if (isActive) btn.classList.add('format-btn-active');
+                else btn.classList.remove('format-btn-active');
+            });
+        }
 
-        function format(command, value = null) { document.execCommand(command, false, value); editor.focus(); }
+        function format(command, value = null) { 
+            document.execCommand(command, false, value); 
+            editor.focus(); 
+            updateToolbarState();
+        }
 
         function saveDraft(silent = false) {
             const text = editor.innerHTML;
@@ -535,24 +605,82 @@
             handleInput();
         }
 
-        function toggleZenMode() { /* Placeholder - handled by class toggle on body/sidebar if needed */ }
-
+        // --- LIBRARY LOGIC RENOVADA ---
         function renderLibraryGrid() {
             const container = getEl('library-content');
-            const projectList = getEl('project-list');
-            const projects = [...new Set(drafts.filter(d => !d.deletedAt).map(d => d.project || 'Sin Proyecto'))];
-            projectList.innerHTML = projects.map(p => `<div onclick="filterLibraryBy('${p}')" class="cursor-pointer px-3 py-2 rounded-lg text-sm text-theme-secondary hover:bg-panel hover:text-theme-primary transition-colors flex items-center gap-2"><i data-lucide="folder" class="w-3 h-3"></i> ${p}</div>`).join('');
             const activeDrafts = drafts.filter(d => !d.deletedAt);
+            
             if(activeDrafts.length === 0) {
                 container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-theme-tertiary"><i data-lucide="feather" class="w-12 h-12 mb-4 opacity-20"></i><p>Tu biblioteca está vacía.</p></div>`;
-            } else {
-                container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">` + 
-                activeDrafts.map(d => `<div class="group bg-panel border border-theme rounded-xl p-5 hover:shadow-lg hover:-translate-y-1 transition-all cursor-pointer relative flex flex-col h-64" onclick="loadDraft(${d.id})"><h3 class="font-bold text-lg text-theme-primary mb-2 line-clamp-2">${d.title}</h3><p class="text-xs text-theme-tertiary mb-4 font-mono">${d.project || 'General'}</p><p class="text-sm text-theme-secondary line-clamp-4 flex-1">${d.preview || ''}</p><div class="pt-4 mt-2 border-t border-theme text-[10px] text-theme-tertiary flex justify-between"><span>${d.date}</span><button onclick="event.stopPropagation(); deleteDraft(${d.id})" class="hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div></div>`).join('') + `</div>`;
+                return;
             }
+            
+            // Agrupar por Proyecto
+            const projects = {};
+            activeDrafts.forEach(d => {
+                const p = d.project || "Sin Proyecto";
+                if(!projects[p]) projects[p] = [];
+                projects[p].push(d);
+            });
+            
+            let html = '';
+            for (const [project, items] of Object.entries(projects)) {
+                html += `
+                <div class="mb-8">
+                    <h3 class="text-xl font-bold text-theme-primary mb-4 flex items-center gap-2"><i data-lucide="folder" class="w-5 h-5 text-amber-500"></i> ${project} <span class="text-xs text-theme-tertiary font-normal">(${items.length})</span></h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        ${items.map(d => `
+                            <div class="group bg-panel border border-theme rounded-xl p-5 hover:shadow-lg transition-all relative flex flex-col h-64">
+                                <div class="cursor-pointer flex-1" onclick="loadDraft(${d.id})">
+                                    <h3 class="font-bold text-lg text-theme-primary mb-2 line-clamp-1">${d.title}</h3>
+                                    <p class="text-sm text-theme-secondary line-clamp-4 leading-relaxed">${d.preview || 'Sin contenido...'}</p>
+                                </div>
+                                <div class="pt-4 mt-2 border-t border-theme text-[10px] flex justify-between items-center bg-panel z-10">
+                                    <span class="text-theme-tertiary">${d.date}</span>
+                                    <div class="flex gap-2">
+                                         <button onclick="previewDraft(${d.id})" class="p-1 hover:text-blue-500" title="Vista Previa"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                         <button onclick="downloadDraftPdf(${d.id})" class="p-1 hover:text-emerald-500" title="Descargar PDF"><i data-lucide="file-down" class="w-4 h-4"></i></button>
+                                         <button onclick="loadDraft(${d.id})" class="p-1 hover:text-amber-500" title="Editar"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                         <button onclick="deleteDraft(${d.id})" class="p-1 hover:text-red-500" title="Papelera"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
             lucide.createIcons();
         }
 
-        function filterLibraryBy(project) { showToast(`Filtrado por: ${project}`); }
+        function previewDraft(id) {
+            const d = drafts.find(x => x.id === id);
+            if(!d) return;
+            getEl('preview-title').textContent = d.title;
+            getEl('preview-content').innerHTML = d.text;
+            getEl('preview-modal').classList.remove('hidden');
+        }
+
+        function downloadDraftPdf(id) {
+            const d = drafts.find(x => x.id === id);
+            if(!d) return;
+            const doc = new jspdf.jsPDF();
+            
+            // Configurar fuente (usando fuente estándar para asegurar caracteres latinos básicos)
+            doc.setFont("times", "roman");
+            
+            doc.setFontSize(24);
+            doc.text(d.title, 20, 30);
+            
+            doc.setFontSize(12);
+            // Limpiar HTML tags muy básico para el PDF
+            const textLines = doc.splitTextToSize(d.text.replace(/<[^>]*>/g, '\n'), 170);
+            doc.text(textLines, 20, 50);
+            
+            doc.save(`${d.title}.pdf`);
+            showToast("PDF descargado");
+        }
+
         function deleteDraft(id) {
             if(confirm("¿Mover a papelera?")) {
                 const d = drafts.find(x => x.id === id);
@@ -560,7 +688,7 @@
             }
         }
 
-        // --- READER MODE LOGIC ---
+        // --- READER MODE LOGIC MEJORADA ---
         function openReaderMode() { 
             getEl('view-reader').classList.remove('hidden'); 
             getEl('reader-library-view').classList.remove('hidden');
@@ -570,8 +698,12 @@
         
         function closeReaderMode() { 
             if (!getEl('reader-content-view').classList.contains('hidden')) {
+                // Guardar progreso antes de cerrar
+                if(currentReaderBookId) saveBookProgress();
+                
                 getEl('reader-content-view').classList.add('hidden');
                 getEl('reader-library-view').classList.remove('hidden');
+                
                 if(bookRendition) { try { bookRendition.destroy(); } catch(e){} bookRendition = null; }
                 if(pdfDoc) { pdfDoc.destroy(); pdfDoc = null; }
                 currentReaderBookId = null;
@@ -579,6 +711,13 @@
             } else {
                 getEl('view-reader').classList.add('hidden'); 
             }
+        }
+        
+        // Manejo de Swipe
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchEndX < touchStartX - threshold) readerNextPage();
+            if (touchEndX > touchStartX + threshold) readerPrevPage();
         }
 
         function renderReaderLibrary() {
@@ -593,7 +732,7 @@
                 grid.innerHTML = books.map(b => {
                     const cover = b.cover ? `<img src="${b.cover}" class="book-cover-img">` : `<div class="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 font-bold text-xl uppercase">${b.type}</div>`;
                     const progress = b.progress || 0;
-                    return `<div class="group relative flex flex-col gap-2 cursor-pointer transform hover:-translate-y-1 transition-transform" onclick="loadBookFromDB(${b.id})"><div class="book-cover-container shadow-sm border border-theme">${cover}<div class="progress-bar" style="width: ${progress}%"></div><button class="absolute top-2 right-2 bg-white/80 p-1 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation(); deleteBook(${b.id})"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><h4 class="font-bold text-sm text-center truncate text-theme-primary mt-1">${b.name}</h4></div>`;
+                    return `<div class="group relative flex flex-col gap-2 cursor-pointer transform hover:-translate-y-1 transition-transform" onclick="loadBookFromDB(${b.id})"><div class="book-cover-container shadow-sm border border-theme h-48 bg-gray-100 rounded overflow-hidden relative">${cover}<div class="absolute bottom-0 left-0 h-1 bg-emerald-500 transition-all" style="width: ${progress}%"></div><button class="absolute top-2 right-2 bg-white/80 p-1 rounded-full text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" onclick="event.stopPropagation(); deleteBook(${b.id})"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><h4 class="font-bold text-sm text-center truncate text-theme-primary mt-1">${b.name}</h4><p class="text-xs text-center text-theme-tertiary">${progress}% completado</p></div>`;
                 }).join('');
                 lucide.createIcons();
             };
@@ -615,37 +754,43 @@
                  if(book) {
                      currentReaderBookId = id;
                      const file = new File([book.data], book.name, {type: book.type}); 
-                     if (book.currentPage) readerPage = book.currentPage; else readerPage = 1;
-                     loadBookFile(file, book); 
+                     readerPage = book.currentPage || 1;
+                     loadBookFile(file); 
                  }
              };
         }
         
-        function loadBookFile(file, bookData = null) {
+        function loadBookFile(file) {
             getEl('reader-library-view').classList.add('hidden');
             getEl('reader-content-view').classList.remove('hidden');
+            getEl('reader-content-view').focus(); // Foco para teclado
+            
             const epubViewer = getEl('epub-viewer');
-            const pdfCanvas = getEl('pdf-render');
+            const pdfContainer = getEl('pdf-container');
+            
             if(bookRendition) try { bookRendition.destroy(); } catch(e){}
             
             const reader = new FileReader();
             
             if(file.type.includes('pdf') || file.name.endsWith('.pdf')) {
-                epubViewer.classList.add('hidden'); pdfCanvas.classList.remove('hidden');
+                epubViewer.classList.add('hidden'); pdfContainer.classList.remove('hidden');
                 reader.onload = async (e) => {
                     const typedarray = new Uint8Array(e.target.result);
                     pdfDoc = await pdfjsLib.getDocument(typedarray).promise;
+                    getEl('total-pages').textContent = pdfDoc.numPages;
                     renderPdfPage(readerPage);
                 };
                 reader.readAsArrayBuffer(file);
             } else {
-                // ePub logic restored
-                epubViewer.classList.remove('hidden'); pdfCanvas.classList.add('hidden');
+                epubViewer.classList.remove('hidden'); pdfContainer.classList.add('hidden');
                 reader.onload = (e) => {
                     if(typeof window.ePub !== 'undefined') {
                         const book = window.ePub(e.target.result);
                         bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated" });
                         bookRendition.display();
+                        // Falta implementar lógica location para epub, por ahora básico
+                        getEl('total-pages').textContent = "?";
+                        getEl('page-input').value = 1;
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -657,27 +802,64 @@
             if(num < 1) num = 1;
             if(num > pdfDoc.numPages) num = pdfDoc.numPages;
             readerPage = num;
-            if(currentReaderBookId) {
-                const tx = db.transaction(['books'], 'readwrite');
-                const store = tx.objectStore('books');
-                store.get(currentReaderBookId).onsuccess = (e) => {
-                    const book = e.target.result;
-                    if(book) {
-                        book.currentPage = readerPage;
-                        book.progress = Math.round((readerPage / pdfDoc.numPages) * 100);
-                        store.put(book);
-                    }
-                };
-            }
+            
+            getEl('page-input').value = num;
+            saveBookProgress();
+
             pdfDoc.getPage(num).then(page => {
                 const canvas = getEl('pdf-render');
                 const ctx = canvas.getContext('2d');
-                const viewport = page.getViewport({scale: 1.5});
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
-                page.render({canvasContext: ctx, viewport: viewport});
-                getEl('reader-page-info').textContent = `${readerPage} / ${pdfDoc.numPages}`;
+                
+                // --- AJUSTE DE NITIDEZ (HiDPI) ---
+                const dpr = window.devicePixelRatio || 1;
+                
+                // Calcular escala para ajustar a pantalla (Contain)
+                const container = getEl('pdf-container');
+                const viewportRaw = page.getViewport({scale: 1});
+                
+                const scaleX = (container.clientWidth * 0.95) / viewportRaw.width;
+                const scaleY = (container.clientHeight * 0.95) / viewportRaw.height;
+                const scale = Math.min(scaleX, scaleY);
+
+                const viewport = page.getViewport({scale: scale});
+                
+                // Dimensiones físicas del canvas (multiplicadas por DPR para nitidez)
+                canvas.width = Math.floor(viewport.width * dpr);
+                canvas.height = Math.floor(viewport.height * dpr);
+                
+                // Dimensiones visuales (CSS)
+                canvas.style.width = `${Math.floor(viewport.width)}px`;
+                canvas.style.height = `${Math.floor(viewport.height)}px`;
+                
+                // Escalar contexto para dibujar nítido
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                
+                if (pdfRenderTask) { pdfRenderTask.cancel(); }
+                
+                pdfRenderTask = page.render({canvasContext: ctx, viewport: viewport});
             });
+        }
+        
+        function saveBookProgress() {
+            if(!currentReaderBookId || !db) return;
+            const tx = db.transaction(['books'], 'readwrite');
+            const store = tx.objectStore('books');
+            store.get(currentReaderBookId).onsuccess = (e) => {
+                const book = e.target.result;
+                if(book) {
+                    book.currentPage = readerPage;
+                    if(pdfDoc) book.progress = Math.round((readerPage / pdfDoc.numPages) * 100);
+                    store.put(book);
+                }
+            };
+        }
+        
+        function jumpToPage(val) {
+            const page = parseInt(val);
+            if(page && page > 0) {
+                if(pdfDoc) renderPdfPage(page);
+                // Lógica epub simple por ahora
+            }
         }
         
         function readerNextPage() { if(pdfDoc && readerPage < pdfDoc.numPages) renderPdfPage(readerPage+1); else if(bookRendition) bookRendition.next(); }
@@ -731,7 +913,6 @@
         }
         function handleFileUpload(i){
             const f=i.files[0]; if(!f)return;
-            // Simplified logic for brevity, mammoth/text logic remains same concept
             const r=new FileReader(); r.onload=e=>{
                 const nd={id:Date.now(),title:f.name,text:e.target.result,project:"Importados",type:'Borrador',date:new Date().toLocaleDateString(),preview:e.target.result.substring(0,100),lastModified:Date.now(),deletedAt:null};
                 drafts.unshift(nd); const tx=db.transaction(['drafts'],'readwrite'); tx.objectStore('drafts').put(nd); renderHomeStats();
@@ -742,14 +923,19 @@
             const totalWords = drafts.reduce((acc, d) => acc + (d.text.replace(/<[^>]*>/g,'').split(/\s+/).length || 0), 0);
             getEl('stat-total-docs').textContent = totalDocs;
             getEl('stat-total-words').textContent = totalWords.toLocaleString();
-            const recent = drafts.slice(0, 3);
-            getEl('projects-progress-container').innerHTML = recent.map(d => `<div onclick="loadDraft(${d.id})" class="bg-panel p-4 rounded-xl border border-theme hover:border-amber-400 cursor-pointer transition-all"><h4 class="font-bold text-theme-primary truncate">${d.title}</h4><p class="text-xs text-theme-tertiary mt-1">${d.date}</p></div>`).join('');
+            
+            // Fix: Check container existence before map
+            const container = getEl('projects-progress-container');
+            if (container) {
+                const recent = drafts.slice(0, 3);
+                container.innerHTML = recent.map(d => `<div onclick="loadDraft(${d.id})" class="bg-panel p-4 rounded-xl border border-theme hover:border-amber-400 cursor-pointer transition-all"><h4 class="font-bold text-theme-primary truncate">${d.title}</h4><p class="text-xs text-theme-tertiary mt-1">${d.date}</p></div>`).join('');
+            }
         }
         function copyToClipboard() { const t = editor.innerText; navigator.clipboard.writeText(t).then(() => showToast("Copiado")); }
         function downloadCurrentTxt() { const blob = new Blob([editor.innerText], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (getEl('doc-title').value || 'doc') + '.txt'; a.click(); }
         function previewSettingsAvatar(input) { if(input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { currentUser.avatar = e.target.result; getEl('settings-avatar-img').src = e.target.result; getEl('settings-avatar-img').classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); } }
         function updateAiStatus() { const dot = getEl('ai-status-dot'); if(currentUser.apiKey) { dot.classList.remove('bg-red-500'); dot.classList.add('bg-emerald-500'); } else { dot.classList.add('bg-red-500'); dot.classList.remove('bg-emerald-500'); } }
-        function setTheme(theme) { document.body.setAttribute('data-theme', theme); if(currentUser) { currentUser.theme = theme; const tx = db.transaction(['user'], 'readwrite'); tx.objectStore('user').put(currentUser); } getEl('dynamic-favicon').href = theme === 'dark' ? 'Noche.png' : 'Día.png'; }
+        function setTheme(theme) { document.body.setAttribute('data-theme', theme); if(currentUser) { currentUser.theme = theme; const tx = db.transaction(['user'], 'readwrite'); tx.objectStore('user').put(currentUser); } getEl('dynamic-favicon').href = theme === 'dark' ? 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>' : 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>'; }
         function showToast(msg) { const t = getEl('toast'); getEl('toast-msg').textContent = msg; t.classList.remove('translate-y-24'); setTimeout(() => t.classList.add('translate-y-24'), 3000); }
         function toggleSettings() { getEl('settings-modal').classList.toggle('hidden'); }
         function toggleAnalysisPanel() { getEl('analysis-panel').classList.toggle('translate-x-full'); }
@@ -789,7 +975,6 @@
             input.value = "";
             container.scrollTop = container.scrollHeight;
 
-            // Loading
             const loadId = Date.now();
             container.innerHTML += `<div id="load-${loadId}" class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs animate-pulse">...</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-secondary">Pensando...</p></div></div>`;
             container.scrollTop = container.scrollHeight;
@@ -808,13 +993,7 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- ARRANQUE ---
         window.onload = initApp;
-        function toggleZenMode() {
-            const sidebar = getEl('main-sidebar'); const btn = getEl('zen-exit-btn');
-            if(sidebar.classList.contains('hidden')) { sidebar.classList.remove('hidden'); btn.classList.add('hidden'); }
-            else { sidebar.classList.add('hidden'); btn.classList.remove('hidden'); }
-        }
     </script>
 </body>
 </html>
