@@ -9,8 +9,9 @@
 
     <title>Scriptorium</title>
     
-    <link rel="icon" id="dynamic-favicon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
-    <link rel="apple-touch-icon-precomposed" id="dynamic-apple-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✒️</text></svg>">
+    <!-- Iconos restaurados a los archivos locales -->
+    <link rel="icon" id="dynamic-favicon" type="image/png" href="Día.png">
+    <link rel="apple-touch-icon-precomposed" id="dynamic-apple-icon" href="Día.png">
 
     <!-- Librerías -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -968,7 +969,29 @@
         function downloadCurrentTxt() { const blob = new Blob([editor.innerText], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (getEl('doc-title').value || 'doc') + '.txt'; a.click(); }
         function previewSettingsAvatar(input) { if(input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { currentUser.avatar = e.target.result; getEl('settings-avatar-img').src = e.target.result; getEl('settings-avatar-img').classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); } }
         function updateAiStatus() { const dot = getEl('ai-status-dot'); if(currentUser.apiKey) { dot.classList.remove('bg-red-500'); dot.classList.add('bg-emerald-500'); } else { dot.classList.add('bg-red-500'); dot.classList.remove('bg-emerald-500'); } }
-        function setTheme(theme) { document.body.setAttribute('data-theme', theme); if(currentUser) { currentUser.theme = theme; const tx = db.transaction(['user'], 'readwrite'); tx.objectStore('user').put(currentUser); } getEl('dynamic-favicon').href = theme === 'dark' ? 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌙</text></svg>' : 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☀️</text></svg>'; }
+        
+        // --- FUNCIÓN DE TEMA ACTUALIZADA PARA CAMBIAR FAVICON E ICONO ---
+        function setTheme(theme) { 
+            document.body.setAttribute('data-theme', theme); 
+            if(currentUser) { 
+                currentUser.theme = theme; 
+                const tx = db.transaction(['user'], 'readwrite'); 
+                tx.objectStore('user').put(currentUser); 
+            } 
+            
+            // Lógica para cambiar iconos dinámicamente según el tema
+            let iconPath = 'Día.png'; // Por defecto
+            switch(theme) {
+                case 'dark': iconPath = 'Noche.png'; break;
+                case 'warm': iconPath = 'Cálido.png'; break;
+                case 'pink': iconPath = 'Pink.png'; break;
+                default: iconPath = 'Día.png';
+            }
+            
+            getEl('dynamic-favicon').href = iconPath;
+            getEl('dynamic-apple-icon').href = iconPath;
+        }
+        
         function showToast(msg) { const t = getEl('toast'); getEl('toast-msg').textContent = msg; t.classList.remove('translate-y-24'); setTimeout(() => t.classList.add('translate-y-24'), 3000); }
         function toggleSettings() { getEl('settings-modal').classList.toggle('hidden'); }
         function toggleAnalysisPanel() { getEl('analysis-panel').classList.toggle('translate-x-full'); }
