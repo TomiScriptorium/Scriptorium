@@ -9,7 +9,6 @@
 
     <title>Scriptorium</title>
     
-    <!-- Iconos restaurados a los archivos locales -->
     <link rel="icon" id="dynamic-favicon" type="image/png" href="Día.png">
     <link rel="apple-touch-icon-precomposed" id="dynamic-apple-icon" href="Día.png">
 
@@ -85,7 +84,17 @@
             --accent-primary: #db2777; --accent-hover: #be185d; --accent-subtle: #fce7f3;
         }
 
-        body { background-color: var(--bg-app); color: var(--text-primary); font-family: var(--font-ui); transition: background-color 0.3s ease, color 0.3s ease; }
+        /* Ajuste clave para iOS: height: 100dvh */
+        body { 
+            background-color: var(--bg-app); 
+            color: var(--text-primary); 
+            font-family: var(--font-ui); 
+            transition: background-color 0.3s ease, color 0.3s ease; 
+            height: 100vh; /* Fallback */
+            height: 100dvh; /* Dynamic viewport height para iOS */
+            width: 100vw;
+            overflow: hidden;
+        }
         
         .bg-sidebar { background-color: var(--bg-sidebar); }
         .bg-panel { background-color: var(--bg-panel); }
@@ -118,7 +127,7 @@
         
         /* Ajuste de PDF/Canvas para que se vea completo y nítido */
         #pdf-render {
-            max-height: 100vh; /* Ocupar toda la altura disponible */
+            max-height: 100vh; 
             max-width: 100vw;
             object-fit: contain;
             margin: auto;
@@ -140,6 +149,15 @@
         .reader-top-anim {
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
         }
+
+        /* Utilería Safe Area iOS */
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        /* Padding extra para listas en móvil para evitar que la navbar tape contenido */
+        .mobile-scroll-padding {
+            padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+        }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
@@ -149,7 +167,7 @@
         }
     </style>
 </head>
-<body data-theme="light" class="h-screen w-screen overflow-hidden flex text-sm selection:bg-amber-200 selection:text-amber-900">
+<body data-theme="light" class="flex text-sm selection:bg-amber-200 selection:text-amber-900">
 
     <!-- SIDEBAR -->
     <aside class="sidebar hidden md:flex w-64 h-full flex-col bg-sidebar border-r border-theme flex-shrink-0 transition-all duration-300 z-30" id="main-sidebar">
@@ -200,7 +218,7 @@
     <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-app transition-colors">
         
         <!-- MOBILE HEADER -->
-        <header class="md:hidden flex items-center justify-between p-4 bg-sidebar border-b border-theme z-20">
+        <header class="md:hidden flex items-center justify-between p-4 bg-sidebar border-b border-theme z-20 shrink-0">
             <div class="flex items-center gap-2">
                  <i data-lucide="feather" class="w-5 h-5 text-amber-600"></i>
                  <span class="font-display font-bold text-theme-primary">Scriptorium</span>
@@ -209,7 +227,7 @@
         </header>
 
         <!-- 1. VISTA INICIO -->
-        <div id="view-home" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 animate-fade-in">
+        <div id="view-home" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 animate-fade-in mobile-scroll-padding">
             <div class="max-w-5xl mx-auto w-full">
                 <header class="mb-10">
                     <p class="text-theme-secondary text-sm font-medium mb-1" id="date-display">...</p>
@@ -278,10 +296,11 @@
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto relative bg-app scroll-smooth" id="editor-scroller">
+            <div class="flex-1 overflow-y-auto relative bg-app scroll-smooth mobile-scroll-padding" id="editor-scroller">
                 <div class="flex justify-center min-h-full py-8 md:py-12" id="editor-container">
                     <div id="main-editor" class="editor-paper w-full rounded-none md:rounded-sm animate-fade-in" contenteditable="true" spellcheck="false" placeholder="Escribe tu historia aquí..."></div>
                 </div>
+                <!-- Status bar flotante sobre el teclado/nav -->
                 <div class="sticky bottom-0 w-full bg-panel/90 backdrop-blur-sm border-t border-theme px-4 py-2 flex justify-between items-center text-[10px] uppercase font-bold text-theme-tertiary z-10 transition-transform duration-300" id="status-bar">
                     <div class="flex gap-4">
                         <span id="stat-words" class="text-theme-secondary">0 Palabras</span>
@@ -302,8 +321,8 @@
                     <h3 class="font-bold text-theme-primary text-xs uppercase flex items-center gap-2"><i data-lucide="search" class="w-4 h-4"></i> Revisión</h3>
                     <button onclick="toggleAnalysisPanel()" class="text-theme-tertiary hover:text-theme-primary"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
-                <div id="issues-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-app"><div class="text-center py-10 opacity-50"><p class="text-xs">Ejecuta el análisis para ver sugerencias.</p></div></div>
-                <div class="p-4 border-t border-theme bg-panel">
+                <div id="issues-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-app mobile-scroll-padding"><div class="text-center py-10 opacity-50"><p class="text-xs">Ejecuta el análisis para ver sugerencias.</p></div></div>
+                <div class="p-4 border-t border-theme bg-panel pb-safe">
                     <button onclick="runGrammarCheck()" class="w-full bg-theme-primary text-bg-panel py-3 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition-all">Analizar Texto</button>
                 </div>
                 <div id="ai-loading-overlay" class="absolute inset-0 flex items-center justify-center hidden z-50 flex-col bg-white/80 backdrop-blur-sm"><div class="w-8 h-8 border-2 border-theme border-t-amber-500 rounded-full animate-spin mb-2"></div><span class="text-[10px] font-bold uppercase tracking-widest text-amber-600">Procesando...</span></div>
@@ -319,7 +338,7 @@
                     <button onclick="exportFullBackup()" class="btn-nav bg-sidebar text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="download" class="w-4 h-4"></i> Backup</button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative mobile-scroll-padding"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
         </div>
 
         <!-- 4. VISTA MENTOR AI -->
@@ -331,10 +350,10 @@
                  </div>
                  <button onclick="switchView('home')" class="md:hidden p-2"><i data-lucide="x" class="w-5 h-5"></i></button>
              </div>
-             <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-app">
+             <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-app mobile-scroll-padding">
                  <div class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs">AI</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-primary">Hola. Soy tu mentor literario. ¿En qué te ayudo hoy?</p></div></div>
              </div>
-             <div class="p-4 bg-panel border-t border-theme shrink-0">
+             <div class="p-4 bg-panel border-t border-theme shrink-0 pb-safe mb-16 md:mb-0">
                  <div class="max-w-3xl mx-auto relative">
                      <input type="text" id="mentor-input" class="w-full bg-sidebar border border-theme rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all shadow-inner" placeholder="Pregunta algo sobre tu historia...">
                      <button onclick="sendMentorMessage()" class="absolute right-2 top-2 p-1.5 bg-theme-primary text-bg-panel rounded-lg hover:opacity-90 transition-all shadow-sm"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
@@ -347,7 +366,7 @@
             <!-- Barra Superior Desplegable -->
             <div id="reader-top-container" class="absolute top-0 left-0 w-full z-50 flex flex-col items-center pointer-events-none">
                 <div id="reader-top-content-wrapper" class="w-full bg-panel/95 backdrop-blur border-b border-theme shadow-md pointer-events-auto reader-top-anim overflow-hidden max-h-40">
-                    <div class="p-4 flex justify-between items-center">
+                    <div class="p-4 flex justify-between items-center pt-8 md:pt-4"> <!-- Ajuste PT para iOS status bar -->
                         <button onclick="closeReaderMode()" class="p-2 bg-panel rounded-full shadow-sm text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme hover:bg-sidebar"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
                         <div class="bg-panel/50 rounded-full px-4 py-2 flex items-center gap-4 border border-theme">
                             <button onclick="setReaderTheme('light')" class="w-4 h-4 rounded-full bg-[#fdf6e3] border border-gray-300 ring-2 ring-transparent hover:ring-amber-400"></button>
@@ -364,7 +383,7 @@
             </div>
             
             <!-- Vista Biblioteca Lector -->
-            <div id="reader-library-view" class="flex-1 overflow-y-auto p-10 pt-24 bg-stone-50">
+            <div id="reader-library-view" class="flex-1 overflow-y-auto p-10 pt-24 bg-stone-50 mobile-scroll-padding">
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-4xl font-display font-bold text-theme-primary mb-8 text-center text-stone-800">Lecturas Guardadas</h2>
                     <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8"></div>
@@ -383,7 +402,7 @@
                 <div class="absolute inset-y-0 right-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
                 
                 <!-- Barra Inferior Desplegable -->
-                <div class="absolute bottom-0 w-full z-50 flex flex-col items-center">
+                <div class="absolute bottom-0 w-full z-50 flex flex-col items-center pb-safe">
                     <button onclick="toggleReaderBottomControls()" class="bg-panel border border-theme border-b-0 rounded-t-lg p-1 shadow-md hover:bg-sidebar transition-colors">
                         <i id="bottom-toggle-chevron" data-lucide="chevron-up" class="w-4 h-4 text-theme-secondary"></i>
                     </button>
@@ -540,6 +559,12 @@
             getEl('welcome-name').textContent = currentUser.name;
             getEl('daily-goal-display').textContent = currentUser.goal;
             getEl('settings-name').value = currentUser.name;
+            
+            // CORRECCIÓN CLAVE: Rellenar el input de API Key con el valor guardado
+            if(getEl('api-key-input')) {
+                getEl('api-key-input').value = currentUser.apiKey || '';
+            }
+            
             setTheme(currentUser.theme || 'light');
             if(currentUser.avatar) {
                 getEl('user-avatar').innerHTML = `<img src="${currentUser.avatar}" class="w-full h-full object-cover">`;
@@ -995,7 +1020,15 @@
         function showToast(msg) { const t = getEl('toast'); getEl('toast-msg').textContent = msg; t.classList.remove('translate-y-24'); setTimeout(() => t.classList.add('translate-y-24'), 3000); }
         function toggleSettings() { getEl('settings-modal').classList.toggle('hidden'); }
         function toggleAnalysisPanel() { getEl('analysis-panel').classList.toggle('translate-x-full'); }
-        function saveSettings() { currentUser.name = getEl('settings-name').value; currentUser.apiKey = getEl('api-key-input').value; const tx = db.transaction(['user'], 'readwrite'); tx.objectStore('user').put(currentUser); updateUIWithUser(); toggleSettings(); showToast("Guardado"); }
+        function saveSettings() { 
+            currentUser.name = getEl('settings-name').value; 
+            currentUser.apiKey = getEl('api-key-input').value; // Guardar API Key
+            const tx = db.transaction(['user'], 'readwrite'); 
+            tx.objectStore('user').put(currentUser); 
+            updateUIWithUser(); 
+            toggleSettings(); 
+            showToast("Guardado"); 
+        }
         function exportFullBackup() { showToast("Función de backup lista"); } 
         function importFullBackup() {}
 
