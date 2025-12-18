@@ -114,7 +114,6 @@
 
         /* Reader Overlay */
         #view-reader { background-color: var(--bg-app); z-index: 50; }
-        #reader-controls { opacity: 1 !important; background-color: var(--bg-panel); border-bottom: 1px solid var(--border-subtle); } 
         
         /* Ajuste de PDF/Canvas para que se vea completo y nítido */
         #pdf-render {
@@ -126,16 +125,19 @@
 
         /* Contenedor seguro para el lector */
         .reader-safe-area {
-            /* padding-bottom eliminado para full screen */
             box-sizing: border-box;
         }
         
-        /* Barra de herramientas desplegable */
+        /* Barras de herramientas desplegables */
         .reader-toolbar {
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .reader-toolbar.collapsed {
             transform: translateY(100%);
+        }
+
+        .reader-top-anim {
+            transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
         }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -339,17 +341,25 @@
              </div>
         </div>
 
-        <!-- 5. VISTA READER (LECTOR ZEN FULL SCREEN) -->
-        <div id="view-reader" class="hidden fixed inset-0 z-50 flex flex-col bg-white">
-            <!-- Header (siempre visible) -->
-            <div id="reader-controls" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 transition-opacity duration-300">
-                <button onclick="closeReaderMode()" class="pointer-events-auto p-2 bg-panel rounded-full shadow-lg text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
-                <div class="pointer-events-auto bg-panel/90 backdrop-blur rounded-full px-4 py-2 shadow-lg flex items-center gap-4 border border-theme">
-                     <button onclick="setReaderTheme('light')" class="w-4 h-4 rounded-full bg-[#fdf6e3] border border-gray-300 ring-2 ring-transparent hover:ring-amber-400"></button>
-                     <button onclick="setReaderTheme('dark')" class="w-4 h-4 rounded-full bg-[#1c1917] border border-gray-600 ring-2 ring-transparent hover:ring-amber-400"></button>
-                     <div class="w-px h-4 bg-theme-tertiary"></div>
-                     <label class="cursor-pointer text-theme-secondary hover:text-theme-primary flex items-center gap-2" title="Importar PDF/ePub"><i data-lucide="plus-circle" class="w-4 h-4"></i><span class="text-xs font-bold">Importar</span><input type="file" class="hidden" accept=".epub,.pdf" onchange="handleBookImport(this)"></label>
+        <!-- 5. VISTA READER (LECTOR ZEN FULL SCREEN & DESPLEGABLE) -->
+        <div id="view-reader" class="hidden fixed inset-0 z-50 flex flex-col bg-white" tabindex="0">
+            <!-- Barra Superior Desplegable -->
+            <div id="reader-top-container" class="absolute top-0 left-0 w-full z-50 flex flex-col items-center pointer-events-none">
+                <div id="reader-top-content-wrapper" class="w-full bg-panel/95 backdrop-blur border-b border-theme shadow-md pointer-events-auto reader-top-anim overflow-hidden max-h-40">
+                    <div class="p-4 flex justify-between items-center">
+                        <button onclick="closeReaderMode()" class="p-2 bg-panel rounded-full shadow-sm text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme hover:bg-sidebar"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
+                        <div class="bg-panel/50 rounded-full px-4 py-2 flex items-center gap-4 border border-theme">
+                            <button onclick="setReaderTheme('light')" class="w-4 h-4 rounded-full bg-[#fdf6e3] border border-gray-300 ring-2 ring-transparent hover:ring-amber-400"></button>
+                            <button onclick="setReaderTheme('dark')" class="w-4 h-4 rounded-full bg-[#1c1917] border border-gray-600 ring-2 ring-transparent hover:ring-amber-400"></button>
+                            <div class="w-px h-4 bg-theme-tertiary"></div>
+                            <label class="cursor-pointer text-theme-secondary hover:text-theme-primary flex items-center gap-2" title="Importar PDF/ePub"><i data-lucide="plus-circle" class="w-4 h-4"></i><span class="text-xs font-bold">Importar</span><input type="file" class="hidden" accept=".epub,.pdf" onchange="handleBookImport(this)"></label>
+                        </div>
+                    </div>
                 </div>
+                <!-- Botón Toggle Top -->
+                <button onclick="toggleReaderTopControls()" class="pointer-events-auto bg-panel border border-theme border-t-0 rounded-b-xl px-4 py-1 shadow-md hover:bg-sidebar transition-colors -mt-[1px] flex items-center gap-2 group">
+                     <i id="top-toggle-icon" data-lucide="chevron-up" class="w-3 h-3 text-theme-secondary group-hover:text-theme-primary"></i>
+                </button>
             </div>
             
             <!-- Vista Biblioteca Lector -->
@@ -361,7 +371,7 @@
             </div>
             
             <!-- Vista Contenido Libro -->
-            <div id="reader-content-view" class="hidden flex-1 relative h-full bg-white flex items-center justify-center overflow-hidden touch-none" tabindex="0">
+            <div id="reader-content-view" class="hidden flex-1 relative h-full bg-white flex items-center justify-center overflow-hidden touch-none outline-none">
                 <div id="epub-viewer" class="w-full h-full shadow-2xl max-w-4xl bg-panel reader-safe-area"></div>
                 <div id="pdf-container" class="w-full h-full flex items-center justify-center bg-zinc-900 overflow-auto reader-safe-area">
                     <canvas id="pdf-render" class="shadow-2xl"></canvas>
@@ -371,13 +381,11 @@
                 <div class="absolute inset-y-0 left-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
                 <div class="absolute inset-y-0 right-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
                 
-                <!-- Barra de controles inferior desplegable -->
+                <!-- Barra Inferior Desplegable -->
                 <div class="absolute bottom-0 w-full z-50 flex flex-col items-center">
-                    <!-- Botón para desplegar/colapsar -->
-                    <button onclick="toggleReaderControls()" class="bg-panel border border-theme border-b-0 rounded-t-lg p-1 shadow-md hover:bg-sidebar transition-colors">
-                        <i id="toggle-chevron" data-lucide="chevron-up" class="w-4 h-4 text-theme-secondary"></i>
+                    <button onclick="toggleReaderBottomControls()" class="bg-panel border border-theme border-b-0 rounded-t-lg p-1 shadow-md hover:bg-sidebar transition-colors">
+                        <i id="bottom-toggle-chevron" data-lucide="chevron-up" class="w-4 h-4 text-theme-secondary"></i>
                     </button>
-                    <!-- Panel de controles -->
                     <div id="reader-bottom-bar" class="reader-toolbar collapsed w-full bg-panel/95 backdrop-blur border-t border-theme p-3 flex justify-center items-center gap-4 shadow-lg">
                         <button onclick="readerPrevPage()" class="p-2 hover:bg-sidebar rounded-full"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
                         <div class="flex items-center gap-2">
@@ -469,8 +477,9 @@
             
             // --- READER LISTENERS (GLOBALES y ROBUSTOS) ---
             
-            // Teclado (Flechas): Ahora en window y ignorando si estás escribiendo en un input
+            // Teclado (Flechas)
             window.addEventListener('keydown', (e) => {
+                // Verificar si estamos en modo lectura
                 if(getEl('view-reader').classList.contains('hidden') || getEl('reader-content-view').classList.contains('hidden')) return;
                 
                 // Evitar conflictos si el usuario está escribiendo el número de página
@@ -480,7 +489,7 @@
                 if(e.key === 'ArrowRight') readerNextPage();
             });
             
-            // Swipe: Ahora en document para capturar eventos aunque el canvas robe foco
+            // Swipe (Táctil)
             document.addEventListener('touchstart', e => {
                  if(getEl('view-reader').classList.contains('hidden')) return;
                  touchStartX = e.changedTouches[0].screenX;
@@ -566,9 +575,7 @@
         }
         
         function updateToolbarState() {
-            // Actualiza visualmente los botones de formato si están activos
             if (document.activeElement !== editor) return;
-            
             const commands = ['bold', 'italic', 'underline'];
             commands.forEach(cmd => {
                 const isActive = document.queryCommandState(cmd);
@@ -638,20 +645,16 @@
         function renderLibraryGrid() {
             const container = getEl('library-content');
             const activeDrafts = drafts.filter(d => !d.deletedAt);
-            
             if(activeDrafts.length === 0) {
                 container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-theme-tertiary"><i data-lucide="feather" class="w-12 h-12 mb-4 opacity-20"></i><p>Tu biblioteca está vacía.</p></div>`;
                 return;
             }
-            
-            // Agrupar por Proyecto
             const projects = {};
             activeDrafts.forEach(d => {
                 const p = d.project || "Sin Proyecto";
                 if(!projects[p]) projects[p] = [];
                 projects[p].push(d);
             });
-            
             let html = '';
             for (const [project, items] of Object.entries(projects)) {
                 html += `
@@ -694,18 +697,12 @@
             const d = drafts.find(x => x.id === id);
             if(!d) return;
             const doc = new jspdf.jsPDF();
-            
-            // Configurar fuente (usando fuente estándar para asegurar caracteres latinos básicos)
             doc.setFont("times", "roman");
-            
             doc.setFontSize(24);
             doc.text(d.title, 20, 30);
-            
             doc.setFontSize(12);
-            // Limpiar HTML tags muy básico para el PDF
             const textLines = doc.splitTextToSize(d.text.replace(/<[^>]*>/g, '\n'), 170);
             doc.text(textLines, 20, 50);
-            
             doc.save(`${d.title}.pdf`);
             showToast("PDF descargado");
         }
@@ -717,22 +714,20 @@
             }
         }
 
-        // --- READER MODE LOGIC MEJORADA ---
+        // --- READER MODE LOGIC ---
         function openReaderMode() { 
             getEl('view-reader').classList.remove('hidden'); 
             getEl('reader-library-view').classList.remove('hidden');
             getEl('reader-content-view').classList.add('hidden');
+            getEl('view-reader').focus(); // Dar foco para que funcionen las teclas
             renderReaderLibrary(); 
         }
         
         function closeReaderMode() { 
             if (!getEl('reader-content-view').classList.contains('hidden')) {
-                // Guardar progreso antes de cerrar
                 if(currentReaderBookId) saveBookProgress();
-                
                 getEl('reader-content-view').classList.add('hidden');
                 getEl('reader-library-view').classList.remove('hidden');
-                
                 if(bookRendition) { try { bookRendition.destroy(); } catch(e){} bookRendition = null; }
                 if(pdfDoc) { pdfDoc.destroy(); pdfDoc = null; }
                 currentReaderBookId = null;
@@ -742,17 +737,15 @@
             }
         }
         
-        // Manejo de Swipe
         function handleSwipe() {
             const threshold = 50;
             if (touchEndX < touchStartX - threshold) readerNextPage();
             if (touchEndX > touchStartX + threshold) readerPrevPage();
         }
         
-        function toggleReaderControls() {
+        function toggleReaderBottomControls() {
             const bar = getEl('reader-bottom-bar');
-            const icon = getEl('toggle-chevron');
-            
+            const icon = getEl('bottom-toggle-chevron');
             if (bar.classList.contains('collapsed')) {
                 bar.classList.remove('collapsed');
                 icon.setAttribute('data-lucide', 'chevron-down');
@@ -761,9 +754,23 @@
                 icon.setAttribute('data-lucide', 'chevron-up');
             }
             lucide.createIcons();
-            
-            // Redibujar PDF para aprovechar espacio si es necesario (opcional)
-            if(pdfDoc) renderPdfPage(readerPage);
+        }
+        
+        function toggleReaderTopControls() {
+             const wrapper = getEl('reader-top-content-wrapper');
+             const icon = getEl('top-toggle-icon');
+             if (wrapper.classList.contains('max-h-0')) {
+                 wrapper.classList.remove('max-h-0');
+                 wrapper.classList.add('max-h-40');
+                 wrapper.classList.remove('opacity-0');
+                 icon.setAttribute('data-lucide', 'chevron-up');
+             } else {
+                 wrapper.classList.add('max-h-0');
+                 wrapper.classList.remove('max-h-40');
+                 wrapper.classList.add('opacity-0');
+                 icon.setAttribute('data-lucide', 'chevron-down');
+             }
+             lucide.createIcons();
         }
 
         function renderReaderLibrary() {
@@ -809,7 +816,7 @@
         function loadBookFile(file) {
             getEl('reader-library-view').classList.add('hidden');
             getEl('reader-content-view').classList.remove('hidden');
-            // getEl('reader-content-view').focus(); // Ya no necesario con listener global
+            // getEl('reader-content-view').focus(); 
             
             const epubViewer = getEl('epub-viewer');
             const pdfContainer = getEl('pdf-container');
@@ -834,7 +841,6 @@
                         const book = window.ePub(e.target.result);
                         bookRendition = book.renderTo("epub-viewer", { width: "100%", height: "100%", flow: "paginated" });
                         bookRendition.display();
-                        // Falta implementar lógica location para epub, por ahora básico
                         getEl('total-pages').textContent = "?";
                         getEl('page-input').value = 1;
                     }
@@ -848,42 +854,24 @@
             if(num < 1) num = 1;
             if(num > pdfDoc.numPages) num = pdfDoc.numPages;
             readerPage = num;
-            
             getEl('page-input').value = num;
             saveBookProgress();
-
             pdfDoc.getPage(num).then(page => {
                 const canvas = getEl('pdf-render');
                 const ctx = canvas.getContext('2d');
-                
-                // --- AJUSTE DE NITIDEZ (HiDPI) ---
                 const dpr = window.devicePixelRatio || 1;
-                
-                // Calcular escala para ajustar a pantalla (Contain)
                 const container = getEl('pdf-container');
                 const viewportRaw = page.getViewport({scale: 1});
-                
-                // Ajustar al menor de los dos para que quepa completo
-                // Se usa 0.98 para dar un pequeño margen de seguridad
                 const scaleX = (container.clientWidth * 0.98) / viewportRaw.width;
                 const scaleY = (container.clientHeight * 0.98) / viewportRaw.height;
                 const scale = Math.min(scaleX, scaleY);
-
                 const viewport = page.getViewport({scale: scale});
-                
-                // Dimensiones físicas del canvas (multiplicadas por DPR para nitidez)
                 canvas.width = Math.floor(viewport.width * dpr);
                 canvas.height = Math.floor(viewport.height * dpr);
-                
-                // Dimensiones visuales (CSS)
                 canvas.style.width = `${Math.floor(viewport.width)}px`;
                 canvas.style.height = `${Math.floor(viewport.height)}px`;
-                
-                // Escalar contexto para dibujar nítido
                 ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                
                 if (pdfRenderTask) { pdfRenderTask.cancel(); }
-                
                 pdfRenderTask = page.render({canvasContext: ctx, viewport: viewport});
             });
         }
@@ -906,7 +894,6 @@
             const page = parseInt(val);
             if(page && page > 0) {
                 if(pdfDoc) renderPdfPage(page);
-                // Lógica epub simple por ahora
             }
         }
         
@@ -971,8 +958,6 @@
             const totalWords = drafts.reduce((acc, d) => acc + (d.text.replace(/<[^>]*>/g,'').split(/\s+/).length || 0), 0);
             getEl('stat-total-docs').textContent = totalDocs;
             getEl('stat-total-words').textContent = totalWords.toLocaleString();
-            
-            // Fix: Check container existence before map
             const container = getEl('projects-progress-container');
             if (container) {
                 const recent = drafts.slice(0, 3);
@@ -996,7 +981,6 @@
                 showToast("Falta API Key (Configuración)");
                 return null;
             }
-            
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${currentUser.apiKey}`;
             try {
                 const response = await fetch(url, {
@@ -1019,7 +1003,6 @@
 
             const container = getEl('mentor-messages');
             container.innerHTML += `<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex items-center justify-center text-white text-xs">Tú</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tr-none shadow-sm"><p class="text-sm">${msg}</p></div></div>`;
-            
             input.value = "";
             container.scrollTop = container.scrollHeight;
 
@@ -1029,7 +1012,6 @@
 
             const prompt = `Actúa como un mentor literario en "Scriptorium". El usuario dice: "${msg}". Sé breve, inspirador y útil.`;
             const reply = await callGemini(prompt);
-            
             document.getElementById(`load-${loadId}`).remove();
             
             if(reply) {
