@@ -118,17 +118,24 @@
         
         /* Ajuste de PDF/Canvas para que se vea completo y nítido */
         #pdf-render {
-            max-height: 85vh; /* Reduce un poco para dar espacio abajo */
-            max-width: 95vw;
+            max-height: 100vh; /* Ocupar toda la altura disponible */
+            max-width: 100vw;
             object-fit: contain;
             margin: auto;
-            /* box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); Mejor sombra */
         }
 
         /* Contenedor seguro para el lector */
         .reader-safe-area {
-            padding-bottom: 6rem; /* Espacio extra abajo para que la barra no tape */
+            /* padding-bottom eliminado para full screen */
             box-sizing: border-box;
+        }
+        
+        /* Barra de herramientas desplegable */
+        .reader-toolbar {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .reader-toolbar.collapsed {
+            transform: translateY(100%);
         }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -332,9 +339,10 @@
              </div>
         </div>
 
-        <!-- 5. VISTA READER (LECTOR ZEN MEJORADO) -->
+        <!-- 5. VISTA READER (LECTOR ZEN FULL SCREEN) -->
         <div id="view-reader" class="hidden fixed inset-0 z-50 flex flex-col bg-white">
-            <div id="reader-controls" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50">
+            <!-- Header (siempre visible) -->
+            <div id="reader-controls" class="absolute top-0 left-0 w-full p-4 flex justify-between items-start z-50 transition-opacity duration-300">
                 <button onclick="closeReaderMode()" class="pointer-events-auto p-2 bg-panel rounded-full shadow-lg text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
                 <div class="pointer-events-auto bg-panel/90 backdrop-blur rounded-full px-4 py-2 shadow-lg flex items-center gap-4 border border-theme">
                      <button onclick="setReaderTheme('light')" class="w-4 h-4 rounded-full bg-[#fdf6e3] border border-gray-300 ring-2 ring-transparent hover:ring-amber-400"></button>
@@ -354,19 +362,30 @@
             
             <!-- Vista Contenido Libro -->
             <div id="reader-content-view" class="hidden flex-1 relative h-full bg-white flex items-center justify-center overflow-hidden touch-none" tabindex="0">
-                <!-- Se añade .reader-safe-area para dar padding inferior -->
                 <div id="epub-viewer" class="w-full h-full shadow-2xl max-w-4xl bg-panel reader-safe-area"></div>
                 <div id="pdf-container" class="w-full h-full flex items-center justify-center bg-zinc-900 overflow-auto reader-safe-area">
                     <canvas id="pdf-render" class="shadow-2xl"></canvas>
                 </div>
                 
-                <!-- Zonas táctiles invisibles para Desktop -->
+                <!-- Zonas táctiles invisibles para navegación en Desktop -->
                 <div class="absolute inset-y-0 left-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerPrevPage()"><i data-lucide="chevron-left" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
                 <div class="absolute inset-y-0 right-0 w-16 cursor-pointer z-40 hover:bg-black/5 transition-colors flex items-center justify-center group hidden md:flex" onclick="readerNextPage()"><i data-lucide="chevron-right" class="w-8 h-8 opacity-0 group-hover:opacity-50 transition-opacity"></i></div>
                 
-                <div class="absolute bottom-6 left-1/2 -translate-x-1/2 bg-panel/80 px-4 py-2 rounded-full shadow-lg backdrop-blur border border-theme flex items-center gap-3 z-50 transition-opacity duration-300 hover:opacity-100 opacity-90">
-                    <input type="number" id="page-input" class="w-10 bg-transparent text-center font-bold text-sm outline-none border-b border-theme text-theme-primary" value="1" onchange="jumpToPage(this.value)">
-                    <span class="text-xs font-bold text-theme-secondary">/ <span id="total-pages">?</span></span>
+                <!-- Barra de controles inferior desplegable -->
+                <div class="absolute bottom-0 w-full z-50 flex flex-col items-center">
+                    <!-- Botón para desplegar/colapsar -->
+                    <button onclick="toggleReaderControls()" class="bg-panel border border-theme border-b-0 rounded-t-lg p-1 shadow-md hover:bg-sidebar transition-colors">
+                        <i id="toggle-chevron" data-lucide="chevron-up" class="w-4 h-4 text-theme-secondary"></i>
+                    </button>
+                    <!-- Panel de controles -->
+                    <div id="reader-bottom-bar" class="reader-toolbar collapsed w-full bg-panel/95 backdrop-blur border-t border-theme p-3 flex justify-center items-center gap-4 shadow-lg">
+                        <button onclick="readerPrevPage()" class="p-2 hover:bg-sidebar rounded-full"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <div class="flex items-center gap-2">
+                             <input type="number" id="page-input" class="w-12 bg-transparent text-center font-bold text-sm outline-none border border-theme rounded p-1 text-theme-primary" value="1" onkeydown="if(event.key==='Enter') jumpToPage(this.value)">
+                             <span class="text-xs font-bold text-theme-secondary">/ <span id="total-pages">?</span></span>
+                        </div>
+                        <button onclick="readerNextPage()" class="p-2 hover:bg-sidebar rounded-full"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -448,17 +467,27 @@
             // Autosave loop
             setInterval(() => { if(isDirty) saveDraft(true); }, 5000);
             
-            // Reader Listeners (Teclado)
-            document.addEventListener('keydown', (e) => {
+            // --- READER LISTENERS (GLOBALES y ROBUSTOS) ---
+            
+            // Teclado (Flechas): Ahora en window y ignorando si estás escribiendo en un input
+            window.addEventListener('keydown', (e) => {
                 if(getEl('view-reader').classList.contains('hidden') || getEl('reader-content-view').classList.contains('hidden')) return;
+                
+                // Evitar conflictos si el usuario está escribiendo el número de página
+                if(document.activeElement.tagName === 'INPUT') return;
+
                 if(e.key === 'ArrowLeft') readerPrevPage();
                 if(e.key === 'ArrowRight') readerNextPage();
             });
             
-            // Reader Listeners (Swipe)
-            const readerView = getEl('reader-content-view');
-            readerView.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].screenX, {passive: true});
-            readerView.addEventListener('touchend', e => {
+            // Swipe: Ahora en document para capturar eventos aunque el canvas robe foco
+            document.addEventListener('touchstart', e => {
+                 if(getEl('view-reader').classList.contains('hidden')) return;
+                 touchStartX = e.changedTouches[0].screenX;
+            }, {passive: true});
+            
+            document.addEventListener('touchend', e => {
+                if(getEl('view-reader').classList.contains('hidden')) return;
                 touchEndX = e.changedTouches[0].screenX;
                 handleSwipe();
             }, {passive: true});
@@ -719,6 +748,23 @@
             if (touchEndX < touchStartX - threshold) readerNextPage();
             if (touchEndX > touchStartX + threshold) readerPrevPage();
         }
+        
+        function toggleReaderControls() {
+            const bar = getEl('reader-bottom-bar');
+            const icon = getEl('toggle-chevron');
+            
+            if (bar.classList.contains('collapsed')) {
+                bar.classList.remove('collapsed');
+                icon.setAttribute('data-lucide', 'chevron-down');
+            } else {
+                bar.classList.add('collapsed');
+                icon.setAttribute('data-lucide', 'chevron-up');
+            }
+            lucide.createIcons();
+            
+            // Redibujar PDF para aprovechar espacio si es necesario (opcional)
+            if(pdfDoc) renderPdfPage(readerPage);
+        }
 
         function renderReaderLibrary() {
             if(!db) return;
@@ -763,7 +809,7 @@
         function loadBookFile(file) {
             getEl('reader-library-view').classList.add('hidden');
             getEl('reader-content-view').classList.remove('hidden');
-            getEl('reader-content-view').focus(); // Foco para teclado
+            // getEl('reader-content-view').focus(); // Ya no necesario con listener global
             
             const epubViewer = getEl('epub-viewer');
             const pdfContainer = getEl('pdf-container');
@@ -817,8 +863,10 @@
                 const container = getEl('pdf-container');
                 const viewportRaw = page.getViewport({scale: 1});
                 
-                const scaleX = (container.clientWidth * 0.95) / viewportRaw.width;
-                const scaleY = (container.clientHeight * 0.95) / viewportRaw.height;
+                // Ajustar al menor de los dos para que quepa completo
+                // Se usa 0.98 para dar un pequeño margen de seguridad
+                const scaleX = (container.clientWidth * 0.98) / viewportRaw.width;
+                const scaleY = (container.clientHeight * 0.98) / viewportRaw.height;
                 const scale = Math.min(scaleX, scaleY);
 
                 const viewport = page.getViewport({scale: scale});
