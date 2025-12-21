@@ -6,6 +6,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#fdfdfc" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)">
 
     <title>Scriptorium</title>
     
@@ -84,16 +86,18 @@
             --accent-primary: #db2777; --accent-hover: #be185d; --accent-subtle: #fce7f3;
         }
 
-        /* Ajuste clave para iOS: height: 100dvh */
+        /* Ajuste clave para iOS: height: 100dvh y scroll behavior */
         body { 
             background-color: var(--bg-app); 
             color: var(--text-primary); 
             font-family: var(--font-ui); 
             transition: background-color 0.3s ease, color 0.3s ease; 
-            height: 100vh; /* Fallback */
-            height: 100dvh; /* Dynamic viewport height para iOS */
+            height: 100vh; 
+            height: 100dvh; 
             width: 100vw;
             overflow: hidden;
+            overscroll-behavior-y: none; /* Previene el rebote de la app completa */
+            -webkit-tap-highlight-color: transparent; /* Elimina flash gris al tocar */
         }
         
         .bg-sidebar { background-color: var(--bg-sidebar); }
@@ -101,6 +105,7 @@
         .border-theme { border-color: var(--border-subtle); }
         .text-theme-primary { color: var(--text-primary); }
         
+        /* Botones Sidebar Desktop */
         .btn-nav {
             display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem;
             border-radius: var(--radius-lg); color: var(--text-secondary); transition: all 0.2s; font-weight: 500;
@@ -108,6 +113,17 @@
         .btn-nav:hover { background-color: var(--bg-panel); color: var(--text-primary); transform: translateX(4px); }
         .btn-nav.active { background-color: var(--bg-panel); color: var(--accent-primary); box-shadow: var(--shadow-sm); font-weight: 600; }
         
+        /* Botones Navbar Mobile */
+        .mobile-nav-btn {
+            display: flex; flex-direction: column; items-align: center; justify-content: center;
+            gap: 4px; padding: 8px; border-radius: 12px; color: var(--text-secondary); transition: all 0.2s;
+        }
+        .mobile-nav-btn.active {
+            color: var(--accent-primary); background-color: var(--bg-input); font-weight: 600;
+        }
+        .mobile-nav-btn i { width: 24px; height: 24px; }
+        .mobile-nav-btn span { font-size: 10px; font-weight: 500; }
+
         .editor-paper {
             background-color: var(--bg-panel); box-shadow: var(--shadow-md);
             max-width: 850px; margin: 0 auto; min-height: calc(100vh - 4rem);
@@ -115,17 +131,14 @@
             line-height: 1.8; color: var(--text-primary); outline: none; transition: width 0.3s ease;
         }
         
-        /* Botones de formato activos */
         .format-btn-active {
             background-color: var(--bg-sidebar);
             color: var(--accent-primary) !important;
             box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
         }
 
-        /* Reader Overlay */
         #view-reader { background-color: var(--bg-app); z-index: 50; }
         
-        /* Ajuste de PDF/Canvas para que se vea completo y nítido */
         #pdf-render {
             max-height: 100vh; 
             max-width: 100vw;
@@ -133,12 +146,6 @@
             margin: auto;
         }
 
-        /* Contenedor seguro para el lector */
-        .reader-safe-area {
-            box-sizing: border-box;
-        }
-        
-        /* Barras de herramientas desplegables */
         .reader-toolbar {
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -150,15 +157,23 @@
             transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s;
         }
 
-        /* Utilería Safe Area iOS */
-        .pb-safe {
-            padding-bottom: env(safe-area-inset-bottom);
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .pt-safe { padding-top: env(safe-area-inset-top); }
+        
+        /* Contenedores con scroll nativo suave */
+        .overflow-y-auto {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: auto; 
         }
-        /* Padding extra para listas en móvil para evitar que la navbar tape contenido */
-        .mobile-scroll-padding {
+
+        /* Padding extra para que el contenido no quede debajo de la nav bar móvil */
+        .mobile-content-spacer {
             padding-bottom: calc(5rem + env(safe-area-inset-bottom));
         }
-        
+
+        /* Evitar zoom en inputs en iOS */
+        input, select, textarea { font-size: 16px !important; }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
@@ -169,7 +184,7 @@
 </head>
 <body data-theme="light" class="flex text-sm selection:bg-amber-200 selection:text-amber-900">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (Escritorio) -->
     <aside class="sidebar hidden md:flex w-64 h-full flex-col bg-sidebar border-r border-theme flex-shrink-0 transition-all duration-300 z-30" id="main-sidebar">
         <div class="p-6 pb-2">
             <div class="flex items-center gap-3 mb-6">
@@ -217,17 +232,17 @@
     <!-- CONTENIDO PRINCIPAL -->
     <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-app transition-colors">
         
-        <!-- MOBILE HEADER -->
-        <header class="md:hidden flex items-center justify-between p-4 bg-sidebar border-b border-theme z-20 shrink-0">
+        <!-- MOBILE HEADER (Optimizado) -->
+        <header class="md:hidden flex items-center justify-between p-4 bg-sidebar/95 backdrop-blur border-b border-theme z-20 shrink-0 pt-safe">
             <div class="flex items-center gap-2">
                  <i data-lucide="feather" class="w-5 h-5 text-amber-600"></i>
-                 <span class="font-display font-bold text-theme-primary">Scriptorium</span>
+                 <span id="mobile-page-title" class="font-display font-bold text-theme-primary text-lg">Inicio</span>
             </div>
-            <button onclick="toggleSettings()" class="text-theme-secondary"><i data-lucide="settings" class="w-5 h-5"></i></button>
+            <button onclick="toggleSettings()" class="text-theme-secondary p-1 rounded hover:bg-black/5"><i data-lucide="settings" class="w-5 h-5"></i></button>
         </header>
 
         <!-- 1. VISTA INICIO -->
-        <div id="view-home" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 animate-fade-in mobile-scroll-padding">
+        <div id="view-home" class="flex-1 overflow-y-auto p-4 md:p-10 space-y-8 animate-fade-in mobile-content-spacer">
             <div class="max-w-5xl mx-auto w-full">
                 <header class="mb-10">
                     <p class="text-theme-secondary text-sm font-medium mb-1" id="date-display">...</p>
@@ -283,20 +298,30 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-1 md:gap-2">
-                    <div class="hidden md:flex items-center bg-sidebar rounded-lg p-1 border border-theme mr-2">
-                        <button id="btn-fmt-bold" onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                        <button id="btn-fmt-italic" onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="italic" class="w-4 h-4"></i></button>
-                        <button id="btn-fmt-underline" onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="underline" class="w-4 h-4"></i></button>
-                    </div>
-                    <div class="flex items-center gap-1">
-                        <button onclick="toggleAnalysisPanel()" class="p-2 text-theme-secondary hover:text-emerald-600 hover:bg-sidebar rounded-lg transition-colors" title="Corrector"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
-                        <button onclick="saveDraft()" class="ml-2 flex items-center gap-2 bg-theme-primary text-bg-panel px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"><span id="save-status-text">Guardar</span></button>
-                    </div>
+                <!-- Botones formato Desktop -->
+                <div class="hidden md:flex items-center bg-sidebar rounded-lg p-1 border border-theme mr-2">
+                    <button id="btn-fmt-bold" onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                    <button id="btn-fmt-italic" onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                    <button id="btn-fmt-underline" onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                </div>
+                
+                <div class="flex items-center gap-1">
+                    <button onclick="toggleAnalysisPanel()" class="p-2 text-theme-secondary hover:text-emerald-600 hover:bg-sidebar rounded-lg transition-colors" title="Corrector"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
+                    <button onclick="saveDraft()" class="ml-2 flex items-center gap-2 bg-theme-primary text-bg-panel px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"><span id="save-status-text">Guardar</span></button>
                 </div>
             </div>
+            
+            <!-- Barra formato Mobile (Scroll Horizontal) -->
+            <div class="md:hidden w-full overflow-x-auto flex items-center gap-2 px-4 py-2 border-b border-theme bg-sidebar scrollbar-hide shrink-0">
+                 <button onclick="format('bold')" class="p-2 rounded bg-panel border border-theme text-theme-secondary shrink-0"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                 <button onclick="format('italic')" class="p-2 rounded bg-panel border border-theme text-theme-secondary shrink-0"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                 <button onclick="format('underline')" class="p-2 rounded bg-panel border border-theme text-theme-secondary shrink-0"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                 <div class="w-px h-6 bg-theme-tertiary shrink-0"></div>
+                 <button onclick="format('justifyLeft')" class="p-2 rounded bg-panel border border-theme text-theme-secondary shrink-0"><i data-lucide="align-left" class="w-4 h-4"></i></button>
+                 <button onclick="format('justifyCenter')" class="p-2 rounded bg-panel border border-theme text-theme-secondary shrink-0"><i data-lucide="align-center" class="w-4 h-4"></i></button>
+            </div>
 
-            <div class="flex-1 overflow-y-auto relative bg-app scroll-smooth mobile-scroll-padding" id="editor-scroller">
+            <div class="flex-1 overflow-y-auto relative bg-app scroll-smooth mobile-content-spacer" id="editor-scroller">
                 <div class="flex justify-center min-h-full py-8 md:py-12" id="editor-container">
                     <div id="main-editor" class="editor-paper w-full rounded-none md:rounded-sm animate-fade-in" contenteditable="true" spellcheck="false" placeholder="Escribe tu historia aquí..."></div>
                 </div>
@@ -321,7 +346,7 @@
                     <h3 class="font-bold text-theme-primary text-xs uppercase flex items-center gap-2"><i data-lucide="search" class="w-4 h-4"></i> Revisión</h3>
                     <button onclick="toggleAnalysisPanel()" class="text-theme-tertiary hover:text-theme-primary"><i data-lucide="x" class="w-4 h-4"></i></button>
                 </div>
-                <div id="issues-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-app mobile-scroll-padding"><div class="text-center py-10 opacity-50"><p class="text-xs">Ejecuta el análisis para ver sugerencias.</p></div></div>
+                <div id="issues-container" class="flex-1 overflow-y-auto p-4 space-y-3 bg-app mobile-content-spacer"><div class="text-center py-10 opacity-50"><p class="text-xs">Ejecuta el análisis para ver sugerencias.</p></div></div>
                 <div class="p-4 border-t border-theme bg-panel pb-safe">
                     <button onclick="runGrammarCheck()" class="w-full bg-theme-primary text-bg-panel py-3 rounded-lg text-xs font-bold shadow-md hover:opacity-90 transition-all">Analizar Texto</button>
                 </div>
@@ -338,7 +363,7 @@
                     <button onclick="exportFullBackup()" class="btn-nav bg-sidebar text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="download" class="w-4 h-4"></i> Backup</button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative mobile-scroll-padding"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative mobile-content-spacer"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
         </div>
 
         <!-- 4. VISTA MENTOR AI -->
@@ -350,7 +375,7 @@
                  </div>
                  <button onclick="switchView('home')" class="md:hidden p-2"><i data-lucide="x" class="w-5 h-5"></i></button>
              </div>
-             <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-app mobile-scroll-padding">
+             <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-app mobile-content-spacer">
                  <div class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs">AI</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-primary">Hola. Soy tu mentor literario. ¿En qué te ayudo hoy?</p></div></div>
              </div>
              <div class="p-4 bg-panel border-t border-theme shrink-0 pb-safe mb-16 md:mb-0">
@@ -366,7 +391,7 @@
             <!-- Barra Superior Desplegable -->
             <div id="reader-top-container" class="absolute top-0 left-0 w-full z-50 flex flex-col items-center pointer-events-none">
                 <div id="reader-top-content-wrapper" class="w-full bg-panel/95 backdrop-blur border-b border-theme shadow-md pointer-events-auto reader-top-anim overflow-hidden max-h-40">
-                    <div class="p-4 flex justify-between items-center pt-8 md:pt-4"> <!-- Ajuste PT para iOS status bar -->
+                    <div class="p-4 flex justify-between items-center pt-8 md:pt-4"> 
                         <button onclick="closeReaderMode()" class="p-2 bg-panel rounded-full shadow-sm text-theme-primary hover:scale-110 transition-transform flex items-center gap-2 px-4 border border-theme hover:bg-sidebar"><i data-lucide="arrow-left" class="w-5 h-5"></i><span class="font-bold text-xs">Volver</span></button>
                         <div class="bg-panel/50 rounded-full px-4 py-2 flex items-center gap-4 border border-theme">
                             <button onclick="setReaderTheme('light')" class="w-4 h-4 rounded-full bg-[#fdf6e3] border border-gray-300 ring-2 ring-transparent hover:ring-amber-400"></button>
@@ -383,7 +408,7 @@
             </div>
             
             <!-- Vista Biblioteca Lector -->
-            <div id="reader-library-view" class="flex-1 overflow-y-auto p-10 pt-24 bg-stone-50 mobile-scroll-padding">
+            <div id="reader-library-view" class="flex-1 overflow-y-auto p-10 pt-24 bg-stone-50 mobile-content-spacer">
                 <div class="max-w-6xl mx-auto">
                     <h2 class="text-4xl font-display font-bold text-theme-primary mb-8 text-center text-stone-800">Lecturas Guardadas</h2>
                     <div id="reader-library-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8"></div>
@@ -426,11 +451,20 @@
              </div>
         </div>
 
-        <nav class="md:hidden flex justify-around p-3 bg-panel border-t border-theme shrink-0 z-30 pb-safe">
-            <button onclick="switchView('home')" class="p-2 text-theme-secondary flex flex-col items-center gap-1 active:text-amber-600"><i data-lucide="home" class="w-5 h-5"></i></button>
-            <button onclick="switchView('editor')" class="p-2 text-theme-secondary flex flex-col items-center gap-1 active:text-amber-600"><i data-lucide="pen-tool" class="w-5 h-5"></i></button>
-            <button onclick="switchView('library')" class="p-2 text-theme-secondary flex flex-col items-center gap-1 active:text-amber-600"><i data-lucide="library" class="w-5 h-5"></i></button>
-            <button onclick="switchView('mentor')" class="p-2 text-theme-secondary flex flex-col items-center gap-1 active:text-amber-600"><i data-lucide="sparkles" class="w-5 h-5"></i></button>
+        <!-- BARRA NAVEGACIÓN MÓVIL (REAL APP FEEL) -->
+        <nav class="md:hidden flex justify-around items-center bg-panel border-t border-theme shrink-0 z-30 pb-safe pt-2">
+            <button onclick="switchView('home')" id="mobile-btn-home" class="mobile-nav-btn active flex-1">
+                <i data-lucide="home"></i><span>Inicio</span>
+            </button>
+            <button onclick="switchView('editor')" id="mobile-btn-editor" class="mobile-nav-btn flex-1">
+                <i data-lucide="pen-tool"></i><span>Editor</span>
+            </button>
+            <button onclick="switchView('library')" id="mobile-btn-library" class="mobile-nav-btn flex-1">
+                <i data-lucide="library"></i><span>Libros</span>
+            </button>
+            <button onclick="switchView('mentor')" id="mobile-btn-mentor" class="mobile-nav-btn flex-1">
+                <i data-lucide="sparkles"></i><span>Mentor</span>
+            </button>
         </nav>
 
     </main>
@@ -496,20 +530,13 @@
             setInterval(() => { if(isDirty) saveDraft(true); }, 5000);
             
             // --- READER LISTENERS (GLOBALES y ROBUSTOS) ---
-            
-            // Teclado (Flechas)
             window.addEventListener('keydown', (e) => {
-                // Verificar si estamos en modo lectura
                 if(getEl('view-reader').classList.contains('hidden') || getEl('reader-content-view').classList.contains('hidden')) return;
-                
-                // Evitar conflictos si el usuario está escribiendo el número de página
                 if(document.activeElement.tagName === 'INPUT') return;
-
                 if(e.key === 'ArrowLeft') readerPrevPage();
                 if(e.key === 'ArrowRight') readerNextPage();
             });
             
-            // Swipe (Táctil)
             document.addEventListener('touchstart', e => {
                  if(getEl('view-reader').classList.contains('hidden')) return;
                  touchStartX = e.changedTouches[0].screenX;
@@ -559,12 +586,7 @@
             getEl('welcome-name').textContent = currentUser.name;
             getEl('daily-goal-display').textContent = currentUser.goal;
             getEl('settings-name').value = currentUser.name;
-            
-            // CORRECCIÓN CLAVE: Rellenar el input de API Key con el valor guardado
-            if(getEl('api-key-input')) {
-                getEl('api-key-input').value = currentUser.apiKey || '';
-            }
-            
+            if(getEl('api-key-input')) getEl('api-key-input').value = currentUser.apiKey || '';
             setTheme(currentUser.theme || 'light');
             if(currentUser.avatar) {
                 getEl('user-avatar').innerHTML = `<img src="${currentUser.avatar}" class="w-full h-full object-cover">`;
@@ -574,13 +596,27 @@
             updateAiStatus();
         }
 
+        // Switch View Optimizado para Mobile
         function switchView(viewName) {
+            const titles = { 'home': 'Inicio', 'editor': 'Editor', 'library': 'Biblioteca', 'mentor': 'Mentor AI' };
+            const titleEl = getEl('mobile-page-title');
+            if(titleEl && titles[viewName]) titleEl.textContent = titles[viewName];
+
             ['home', 'editor', 'library', 'mentor', 'reader'].forEach(v => {
                 const el = getEl(`view-${v}`); if(el) el.classList.add('hidden');
+                
+                // Desktop
                 const btn = getEl(`btn-${v}`); if(btn) btn.classList.remove('active');
+                // Mobile
+                const mobileBtn = getEl(`mobile-btn-${v}`); if(mobileBtn) mobileBtn.classList.remove('active');
             });
+            
             const target = getEl(`view-${viewName}`); if(target) target.classList.remove('hidden');
+            
+            // Active states
             const btnTarget = getEl(`btn-${viewName}`); if(btnTarget) btnTarget.classList.add('active');
+            const mobileBtnTarget = getEl(`mobile-btn-${viewName}`); if(mobileBtnTarget) mobileBtnTarget.classList.add('active');
+            
             if(viewName === 'home') renderHomeStats();
             if(viewName === 'library') renderLibraryGrid();
         }
@@ -606,8 +642,8 @@
             commands.forEach(cmd => {
                 const isActive = document.queryCommandState(cmd);
                 const btn = getEl(`btn-fmt-${cmd}`);
-                if (isActive) btn.classList.add('format-btn-active');
-                else btn.classList.remove('format-btn-active');
+                if (isActive && btn) btn.classList.add('format-btn-active');
+                else if (btn) btn.classList.remove('format-btn-active');
             });
         }
 
@@ -667,7 +703,7 @@
             handleInput();
         }
 
-        // --- LIBRARY LOGIC RENOVADA ---
+        // --- LIBRARY LOGIC ---
         function renderLibraryGrid() {
             const container = getEl('library-content');
             const activeDrafts = drafts.filter(d => !d.deletedAt);
@@ -745,7 +781,7 @@
             getEl('view-reader').classList.remove('hidden'); 
             getEl('reader-library-view').classList.remove('hidden');
             getEl('reader-content-view').classList.add('hidden');
-            getEl('view-reader').focus(); // Dar foco para que funcionen las teclas
+            getEl('view-reader').focus(); 
             renderReaderLibrary(); 
         }
         
@@ -842,7 +878,6 @@
         function loadBookFile(file) {
             getEl('reader-library-view').classList.add('hidden');
             getEl('reader-content-view').classList.remove('hidden');
-            // getEl('reader-content-view').focus(); 
             
             const epubViewer = getEl('epub-viewer');
             const pdfContainer = getEl('pdf-container');
@@ -995,7 +1030,6 @@
         function previewSettingsAvatar(input) { if(input.files[0]) { const reader = new FileReader(); reader.onload = (e) => { currentUser.avatar = e.target.result; getEl('settings-avatar-img').src = e.target.result; getEl('settings-avatar-img').classList.remove('hidden'); }; reader.readAsDataURL(input.files[0]); } }
         function updateAiStatus() { const dot = getEl('ai-status-dot'); if(currentUser.apiKey) { dot.classList.remove('bg-red-500'); dot.classList.add('bg-emerald-500'); } else { dot.classList.add('bg-red-500'); dot.classList.remove('bg-emerald-500'); } }
         
-        // --- FUNCIÓN DE TEMA ACTUALIZADA PARA CAMBIAR FAVICON E ICONO ---
         function setTheme(theme) { 
             document.body.setAttribute('data-theme', theme); 
             if(currentUser) { 
@@ -1004,15 +1038,13 @@
                 tx.objectStore('user').put(currentUser); 
             } 
             
-            // Lógica para cambiar iconos dinámicamente según el tema
-            let iconPath = 'Día.png'; // Por defecto
+            let iconPath = 'Día.png'; 
             switch(theme) {
                 case 'dark': iconPath = 'Noche.png'; break;
                 case 'warm': iconPath = 'Cálido.png'; break;
                 case 'pink': iconPath = 'Pink.png'; break;
                 default: iconPath = 'Día.png';
             }
-            
             getEl('dynamic-favicon').href = iconPath;
             getEl('dynamic-apple-icon').href = iconPath;
         }
@@ -1022,7 +1054,7 @@
         function toggleAnalysisPanel() { getEl('analysis-panel').classList.toggle('translate-x-full'); }
         function saveSettings() { 
             currentUser.name = getEl('settings-name').value; 
-            currentUser.apiKey = getEl('api-key-input').value; // Guardar API Key
+            currentUser.apiKey = getEl('api-key-input').value; 
             const tx = db.transaction(['user'], 'readwrite'); 
             tx.objectStore('user').put(currentUser); 
             updateUIWithUser(); 
