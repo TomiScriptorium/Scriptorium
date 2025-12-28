@@ -140,6 +140,25 @@
             box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
         }
 
+        /* --- MODO ENFOQUE --- */
+        body.focus-mode #main-sidebar {
+            display: none;
+        }
+        body.focus-mode #editor-toolbar {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        body.focus-mode #editor-toolbar:hover {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        body.focus-mode .editor-paper {
+            max-width: 900px;
+            box-shadow: none;
+            padding-top: 5rem; /* Más espacio arriba */
+        }
+        
         #view-reader { background-color: var(--bg-app); z-index: 50; }
         
         #pdf-render {
@@ -303,14 +322,16 @@
 
                 <!-- Botones formato Desktop -->
                 <div class="hidden md:flex items-center bg-sidebar rounded-lg p-1 border border-theme mr-2">
-                    <button id="btn-fmt-bold" onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="bold" class="w-4 h-4"></i></button>
-                    <button id="btn-fmt-italic" onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="italic" class="w-4 h-4"></i></button>
-                    <button id="btn-fmt-underline" onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                    <button id="btn-fmt-bold" onclick="format('bold')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors" title="Negrita (Ctrl+B)"><i data-lucide="bold" class="w-4 h-4"></i></button>
+                    <button id="btn-fmt-italic" onclick="format('italic')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors" title="Cursiva (Ctrl+I)"><i data-lucide="italic" class="w-4 h-4"></i></button>
+                    <button id="btn-fmt-underline" onclick="format('underline')" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors" title="Subrayado (Ctrl+U)"><i data-lucide="underline" class="w-4 h-4"></i></button>
+                    <div class="w-px h-4 bg-theme-tertiary mx-1"></div>
+                    <button onclick="toggleFocusMode()" id="btn-focus-mode" class="p-1.5 rounded hover:bg-panel text-theme-secondary hover:text-theme-primary transition-colors" title="Modo Enfoque (Ctrl+Shift+F)"><i data-lucide="maximize" class="w-4 h-4"></i></button>
                 </div>
                 
                 <div class="flex items-center gap-1">
                     <button onclick="toggleAnalysisPanel()" class="p-2 text-theme-secondary hover:text-emerald-600 hover:bg-sidebar rounded-lg transition-colors" title="Corrector"><i data-lucide="check-circle-2" class="w-4 h-4"></i></button>
-                    <button onclick="saveDraft()" class="ml-2 flex items-center gap-2 bg-theme-primary text-bg-panel px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm"><span id="save-status-text">Guardar</span></button>
+                    <button onclick="saveDraft()" class="ml-2 flex items-center gap-2 bg-theme-primary text-bg-panel px-4 py-2 rounded-lg text-xs font-bold hover:opacity-90 transition-all shadow-sm" title="Guardar (Ctrl+S)"><span id="save-status-text">Guardar</span></button>
                 </div>
             </div>
             
@@ -376,16 +397,22 @@
                      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-purple-500 to-indigo-600 flex items-center justify-center text-white shadow-md"><i data-lucide="sparkles" class="w-4 h-4"></i></div>
                      <div><h3 class="font-bold text-theme-primary">Mentor AI</h3><p class="text-[10px] text-theme-secondary">Powered by Gemini</p></div>
                  </div>
-                 <button onclick="switchView('home')" class="md:hidden p-2"><i data-lucide="x" class="w-5 h-5"></i></button>
+                 <div class="flex items-center gap-2">
+                    <button onclick="resetMentorChat()" class="p-2 text-theme-secondary hover:text-red-500 transition-colors rounded-lg hover:bg-black/5" title="Reiniciar conversación">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                    <button onclick="switchView('home')" class="md:hidden p-2 text-theme-secondary"><i data-lucide="x" class="w-5 h-5"></i></button>
+                 </div>
              </div>
              <div id="mentor-messages" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 bg-app mobile-content-spacer">
                  <div class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs">AI</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-primary">Hola. Soy tu mentor literario. ¿En qué te ayudo hoy?</p></div></div>
              </div>
              <div class="p-4 bg-panel border-t border-theme shrink-0 pb-safe mb-16 md:mb-0">
                  <div class="max-w-3xl mx-auto relative">
-                     <input type="text" id="mentor-input" class="w-full bg-sidebar border border-theme rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all shadow-inner" placeholder="Pregunta algo sobre tu historia...">
-                     <button onclick="sendMentorMessage()" class="absolute right-2 top-2 p-1.5 bg-theme-primary text-bg-panel rounded-lg hover:opacity-90 transition-all shadow-sm"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
+                     <textarea id="mentor-input" rows="1" class="w-full bg-sidebar border border-theme rounded-xl px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all shadow-inner resize-none overflow-hidden" placeholder="Pregunta algo sobre tu historia..." onkeydown="handleMentorInputKey(event)" oninput="this.style.height = ''; this.style.height = Math.min(this.scrollHeight, 120) + 'px'"></textarea>
+                     <button onclick="sendMentorMessage()" class="absolute right-2 bottom-2 p-1.5 bg-theme-primary text-bg-panel rounded-lg hover:opacity-90 transition-all shadow-sm mb-1"><i data-lucide="arrow-up" class="w-4 h-4"></i></button>
                  </div>
+                 <p class="text-[10px] text-theme-tertiary text-center mt-2">Enter para enviar, Shift+Enter para nueva línea</p>
              </div>
         </div>
 
@@ -504,6 +531,7 @@
         let readerPage = 1;
         let currentReaderBookId = null;
         let initialWordCount = 0;
+        let mentorHistory = []; // HISTORIAL DE CHAT
         
         // Variables para Swipe
         let touchStartX = 0;
@@ -528,6 +556,21 @@
             // Editor Listeners
             editor.addEventListener('input', handleInput);
             document.addEventListener('selectionchange', updateToolbarState);
+            
+            // Global Shortcuts Listener
+            document.addEventListener('keydown', (e) => {
+                // Ctrl + S: Guardar
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    if(!getEl('view-editor').classList.contains('hidden')) saveDraft();
+                    else showToast("Solo puedes guardar en el editor");
+                }
+                // Ctrl + Shift + F: Focus Mode
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'f') { // Usamos 'f' para focus
+                    e.preventDefault();
+                    if(!getEl('view-editor').classList.contains('hidden')) toggleFocusMode();
+                }
+            });
             
             // Autosave loop
             setInterval(() => { if(isDirty) saveDraft(true); }, 5000);
@@ -625,6 +668,17 @@
         }
 
         // --- EDITOR LOGIC ---
+        function toggleFocusMode() {
+            document.body.classList.toggle('focus-mode');
+            const btn = getEl('btn-focus-mode');
+            if(document.body.classList.contains('focus-mode')) {
+                btn.classList.add('text-accent-primary');
+                showToast("Modo Enfoque activado");
+            } else {
+                btn.classList.remove('text-accent-primary');
+            }
+        }
+
         function handleInput() {
             isDirty = true;
             getEl('stat-unsaved').classList.remove('hidden');
@@ -1067,7 +1121,9 @@
         function exportFullBackup() { showToast("Función de backup lista"); } 
         function importFullBackup() {}
 
-        async function callGemini(prompt) {
+        // --- GEMINI AI CON CONTEXTO ---
+
+        async function callGemini(contentsPayload) {
             if(!currentUser.apiKey) {
                 showToast("Falta API Key (Configuración)");
                 return null;
@@ -1077,7 +1133,7 @@
                 const response = await fetch(url, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    body: JSON.stringify({ contents: contentsPayload })
                 });
                 const data = await response.json();
                 return data.candidates?.[0]?.content?.parts?.[0]?.text;
@@ -1087,28 +1143,108 @@
             }
         }
 
+        function getLibraryContext() {
+            let context = "INSTRUCCIONES DEL SISTEMA:\n";
+            context += "Actúa como un mentor literario experto en la aplicación 'Scriptorium'. Tu objetivo es ayudar al usuario a escribir mejor, superar bloqueos, desarrollar personajes y mejorar su estilo. Sé empático, conciso y constructivo.\n\n";
+            
+            // Contexto del archivo actual (Prioridad Alta)
+            if (currentDraftId) {
+                const curr = drafts.find(d => d.id === currentDraftId);
+                if (curr) {
+                    context += `--- CONTEXTO: ARCHIVO ACTUALMENTE ABIERTO ---\n`;
+                    context += `Título: ${curr.title}\n`;
+                    context += `Tipo: ${curr.type}\n`;
+                    // Limitar el texto enviado para no saturar tokens si es muy largo (aprox 2000 chars)
+                    const cleanText = curr.text.replace(/<[^>]*>/g, '');
+                    context += `Contenido (Extracto): ${cleanText.substring(0, 3000)}\n`;
+                    context += `----------------------------------------------\n\n`;
+                }
+            }
+
+            // Contexto general de la biblioteca (Resumen)
+            if (drafts.length > 0) {
+                context += `--- CONTEXTO: OTRAS OBRAS EN LA BIBLIOTECA ---\n`;
+                const otherDrafts = drafts.filter(d => d.id !== currentDraftId).slice(0, 5); // Solo los 5 más recientes
+                if (otherDrafts.length > 0) {
+                    otherDrafts.forEach(d => {
+                        context += `- [${d.type}] ${d.title}: ${d.preview.replace(/\n/g, ' ').substring(0, 100)}...\n`;
+                    });
+                } else {
+                    context += "(No hay otros borradores recientes)\n";
+                }
+                context += `----------------------------------------------\n`;
+            }
+
+            return context;
+        }
+
+        function resetMentorChat() {
+            mentorHistory = [];
+            const container = getEl('mentor-messages');
+            container.innerHTML = `<div class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs">AI</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-primary">Hola. Soy tu mentor literario. ¿En qué te ayudo hoy?</p></div></div>`;
+            showToast("Conversación reiniciada");
+        }
+
+        function handleMentorInputKey(event) {
+            if (event.key === 'Enter') {
+                if (!event.shiftKey) {
+                    // Enter solo = enviar
+                    event.preventDefault();
+                    sendMentorMessage();
+                }
+                // Shift+Enter = salto de línea natural (no prevenimos default)
+            }
+        }
+
         async function sendMentorMessage() {
             const input = getEl('mentor-input');
             const msg = input.value.trim();
             if(!msg) return;
 
+            // 1. Mostrar mensaje del usuario en UI
             const container = getEl('mentor-messages');
-            container.innerHTML += `<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex items-center justify-center text-white text-xs">Tú</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tr-none shadow-sm"><p class="text-sm">${msg}</p></div></div>`;
+            container.innerHTML += `<div class="flex gap-4 max-w-2xl ml-auto flex-row-reverse"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex items-center justify-center text-white text-xs">Tú</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tr-none shadow-sm"><p class="text-sm whitespace-pre-line">${msg}</p></div></div>`;
             input.value = "";
+            input.style.height = 'auto'; // Reset height
             container.scrollTop = container.scrollHeight;
 
+            // 2. Mostrar indicador de carga
             const loadId = Date.now();
-            container.innerHTML += `<div id="load-${loadId}" class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs animate-pulse">...</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-secondary">Pensando...</p></div></div>`;
+            container.innerHTML += `<div id="load-${loadId}" class="flex gap-4 max-w-2xl"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs animate-pulse">...</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm"><p class="text-sm text-theme-secondary">Leyendo tus escritos...</p></div></div>`;
             container.scrollTop = container.scrollHeight;
 
-            const prompt = `Actúa como un mentor literario en "Scriptorium". El usuario dice: "${msg}". Sé breve, inspirador y útil.`;
-            const reply = await callGemini(prompt);
+            // 3. Construir Payload con Contexto + Historial
+            // Añadimos el mensaje actual al historial local
+            mentorHistory.push({ role: 'user', parts: [{ text: msg }] });
+
+            // Mensaje de sistema "oculto" (inyectado como primer mensaje de usuario o contexto)
+            // Para la API de Gemini (stateless), enviamos toda la cadena.
+            const systemContextMsg = {
+                role: 'user',
+                parts: [{ text: getLibraryContext() + "\nIMPORTANTE: A continuación comienza la conversación actual con el usuario. Responde basándote en el contexto anterior si es relevante." }]
+            };
+            
+            const modelAckMsg = {
+                role: 'model',
+                parts: [{ text: "Entendido. He procesado el contexto de tu biblioteca y tu archivo actual. Estoy listo para ayudarte." }]
+            };
+
+            // Combinamos: Contexto Inicial -> Ack del Modelo -> Historial Real de Chat
+            const payloadContents = [systemContextMsg, modelAckMsg, ...mentorHistory];
+
+            // 4. Llamada a API
+            const reply = await callGemini(payloadContents);
             document.getElementById(`load-${loadId}`).remove();
             
             if(reply) {
+                // Guardar respuesta en historial
+                mentorHistory.push({ role: 'model', parts: [{ text: reply }] });
+                
                 const cleanReply = marked.parse(reply);
                 container.innerHTML += `<div class="flex gap-4 max-w-2xl animate-fade-in"><div class="w-8 h-8 rounded-full bg-theme-tertiary flex-shrink-0 flex items-center justify-center text-white text-xs">AI</div><div class="bg-panel border border-theme p-4 rounded-2xl rounded-tl-none shadow-sm text-sm text-theme-primary prose prose-sm max-w-none">${cleanReply}</div></div>`;
             } else {
+                // Si falla, sacamos el mensaje del usuario del historial para que pueda reintentar limpiamente
+                mentorHistory.pop(); 
                 showToast("Error conectando con la IA");
             }
             container.scrollTop = container.scrollHeight;
