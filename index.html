@@ -382,12 +382,22 @@
         <div id="view-library" class="hidden h-full flex flex-col bg-app overflow-hidden">
              <div class="p-6 md:p-10 border-b border-theme bg-panel flex justify-between items-end shrink-0">
                 <div><h2 class="text-3xl font-display font-bold text-theme-primary">Biblioteca</h2><p class="text-theme-secondary text-sm mt-1">Archivo de manuscritos.</p></div>
-                <div class="flex gap-2">
+                <div class="flex gap-2 items-center">
+                    <button onclick="toggleLibraryMode()" id="btn-trash-toggle" class="btn-nav bg-sidebar cursor-pointer text-xs shadow-sm hover:shadow-md border border-theme hover:text-red-600 group">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i> <span id="trash-btn-text">Papelera</span>
+                    </button>
+                    <div class="w-px h-6 bg-theme-tertiary mx-1"></div>
                     <label class="btn-nav bg-sidebar cursor-pointer text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="upload" class="w-4 h-4"></i> Importar<input type="file" class="hidden" accept=".txt,.docx,.pdf" onchange="handleFileUpload(this)"></label>
                     <button onclick="exportFullBackup()" class="btn-nav bg-sidebar text-xs shadow-sm hover:shadow-md border border-theme"><i data-lucide="download" class="w-4 h-4"></i> Backup</button>
                 </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative mobile-content-spacer"><div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div></div>
+            <div class="flex-1 overflow-y-auto p-6 md:p-10 bg-app relative mobile-content-spacer">
+                <div id="library-header-status" class="hidden mb-6 bg-red-50 text-red-600 border border-red-200 p-4 rounded-xl flex items-center gap-3">
+                    <i data-lucide="trash" class="w-5 h-5"></i>
+                    <span class="font-bold text-sm">Viendo la Papelera de Reciclaje.</span>
+                </div>
+                <div id="library-content" class="animate-fade-in pb-20 max-w-7xl mx-auto space-y-12"></div>
+            </div>
         </div>
 
         <!-- 4. VISTA MENTOR AI -->
@@ -532,6 +542,7 @@
         let currentReaderBookId = null;
         let initialWordCount = 0;
         let mentorHistory = []; // HISTORIAL DE CHAT
+        let libraryViewMode = 'active'; // active | trash
         
         // Variables para Swipe
         let touchStartX = 0;
@@ -664,7 +675,10 @@
             const mobileBtnTarget = getEl(`mobile-btn-${viewName}`); if(mobileBtnTarget) mobileBtnTarget.classList.add('active');
             
             if(viewName === 'home') renderHomeStats();
-            if(viewName === 'library') renderLibraryGrid();
+            if(viewName === 'library') {
+                libraryViewMode = 'active'; // Reset to active when opening library
+                renderLibraryGrid();
+            }
         }
 
         // --- EDITOR LOGIC ---
@@ -738,6 +752,7 @@
             if(isDirty) saveDraft(true);
             const draft = drafts.find(d => d.id === id);
             if(!draft) return;
+            if(draft.deletedAt) { showToast("No se puede editar un archivo en la papelera"); return; }
             currentDraftId = draft.id;
             getEl('doc-title').value = draft.title;
             getEl('doc-project').value = draft.project || "";
@@ -761,42 +776,89 @@
         }
 
         // --- LIBRARY LOGIC ---
+        
+        function toggleLibraryMode() {
+            libraryViewMode = libraryViewMode === 'active' ? 'trash' : 'active';
+            renderLibraryGrid();
+        }
+
         function renderLibraryGrid() {
             const container = getEl('library-content');
-            const activeDrafts = drafts.filter(d => !d.deletedAt);
-            if(activeDrafts.length === 0) {
-                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-theme-tertiary"><i data-lucide="feather" class="w-12 h-12 mb-4 opacity-20"></i><p>Tu biblioteca está vacía.</p></div>`;
+            const headerStatus = getEl('library-header-status');
+            const trashBtnText = getEl('trash-btn-text');
+            const trashBtn = getEl('btn-trash-toggle');
+
+            // Update UI State for Mode
+            if(libraryViewMode === 'trash') {
+                trashBtnText.textContent = "Ver Biblioteca";
+                trashBtn.classList.add('bg-red-50', 'text-red-600', 'border-red-200');
+                headerStatus.classList.remove('hidden');
+            } else {
+                trashBtnText.textContent = "Papelera";
+                trashBtn.classList.remove('bg-red-50', 'text-red-600', 'border-red-200');
+                headerStatus.classList.add('hidden');
+            }
+
+            // Filter drafts based on mode
+            let displayDrafts = [];
+            if(libraryViewMode === 'trash') {
+                displayDrafts = drafts.filter(d => d.deletedAt);
+            } else {
+                displayDrafts = drafts.filter(d => !d.deletedAt);
+            }
+
+            if(displayDrafts.length === 0) {
+                const emptyMsg = libraryViewMode === 'trash' ? "La papelera está vacía." : "Tu biblioteca está vacía.";
+                container.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-theme-tertiary"><i data-lucide="${libraryViewMode === 'trash' ? 'trash' : 'feather'}" class="w-12 h-12 mb-4 opacity-20"></i><p>${emptyMsg}</p></div>`;
+                lucide.createIcons();
                 return;
             }
+
+            // Group by Project (only if active, trash shows flat list or we can group too)
             const projects = {};
-            activeDrafts.forEach(d => {
+            displayDrafts.forEach(d => {
                 const p = d.project || "Sin Proyecto";
                 if(!projects[p]) projects[p] = [];
                 projects[p].push(d);
             });
+
             let html = '';
             for (const [project, items] of Object.entries(projects)) {
                 html += `
                 <div class="mb-8">
                     <h3 class="text-xl font-bold text-theme-primary mb-4 flex items-center gap-2"><i data-lucide="folder" class="w-5 h-5 text-amber-500"></i> ${project} <span class="text-xs text-theme-tertiary font-normal">(${items.length})</span></h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        ${items.map(d => `
-                            <div class="group bg-panel border border-theme rounded-xl p-5 hover:shadow-lg transition-all relative flex flex-col h-64">
-                                <div class="cursor-pointer flex-1" onclick="loadDraft(${d.id})">
+                        ${items.map(d => {
+                            // Conditional Buttons based on mode
+                            let actionButtons = '';
+                            if(libraryViewMode === 'trash') {
+                                actionButtons = `
+                                    <button onclick="restoreDraft(${d.id})" class="p-1 hover:text-emerald-500 text-theme-secondary flex items-center gap-1" title="Restaurar"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                                    <button onclick="permanentDeleteDraft(${d.id})" class="p-1 hover:text-red-600 text-theme-secondary flex items-center gap-1" title="Eliminar Definitivamente"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+                                `;
+                            } else {
+                                actionButtons = `
+                                    <button onclick="previewDraft(${d.id})" class="p-1 hover:text-blue-500" title="Vista Previa"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                    <button onclick="downloadDraftPdf(${d.id})" class="p-1 hover:text-emerald-500" title="Descargar PDF"><i data-lucide="file-down" class="w-4 h-4"></i></button>
+                                    <button onclick="loadDraft(${d.id})" class="p-1 hover:text-amber-500" title="Editar"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                                    <button onclick="deleteDraft(${d.id})" class="p-1 hover:text-red-500" title="Papelera"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                `;
+                            }
+
+                            return `
+                            <div class="group bg-panel border border-theme rounded-xl p-5 hover:shadow-lg transition-all relative flex flex-col h-64 ${libraryViewMode === 'trash' ? 'opacity-75 hover:opacity-100' : ''}">
+                                <div class="cursor-pointer flex-1" onclick="${libraryViewMode === 'active' ? `loadDraft(${d.id})` : ''}">
                                     <h3 class="font-bold text-lg text-theme-primary mb-2 line-clamp-1">${d.title}</h3>
                                     <p class="text-sm text-theme-secondary line-clamp-4 leading-relaxed">${d.preview || 'Sin contenido...'}</p>
                                 </div>
                                 <div class="pt-4 mt-2 border-t border-theme text-[10px] flex justify-between items-center bg-panel z-10">
                                     <span class="text-theme-tertiary">${d.date}</span>
                                     <div class="flex gap-2">
-                                         <button onclick="previewDraft(${d.id})" class="p-1 hover:text-blue-500" title="Vista Previa"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                                         <button onclick="downloadDraftPdf(${d.id})" class="p-1 hover:text-emerald-500" title="Descargar PDF"><i data-lucide="file-down" class="w-4 h-4"></i></button>
-                                         <button onclick="loadDraft(${d.id})" class="p-1 hover:text-amber-500" title="Editar"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-                                         <button onclick="deleteDraft(${d.id})" class="p-1 hover:text-red-500" title="Papelera"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                         ${actionButtons}
                                     </div>
                                 </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                 </div>`;
             }
@@ -829,7 +891,45 @@
         function deleteDraft(id) {
             if(confirm("¿Mover a papelera?")) {
                 const d = drafts.find(x => x.id === id);
-                if(d) { d.deletedAt = Date.now(); const tx = db.transaction(['drafts'], 'readwrite'); tx.objectStore('drafts').put(d); renderLibraryGrid(); showToast("Movido a papelera"); }
+                if(d) { 
+                    d.deletedAt = Date.now(); 
+                    const tx = db.transaction(['drafts'], 'readwrite'); 
+                    tx.objectStore('drafts').put(d); 
+                    
+                    // Si estamos borrando el que está abierto actualmente, limpiar el editor
+                    if (currentDraftId === id) {
+                        clearEditor();
+                    }
+                    
+                    renderLibraryGrid(); 
+                    renderHomeStats(); // Actualizar stats al borrar
+                    showToast("Movido a papelera"); 
+                }
+            }
+        }
+        
+        function restoreDraft(id) {
+            const d = drafts.find(x => x.id === id);
+            if(d) {
+                d.deletedAt = null;
+                const tx = db.transaction(['drafts'], 'readwrite');
+                tx.objectStore('drafts').put(d);
+                renderLibraryGrid();
+                renderHomeStats();
+                showToast("Archivo restaurado");
+            }
+        }
+        
+        function permanentDeleteDraft(id) {
+            if(confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) {
+                const tx = db.transaction(['drafts'], 'readwrite');
+                tx.objectStore('drafts').delete(id);
+                tx.oncomplete = () => {
+                    // Update local array
+                    drafts = drafts.filter(d => d.id !== id);
+                    renderLibraryGrid();
+                    showToast("Eliminado definitivamente");
+                };
             }
         }
 
@@ -1072,14 +1172,20 @@
             }; r.readAsText(f);
         }
         function renderHomeStats() {
-            const totalDocs = drafts.length;
-            const totalWords = drafts.reduce((acc, d) => acc + (d.text.replace(/<[^>]*>/g,'').split(/\s+/).length || 0), 0);
+            // FIX: SOLO CONTAR NO BORRADOS
+            const activeDrafts = drafts.filter(d => !d.deletedAt);
+            const totalDocs = activeDrafts.length;
+            const totalWords = activeDrafts.reduce((acc, d) => acc + (d.text.replace(/<[^>]*>/g,'').split(/\s+/).length || 0), 0);
             getEl('stat-total-docs').textContent = totalDocs;
             getEl('stat-total-words').textContent = totalWords.toLocaleString();
             const container = getEl('projects-progress-container');
             if (container) {
-                const recent = drafts.slice(0, 3);
-                container.innerHTML = recent.map(d => `<div onclick="loadDraft(${d.id})" class="bg-panel p-4 rounded-xl border border-theme hover:border-amber-400 cursor-pointer transition-all"><h4 class="font-bold text-theme-primary truncate">${d.title}</h4><p class="text-xs text-theme-tertiary mt-1">${d.date}</p></div>`).join('');
+                const recent = activeDrafts.slice(0, 3);
+                if (recent.length === 0) {
+                     container.innerHTML = '<p class="text-theme-tertiary col-span-full">Aún no has escrito nada.</p>';
+                } else {
+                    container.innerHTML = recent.map(d => `<div onclick="loadDraft(${d.id})" class="bg-panel p-4 rounded-xl border border-theme hover:border-amber-400 cursor-pointer transition-all"><h4 class="font-bold text-theme-primary truncate">${d.title}</h4><p class="text-xs text-theme-tertiary mt-1">${d.date}</p></div>`).join('');
+                }
             }
         }
         function copyToClipboard() { const t = editor.innerText; navigator.clipboard.writeText(t).then(() => showToast("Copiado")); }
@@ -1150,7 +1256,8 @@
             // Contexto del archivo actual (Prioridad Alta)
             if (currentDraftId) {
                 const curr = drafts.find(d => d.id === currentDraftId);
-                if (curr) {
+                // FIX: Validar que no esté borrado
+                if (curr && !curr.deletedAt) {
                     context += `--- CONTEXTO: ARCHIVO ACTUALMENTE ABIERTO ---\n`;
                     context += `Título: ${curr.title}\n`;
                     context += `Tipo: ${curr.type}\n`;
@@ -1162,9 +1269,11 @@
             }
 
             // Contexto general de la biblioteca (Resumen)
-            if (drafts.length > 0) {
+            // FIX: Filtrar borrados para el contexto AI
+            const activeDrafts = drafts.filter(d => !d.deletedAt);
+            if (activeDrafts.length > 0) {
                 context += `--- CONTEXTO: OTRAS OBRAS EN LA BIBLIOTECA ---\n`;
-                const otherDrafts = drafts.filter(d => d.id !== currentDraftId).slice(0, 5); // Solo los 5 más recientes
+                const otherDrafts = activeDrafts.filter(d => d.id !== currentDraftId).slice(0, 5); // Solo los 5 más recientes
                 if (otherDrafts.length > 0) {
                     otherDrafts.forEach(d => {
                         context += `- [${d.type}] ${d.title}: ${d.preview.replace(/\n/g, ' ').substring(0, 100)}...\n`;
