@@ -1224,8 +1224,143 @@
             toggleSettings(); 
             showToast("Guardado"); 
         }
-        function exportFullBackup() { showToast("Función de backup lista"); } 
-        function importFullBackup() {}
+        
+        // --- BACKUP & RESTORE SYSTEM (FUNCIONANDO) ---
+        
+        async function exportFullBackup() {
+            showToast("Generando backup...");
+            
+            try {
+                // 1. Recopilar datos
+                const userData = await new Promise(r => { 
+                    const req = db.transaction(['user']).objectStore('user').get('current'); 
+                    req.onsuccess = () => r(req.result); 
+                });
+                
+                const draftsData = await new Promise(r => {
+                     const req = db.transaction(['drafts']).objectStore('drafts').getAll();
+                     req.onsuccess = () => r(req.result);
+                });
+                
+                const booksData = await new Promise(r => {
+                     const req = db.transaction(['books']).objectStore('books').getAll();
+                     req.onsuccess = () => r(req.result);
+                });
+
+                // 2. Procesar Libros (Blobs a Base64 para JSON)
+                // Esto es necesario porque JSON no soporta Blobs nativamente
+                const processedBooks = await Promise.all(booksData.map(async (book) => {
+                    const base64Data = await new Promise(resolve => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.readAsDataURL(book.data); // Convierte el Blob del libro a string base64
+                    });
+                    return { ...book, data: base64Data }; // Reemplazamos el blob por el string
+                }));
+
+                // 3. Crear Objeto de Backup
+                const backupObject = {
+                    version: 1,
+                    date: new Date().toISOString(),
+                    user: userData,
+                    drafts: draftsData, // Incluye papelera (deletedAt != null)
+                    books: processedBooks
+                };
+
+                // 4. Generar ZIP
+                const zip = new JSZip();
+                zip.file("scriptorium_backup.json", JSON.stringify(backupObject));
+
+                const content = await zip.generateAsync({type:"blob"});
+                
+                // 5. Descargar
+                const a = document.createElement("a");
+                a.href = URL.createObjectURL(content);
+                const dateStr = new Date().toISOString().slice(0,10);
+                a.download = `Scriptorium_Backup_${dateStr}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                showToast("Backup descargado correctamente");
+
+            } catch (error) {
+                console.error("Backup error:", error);
+                showToast("Error al crear backup: " + error.message);
+            }
+        } 
+
+        async function importFullBackup(input) {
+            const file = input.files[0];
+            if(!file) return;
+            
+            showToast("Leyendo backup...");
+            
+            try {
+                // 1. Leer ZIP
+                const zip = await JSZip.loadAsync(file);
+                
+                if (!zip.file("scriptorium_backup.json")) {
+                    throw new Error("Archivo de backup inválido (falta json)");
+                }
+                
+                const jsonStr = await zip.file("scriptorium_backup.json").async("string");
+                const backupData = JSON.parse(jsonStr);
+                
+                // 2. Restaurar Datos en DB
+                const tx = db.transaction(['user', 'drafts', 'books'], 'readwrite');
+                
+                // Restaurar User
+                if(backupData.user) {
+                    tx.objectStore('user').put(backupData.user);
+                }
+                
+                // Restaurar Drafts
+                if(backupData.drafts && Array.isArray(backupData.drafts)) {
+                    backupData.drafts.forEach(d => tx.objectStore('drafts').put(d));
+                }
+                
+                // Restaurar Libros (Base64 a Blob)
+                if(backupData.books && Array.isArray(backupData.books)) {
+                    // Helper para convertir base64 dataURI a Blob
+                    const dataURItoBlob = (dataURI) => {
+                        const byteString = atob(dataURI.split(',')[1]);
+                        const mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+                        const ab = new ArrayBuffer(byteString.length);
+                        const ia = new Uint8Array(ab);
+                        for (let i = 0; i < byteString.length; i++) { ia[i] = byteString.charCodeAt(i); }
+                        return new Blob([ab], {type: mimeString});
+                    };
+
+                    backupData.books.forEach(b => {
+                        // Si es string (base64 del backup), convertir a Blob. Si ya es blob (raro en json), dejarlo.
+                        if (typeof b.data === 'string') {
+                            b.data = dataURItoBlob(b.data);
+                        }
+                        tx.objectStore('books').put(b);
+                    });
+                }
+                
+                tx.oncomplete = () => {
+                    showToast("Backup restaurado con éxito");
+                    // Recargar interfaz
+                    loadInitialData();
+                    // Limpiar input
+                    input.value = '';
+                    // Cerrar modal
+                    toggleSettings();
+                };
+                
+                tx.onerror = (e) => {
+                    throw new Error("Error en transacción DB");
+                };
+
+            } catch (error) {
+                console.error("Import error:", error);
+                showToast("Error al importar: " + error.message);
+                input.value = '';
+            }
+        }
 
         // --- GEMINI AI CON CONTEXTO ---
 
